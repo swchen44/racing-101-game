@@ -58,6 +58,8 @@ export const TRACKS = [
       neonColors: ['#37a8ff', '#7a5cff', '#2ee6d0', '#ffffff', '#ff9d4d'],
       horizonColor: [0.10, 0.14, 0.26],
       groundTint: 0x0d1016,
+      skyMid: [0.045, 0.06, 0.16],       // 藍紫港灣夜色
+      skyZenith: [0.014, 0.018, 0.06],
     },
   },
   {
@@ -74,6 +76,9 @@ export const TRACKS = [
       neonColors: ['#ffb54d', '#ff7733', '#e8ffe0', '#ffd23e'],
       horizonColor: [0.08, 0.10, 0.16],
       groundTint: 0x0c1410,
+      skyMid: [0.028, 0.042, 0.10],      // 光害少 → 更暗更透的山夜
+      skyZenith: [0.008, 0.014, 0.04],
+      stars: { count: 1800, size: 2.4, opacity: 0.8 },
     },
   },
   {
@@ -91,6 +96,8 @@ export const TRACKS = [
       neonColors: ['#ff2e4d', '#ffffff', '#37e0ff', '#ffd23e'],
       horizonColor: [0.16, 0.10, 0.18],
       groundTint: 0x121316,
+      skyMid: [0.05, 0.05, 0.13],        // 賽場探照燈的微紫光害
+      skyZenith: [0.014, 0.016, 0.05],
     },
   },
 ];

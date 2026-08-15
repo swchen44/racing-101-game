@@ -1,14 +1,20 @@
 # TAIPEI 101 — Midnight Circuit 午夜疾走
 
 > 🇹🇼 [中文版說明請見 README.zh-TW.md](./README.zh-TW.md)
+>
+> 🎮 **Play now: <https://swchen44.github.io/racing-101-game/>** (desktop / tablet / phone-landscape)
 
-A third-person 3D arcade racing game set on the rain-slicked neon streets of Taipei's Xinyi District, circling the Taipei 101 tower at midnight. Built with **vanilla Three.js** — every asset (the tower, the city, the car, every texture and sound) is **100% procedurally generated** in code. No model files, no image assets, no audio files.
+A third-person 3D arcade racing game set in a rain-slicked neon Taipei at midnight. Built with **vanilla Three.js** — every asset (the 101 tower, four tracks, eight cars, every texture and sound) is **100% procedurally generated** in code. No model files, no image assets, no audio files.
 
 ![Title screen](docs/screenshots/title.png)
 
-| | | |
+| Taipei GP Circuit | Mountain Pass | Wangan Speedway |
 |---|---|---|
-| ![Straight](docs/screenshots/straight.png) | ![Drift](docs/screenshots/drift.png) | ![Tower](docs/screenshots/tower.png) |
+| ![GP](docs/screenshots/gp.png) | ![Mountain](docs/screenshots/mountain.png) | ![Wangan](docs/screenshots/wangan.png) |
+
+| Formula on wet streets | Taipei Taxi & neon reflections | Touch controls (mobile) |
+|---|---|---|
+| ![F1](docs/screenshots/straight.png) | ![Taxi](docs/screenshots/drift.png) | ![Mobile](docs/screenshots/mobile.png) |
 
 ---
 
@@ -16,7 +22,7 @@ A third-person 3D arcade racing game set on the rain-slicked neon streets of Tai
 
 ### Play
 
-You need any static file server (ES modules require HTTP, not `file://`):
+Online: **<https://swchen44.github.io/racing-101-game/>** — or run locally with any static server (ES modules need HTTP):
 
 ```bash
 git clone https://github.com/swchen44/racing-101-game.git
@@ -25,53 +31,76 @@ python3 -m http.server 8080     # or: npx serve
 # open http://localhost:8080
 ```
 
-Requires a WebGL2-capable browser (Chrome / Edge / Firefox / Safari). Three.js is loaded from CDN — an internet connection is needed on first load.
+Requires a WebGL2 browser. On phones/tablets play in **landscape** — neon touch controls appear automatically.
+
+### Game flow
+
+1. **Enter your driver name** (remembered in your browser)
+2. Pick a **mode** → **track** → **car** → **transmission**, then race
+3. Results are saved to the local leaderboard (and to the global one if configured — see below)
+
+### Modes
+
+| Mode | Rule |
+|---|---|
+| ⏱ **Time Attack** | 3 laps against the clock; best laps saved per track |
+| 🚨 **Police Chase** | Finish 3 laps while cop cars PIT you, call reinforcements and set up roadblocks. Get boxed in at low speed → BUSTED |
+| 🏆 **Grand Prix** | Race 5 AI drivers with racing lines, avoidance and rubber-banding. Take P1 |
+
+### Tracks
+
+| Track | Character |
+|---|---|
+| 信義午夜街道 Xinyi Midnight | Streets around Taipei 101, neon signs, 1.6 km |
+| 灣岸高速環道 Wangan Speedway | Harbor highway ring: cranes, container yards, sea bridge, 2.9 km — top-speed run |
+| 陽明山夜峠 Mountain Pass | Hairpin touge in layered mountains and forest, 1.3 km — drift heaven |
+| 台北大獎賽環道 Taipei GP | F1-grade: grandstands, pit building, DRS straight, tyre walls, 2.4 km |
+
+### Cars (8)
+
+Formula TF-01 (250 km/h, 8-speed) ・ GT Blaze ・ Thunder EV-S (single-speed EV) ・ Rally R4 (loose tail) ・ Trail Titan pickup ・ Taipei Taxi 55688 ・ City e-GO ・ Summit SUV — each with distinct procedural bodywork and physics tuning (top speed, grip, drift character, gear count).
 
 ### Controls
 
 | Key | Action |
 |---|---|
-| `W` / `↑` | Accelerate |
-| `S` / `↓` | Brake / Reverse |
-| `A` `D` / `←` `→` | Steer |
-| `Space` | Handbrake — hold while turning to **drift** |
-| `C` | Cycle camera (chase / far / bumper) |
-| `R` | Restart race |
-| `Enter` | Start from title screen |
+| `W A S D` / arrows | Drive |
+| `Space` | Handbrake / drift |
+| `Q` / `E` | Shift down / up (manual transmission) |
+| `C` | Camera (chase / far / bumper) |
+| `R` | Restart, `Enter` menus, `Esc` back |
 
-### Rules
+Touch: on-screen steering, throttle, brake, drift and shift buttons (landscape only).
 
-- **3 laps** around the closed circuit surrounding Taipei 101.
-- **8 ordered checkpoints** validate your lap — no shortcuts count.
-- Your **best lap** is saved locally (`localStorage`) and shown on the HUD; beating it triggers a NEW RECORD flash.
-- Concrete barriers line the whole track: scraping them showers sparks and costs speed. A **WRONG WAY** warning appears if you turn around.
+### Global leaderboard (optional, free)
+
+Local scores always work. To enable the **worldwide leaderboard** (name + masked IP shown), create a free Supabase project and paste its URL/anon key into `js/config.js` — full 5-minute walkthrough in [SETUP-LEADERBOARD.md](./SETUP-LEADERBOARD.md). Privacy: only a masked IP (e.g. `140.112.x.x`) is ever uploaded.
 
 ---
 
 ## 🎨 Design Document
 
-### Aesthetic direction — "Rainy Night in Xinyi"
+### Aesthetic — "Rainy Night in Taipei"
 
-One committed look: Taipei's Xinyi district at midnight after rain. Jade-green glass of the 101 tower, sodium-amber streetlights, Chinese neon signage (誠品書店, 深夜食堂, 珍珠奶茶…), wet asphalt reflecting everything, and a teal-and-amber cinematic grade under ACES tone mapping with bloom. HUD typography pairs a display face (Zen Dots) with Chakra Petch and Noto Sans TC for a bilingual motorsport identity.
+Jade-green glass of the 101, sodium streetlights, Chinese neon signage, teal-and-amber grade under ACES tone mapping with bloom — and the signature feature: **real-time planar reflections on wet asphalt**. A mirrored camera renders emissive objects (neon, gates, tail-lights) into a low-res target that is blended into the road shader with fresnel and roughness ripple, so every sign stretches into a wobbling streak of light on the road.
 
 ### World building
 
-- **Track**: a closed CatmullRom spline (~1.6 km) encircling the tower. The road, curbs, sidewalks and barriers are *ribbon geometries* extruded along the spline. Lane markings and asphalt grain are canvas-painted textures with an emissive pass so markings stay readable at night.
-- **Taipei 101**: procedurally assembled from its signature architecture — a podium, a tapered base, **8 flared "dou" segments** (wider at top, the rice-bowl motif), ruyi ornaments, a crown and a spire with a blinking aviation beacon, up-lit by spotlights in the nightly jade color.
-- **City**: buildings are instanced boxes with double canvas textures (dark albedo + emissive lit-windows with realistic lighting logic — contiguous lit runs, darker high floors, some fully dark buildings). Neon signs are canvas-rendered Chinese text with glow. A distant skyline silhouette ring and a gradient-shader sky with stars and light-pollution horizon close the scene.
-- **Fake light budget**: streetlight pools, sign glow and lamp halos are additive sprites/decals — almost zero real lights. Real dynamic lights are limited to the moon (with shadows), the car's headlights and a small fill light, keeping the frame at 60 fps.
+- **Tracks** are closed CatmullRom splines; road, curbs, sidewalks and barriers are ribbon geometries extruded along the spline, with canvas-painted albedo + emissive lane markings. Each track carries a *theme* (sky colors, building density, neon palette, landmark) driving the procedural city: Taipei 101 with its 8 flared "dou" segments; a harbor with cranes, container stacks and a lit sea bridge; layered mountain ridges with ~2,600 instanced trees; an F1 venue with crowd-textured grandstands, pit lane and searchlights.
+- **Fake light budget**: light pools, sign glows and halos are additive sprites; real dynamic lights ≤ 3 (moon with shadows, headlights, fill), keeping 60 fps.
 
 ### Vehicle & physics
 
-Custom arcade physics (no physics engine): velocity is decomposed into forward/lateral components each fixed step (120 Hz). Lateral grip is exponentially damped — weak damping under handbrake produces controllable **drift**; yaw gain scales with speed and gets a drift boost. Wall collision is solved *analytically against the spline*: the car's lateral offset from the track centerline is clamped to the barrier width, with restitution, spark bursts and heading alignment. This is O(1) per frame via a hint-tracked nearest-sample search.
+Custom arcade physics at 120 Hz fixed step: forward/lateral velocity decomposition, exponential lateral grip (weakened under handbrake → controllable drift), speed-scaled yaw. **Transmission model**: per-gear speed bands with a torque curve and rev-limiter cutoff — automatic shifts near redline, manual (Q/E) rewards shifting at the line; EVs are single-speed with flat torque. Wall collision is solved analytically against the spline (lateral clamp + restitution + heading alignment), O(1) per frame.
 
-### Camera & game feel
+### AI
 
-Spring-damped chase camera with speed-scaled FOV (62°→84°), high-speed camera dip, drift side-offset, collision shake, corner-apex look-ahead (reads track curvature 35 m ahead) and a **landmark framing system**: when the car faces Taipei 101, the camera lifts and side-shifts to compose the tower into the upper third of the frame.
+- **Grand Prix**: kinematic line-followers with apex-seeking lanes, curvature-based corner speeds, mutual avoidance, squeeze-upset wobble, reaction-time starts, post-finish coasting and ±6 % rubber-banding.
+- **Police**: progress-based pursuit with PIT maneuvers, lap-2 reinforcements, escape-triggered roadblocks (crashable barriers), two-tone Web Audio siren with distance attenuation, and a low-speed proximity "busted" meter.
 
 ### Audio
 
-Entirely Web Audio API: engine = sawtooth + sub-square through a low-pass filter with simulated gear steps; drift screech = band-passed noise; wind, exhaust, collision thumps, countdown beeps and a finish fanfare are all synthesized at runtime.
+Entirely Web Audio: engine (sawtooth + sub-square through filters, driven by real gearbox rpm), drift screech, wind, sirens, collisions, UI beeps, fanfares.
 
 ---
 
@@ -80,39 +109,36 @@ Entirely Web Audio API: engine = sawtooth + sub-square through a low-pass filter
 ### File structure
 
 ```
-index.html          HUD DOM/CSS, title & results screens, import map (three@0.160 CDN)
-js/main.js          Renderer, scene, lighting, state machine, fixed-step main loop
-js/track.js         Track class: spline, sampling, query(), all track meshes
-js/vehicle.js       Car class: procedural car model + arcade physics
-js/taipei101.js     createTaipei101(): the landmark
-js/city.js          createCity(track): ground, sky, buildings, neon, streetlights
-js/effects.js       Effects: bloom composer, skid marks, smoke, sparks, rain
-js/audio.js         GameAudio: all Web Audio synthesis
-js/hud.js           HUD: gauge canvas, minimap canvas, timers, messages
-js/camera.js        ChaseCamera: spring follow, FOV, framing, shake
+index.html          Menus (name/mode/track/car/transmission), HUD DOM/CSS, touch UI, import map
+js/config.js        Central definitions: TRACKS (spline+theme), CARS (tune+stats), MODES, leaderboard config
+js/main.js          Renderer, lighting, world lifecycle (build/dispose), menu flow, race state machine, main loop
+js/track.js         Track(def): spline sampling, query(), road/curb/barrier meshes, wet-reflection road shader
+js/vehicle.js       Car(track, def, {transmission}): physics + gearbox; visuals dispatched to cars/
+js/cars/            One file per car model (f1, gt, evsport, rally, pickup, taxi, evcity, suv) + common.js helpers
+js/city.js          createCity(track, theme): buildings, neon, streetlights + harbor/mountain/grandstand envs
+js/taipei101.js     The landmark tower
+js/reflections.js   Planar reflection render target + shared uniforms (REFLECT_LAYER)
+js/effects.js       Bloom + color grade + radial blur, skid marks, smoke, sparks, rain, speed streaks
+js/opponents.js     Grand Prix AI       js/police.js  Police AI
+js/leaderboard.js   Local scores + optional Supabase REST adapter (masked IP)
+js/hud.js           Gauge/minimap/timers/position/wanted   js/camera.js  Chase camera
+js/audio.js         Web Audio synthesis (engine, siren…)   js/touch.js   Touch controls
 ```
 
 ### Key contracts
 
-- `Track.query(pos, hint)` → `{ index, s, lateral, tangent, normal, roadPos }` — the single source of truth for "where am I relative to the road". `s ∈ [0,1)` is lap progress; `lateral` drives wall collision; checkpoints live at `s = k/8`.
-- `ROAD_HALF_WIDTH = 7.5`, `WALL_HALF_WIDTH = 8.6` (track.js) — road and collision widths.
-- Physics tuning lives in the `TUNE` object at the top of `vehicle.js` (max speed, engine force, grip, drift parameters, wall restitution).
-- Game states: `title → countdown → racing → finished` (see `race` in main.js).
-
-### QA / automation hook
-
-`window.__game` exposes `{ car, race, track, camera, chaseCam, startRace, restartRace, teleport(s, kmh) }`. `teleport(0.3, 110)` places the car at 30% lap progress moving at 110 km/h — used by the automated screenshot/critique pipeline that polished this game.
+- `Track.query(pos, hint)` → `{ index, s, lateral, tangent }` — lap progress + wall collision basis; checkpoints at `s = k/8`.
+- Car builders: `build(def) → { mesh, parts }` (see `cars/gt.js`); physics tuning in each car's `tune` in config.js.
+- `window.__game` QA hook: `{ car, race, track, setup, startRace, teleport(s, kmh) }` — drive any track/car/mode from the console.
+- **Dispose discipline**: worlds and cars are rebuilt per race; always route removals through `disposeObject()` (cars/common.js) — shared cached textures are marked `userData.shared`.
 
 ### Performance rules
 
-- Everything repeated is `InstancedMesh` (barriers, streetlights, skid marks, windows).
-- Canvas textures ≤ 1024 px; procedural only.
-- ≤ 2–3 real dynamic lights in view; everything else is emissive + additive sprites.
-- Auto quality scaler: if FPS drops below ~42, `pixelRatio` steps down (and recovers above 58).
+InstancedMesh for everything repeated; canvas textures ≤ 1024 px; ≤ 3 real lights; reflection target 512 px; auto quality scaler drops pixelRatio below 42 fps.
 
 ### Development approach
 
-The game was built and iterated by a multi-agent loop: a *photographer* agent drives the game in a headless browser and captures a standard shot set; four *harsh art-director critics* (lighting, vehicle, world/landmark, HUD/composition) score each round against AAA night-racer references; *fixer* agents with exclusive file ownership apply the critiques in parallel — repeated until the scores converge.
+Built by a multi-agent pipeline: core architecture first, then parallel specialist agents with **exclusive file ownership** (car modeling ×3, track theming, reflections, touch UI, AI behaviors), each self-verifying in its own headless-browser session, followed by integration passes and harsh art-director review rounds.
 
 ## License
 
