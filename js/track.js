@@ -112,8 +112,10 @@ export class Track {
       uvs[ui + 0] = 0; uvs[ui + 1] = dist * uScale;
       uvs[ui + 2] = 1; uvs[ui + 3] = dist * uScale;
       if (i < n) {
+        // 注意 winding:頂點0=左(+normal)、1=右(-normal),
+        // 從上方看必須逆時針,面法線才朝上(否則整條路被背面剔除)。
         const a = i * 2;
-        indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+        indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
       }
     }
     const geo = new THREE.BufferGeometry();
@@ -397,7 +399,12 @@ export class Track {
         const ui = i * 4;
         uvs[ui] = 0; uvs[ui + 1] = dist / 1.2;
         uvs[ui + 2] = 1; uvs[ui + 3] = dist / 1.2;
-        if (i < n) { const a = i * 2; indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+        if (i < n) {
+          const a = i * 2;
+          // winding 依 side 翻轉,確保面朝上 (否則單側路緣被背面剔除)
+          if (side === 1) indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+          else indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+        }
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -427,7 +434,12 @@ export class Track {
         positions[li + 3] = sm.pos.x + sm.normal.x * outer * side;
         positions[li + 4] = 0.22;
         positions[li + 5] = sm.pos.z + sm.normal.z * outer * side;
-        if (i < n) { const a = i * 2; indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+        if (i < n) {
+          const a = i * 2;
+          // winding 依 side 翻轉,確保面朝上
+          if (side === 1) indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+          else indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+        }
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
