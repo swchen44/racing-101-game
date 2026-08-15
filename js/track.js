@@ -1,13 +1,14 @@
 // track.js — 信義區封閉賽道:曲線定義、路面網格、護欄、路緣石、起跑線、檢查點
 import * as THREE from 'three';
+import { reflectionUniforms } from './reflections.js';
 
 export const ROAD_HALF_WIDTH = 7.5;      // 路面半寬 (m)
 export const WALL_HALF_WIDTH = 8.6;      // 護欄碰撞半寬
 export const N_SAMPLES = 1400;           // 曲線取樣數
 export const N_CHECKPOINTS = 8;
 
-// 環繞台北101 (位於 0,-40) 的封閉賽道控制點 (x, z)
-const CONTROL_POINTS = [
+// 預設賽道 (信義):環繞台北101 (位於 0,-40) 的封閉賽道控制點 (x, z)
+const DEFAULT_CONTROL_POINTS = [
   [-40, -235], [70, -240], [165, -218], [224, -158], [242, -76],
   [232, 16], [252, 108], [214, 182], [124, 218], [28, 240],
   [-84, 232], [-172, 200], [-228, 128], [-244, 36], [-230, -58],
@@ -15,8 +16,12 @@ const CONTROL_POINTS = [
 ];
 
 export class Track {
-  constructor() {
-    const pts = CONTROL_POINTS.map(([x, z]) => new THREE.Vector3(x, 0, z));
+  // def: config.js TRACKS 的一項 (controlPoints/theme);省略時使用信義預設
+  constructor(def = null) {
+    this.def = def;
+    this.theme = def?.theme || {};
+    const cps = def?.controlPoints || DEFAULT_CONTROL_POINTS;
+    const pts = cps.map(([x, z]) => new THREE.Vector3(x, 0, z));
     this.curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.5);
     this.length = this.curve.getLength();
     this._buildSamples();
@@ -289,9 +294,56 @@ export class Track {
       envMap: this._envTexture(),
       envMapIntensity: 0.7,
     });
+    this._patchRoadReflection(mat);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.receiveShadow = true;
     return mesh;
+  }
+
+  // 濕路面即時反射:把 reflections.js 的平面反射 RT 以投影 UV 混入路面。
+  // 菲涅耳 (掠射角反射強)、垂直 4-tap 拉絲 (倒影往鏡頭方向拖長)、
+  // 世界座標漣漪擾動 (柏油微凹凸打碎鏡面)。加進 totalEmissiveRadiance → bloom 會咬住霓虹倒影。
+  _patchRoadReflection(mat) {
+    mat.onBeforeCompile = (shader) => {
+      Object.assign(shader.uniforms, reflectionUniforms);
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', `#include <common>
+          uniform mat4 uReflectMatrix;
+          varying vec4 vReflCoord;
+          varying vec3 vReflWorld;`)
+        .replace('#include <fog_vertex>', `#include <fog_vertex>
+          vec4 rWp = modelMatrix * vec4( transformed, 1.0 );
+          vReflCoord = uReflectMatrix * rWp;
+          vReflWorld = rWp.xyz;`);
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', `#include <common>
+          uniform sampler2D uReflectTex;
+          uniform float uReflectStrength;
+          uniform vec2 uReflectTexel;
+          varying vec4 vReflCoord;
+          varying vec3 vReflWorld;`)
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+          {
+            vec2 uvR = vReflCoord.xy / max(vReflCoord.w, 1e-4);
+            // 漣漪擾動:世界座標多頻正弦 (靜態濕面紋理,不隨鏡頭抖動)
+            vec2 pert = vec2(
+              sin(vReflWorld.x * 2.3 + vReflWorld.z * 1.1) + sin(vReflWorld.z * 4.1) * 0.6,
+              sin(vReflWorld.z * 2.7 + vReflWorld.x * 1.5) + sin(vReflWorld.x * 3.7) * 0.6);
+            uvR += pert * 0.0045;
+            // 垂直拉絲 4-tap:雨夜倒影沿畫面縱向拖長
+            vec3 refl = texture2D(uReflectTex, uvR).rgb * 0.40;
+            refl += texture2D(uReflectTex, uvR + vec2(0.0, uReflectTexel.y * 3.0)).rgb * 0.26;
+            refl += texture2D(uReflectTex, uvR + vec2(0.0, uReflectTexel.y * 7.5)).rgb * 0.20;
+            refl += texture2D(uReflectTex, uvR - vec2(0.0, uReflectTexel.y * 3.0)).rgb * 0.14;
+            // 菲涅耳:掠射角反射強、正俯視弱
+            float cosT = clamp(dot(normalize(vViewPosition), normal), 0.0, 1.0);
+            float fres = 0.22 + 0.78 * pow(1.0 - cosT, 2.2);
+            // 濕度斑塊:低頻正弦讓路面乾濕不均,倒影帶狀分佈
+            float wet = 0.72 + 0.28 * sin(vReflWorld.x * 0.21 + vReflWorld.z * 0.17);
+            totalEmissiveRadiance += refl * (uReflectStrength * fres * wet);
+          }`);
+    };
+    mat.customProgramCacheKey = () => 'road-wet-reflection';
   }
 
   // 濕地拖影:沿賽道撒 instanced 加法混合拉伸光斑,

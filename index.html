@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>TAIPEI 101 — 午夜疾走 MIDNIGHT CIRCUIT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,21 +15,31 @@
   --neon-cyan: #4dd8ff;
   --ink: #060a12;
   --glass: rgba(10, 16, 28, 0.72);
+  --glass-solid: rgba(8, 14, 26, 0.92);
   --hud-font: 'Chakra Petch', 'Noto Sans TC', sans-serif;
   --display-font: 'Zen Dots', 'Noto Sans TC', sans-serif;
   --tc-font: 'Noto Sans TC', sans-serif;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); font-family: var(--hud-font); }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); font-family: var(--hud-font); -webkit-tap-highlight-color: transparent; }
+/* iOS Safari:100% 會受動態網址列影響,支援 dvh 時改用動態視口高度 */
+@supports (height: 100dvh) { html, body { height: 100dvh; } }
 canvas#game { display: block; width: 100%; height: 100%; }
 
 #ui { position: fixed; inset: 0; pointer-events: none; user-select: none; -webkit-user-select: none; }
 
 /* ---------- cinematic frame ---------- */
 #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(2,4,10,0.55) 100%); }
+#danger-vignette {
+  position: absolute; inset: 0; opacity: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 48%, rgba(255,25,60,0.28) 78%, rgba(255,20,55,0.55) 100%);
+  transition: opacity .5s ease;
+}
+#danger-vignette.on { opacity: 1; animation: dangerPulse .85s ease-in-out infinite; }
+@keyframes dangerPulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
 #grain { position: absolute; inset: 0; opacity: 0.05; mix-blend-mode: overlay; }
 
-/* ---------- HUD bottom-left: speed (一體式模組:讀數疊在儀表圓心) ---------- */
+/* ---------- HUD bottom-left: speed ---------- */
 #speed-pod {
   position: absolute; left: 34px; bottom: 30px;
   width: 190px; height: 190px;
@@ -42,12 +52,17 @@ canvas#game { display: block; width: 100%; height: 100%; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 #speed-num {
-  /* Chakra Petch:乾淨的 tabular 零,避免 Zen Dots 斜線零被誤讀為「∅」 */
   font-family: var(--hud-font); font-weight: 700; font-size: 44px; line-height: 1;
   color: #eafff5; text-shadow: 0 0 20px rgba(62,230,168,0.8);
   font-variant-numeric: tabular-nums; letter-spacing: 1px; text-align: center;
 }
 #speed-unit { font-size: 10px; letter-spacing: 5px; text-indent: 5px; color: var(--neon-jade); margin-top: 6px; font-weight: 600; }
+#gear-num {
+  font-size: 15px; font-weight: 700; color: var(--neon-amber); margin-top: 4px;
+  letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,181,77,0.7);
+  font-variant-numeric: tabular-nums;
+}
+#gear-num.limiter { color: var(--neon-red); animation: wwBlink .3s steps(2) infinite; }
 #drift-tag {
   position: absolute; top: -26px; left: 50%;
   font-family: var(--tc-font); font-weight: 900; font-size: 15px; letter-spacing: 4px;
@@ -65,10 +80,9 @@ canvas#game { display: block; width: 100%; height: 100%; }
   border-left: 3px solid var(--neon-jade);
   padding: 12px 20px 12px 16px; min-width: 200px;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   opacity: 0; transition: opacity .6s ease;
 }
-/* 主行:TIME (視覺主角) + LAP 同行靠右 */
 #main-row { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
 #lap-line { display: flex; align-items: baseline; gap: 6px; }
 #lap-label { font-family: var(--tc-font); font-size: 10px; letter-spacing: 3px; color: #7fa8c9; font-weight: 500; }
@@ -80,19 +94,51 @@ canvas#game { display: block; width: 100%; height: 100%; }
 #t-current { margin-top: 0; justify-content: flex-start; gap: 10px; }
 #t-current .v { color: #fff; font-size: 24px; font-weight: 700; text-shadow: 0 0 12px rgba(77,216,255,0.55); }
 #t-best .v { color: var(--neon-amber); }
-.time-row .v.empty { color: #3a5570; text-shadow: none; } /* 尚無紀錄的靜默空狀態 */
+.time-row .v.empty { color: #3a5570; text-shadow: none; }
 
-/* ---------- minimap (右下,與左下速度表對稱;右上讓給場景) ---------- */
+/* ---------- 名次 (大獎賽) / 通緝 (警車追逐) ---------- */
+#pos-pod {
+  position: absolute; right: 30px; top: 30px; display: none;
+  background: var(--glass); border: 1px solid rgba(255,181,77,0.25); border-right: 3px solid var(--neon-amber);
+  padding: 10px 18px; text-align: right; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px);
+}
+#pos-pod.on { display: block; }
+#pos-num { font-family: var(--display-font); font-size: 40px; color: #fff; text-shadow: 0 0 18px rgba(255,181,77,0.8); line-height: 1; display: inline-block; }
+#pos-num.bump { animation: posBump .55s cubic-bezier(.2,1.7,.35,1); }
+#pos-num.bump.up { color: #b9ffe2; text-shadow: 0 0 24px rgba(62,230,168,1), 0 0 50px rgba(62,230,168,0.5); }
+#pos-num.bump.down { color: #ffb9c6; text-shadow: 0 0 24px rgba(255,77,109,1), 0 0 50px rgba(255,77,109,0.5); }
+@keyframes posBump {
+  0% { transform: scale(1.55) rotate(-4deg); filter: brightness(1.6); }
+  55% { transform: scale(0.94); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+#pos-total { font-size: 14px; color: #93a9c0; }
+#pos-label { font-family: var(--tc-font); font-size: 10px; letter-spacing: 4px; color: #93a9c0; }
+#wanted-pod {
+  position: absolute; right: 30px; top: 30px; display: none; width: 210px;
+  background: var(--glass); border: 1px solid rgba(255,77,109,0.35); border-right: 3px solid var(--neon-red);
+  padding: 10px 16px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px);
+}
+#wanted-pod.on { display: block; }
+#wanted-label { font-family: var(--tc-font); font-size: 11px; letter-spacing: 5px; color: #ff9eb0; font-weight: 700; }
+#wanted-bar { margin-top: 7px; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+#wanted-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff4d6d, #ff2233); border-radius: 4px;
+  box-shadow: 0 0 12px rgba(255,60,90,0.8); transition: width .1s linear; }
+#wanted-pod.danger #wanted-label { animation: wwBlink .4s steps(2) infinite; color: #ff4d6d; }
+
+/* ---------- minimap ---------- */
 #minimap-wrap {
   position: absolute; right: 30px; bottom: 30px; width: 172px; height: 172px;
   background: var(--glass); border: 2px solid rgba(62,230,168,0.35);
-  border-radius: 50%; backdrop-filter: blur(6px);
+  border-radius: 50%; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 0 30px rgba(0,0,0,0.5), 0 0 20px rgba(62,230,168,0.28), inset 0 0 24px rgba(62,230,168,0.06);
   opacity: 0; transition: opacity .6s ease;
 }
 #minimap { width: 100%; height: 100%; }
 
-/* ---------- wrong way ---------- */
+/* ---------- wrong way / center message ---------- */
 #wrongway {
   position: absolute; top: 22%; left: 50%; transform: translateX(-50%);
   font-family: var(--tc-font); font-weight: 900; font-size: 34px; letter-spacing: 12px;
@@ -101,8 +147,6 @@ canvas#game { display: block; width: 100%; height: 100%; }
 }
 #wrongway.on { opacity: 1; animation: wwBlink .5s steps(2) infinite; }
 @keyframes wwBlink { 50% { opacity: .25; } }
-
-/* ---------- center message ---------- */
 #center-msg {
   position: absolute; top: 34%; left: 50%; transform: translate(-50%,-50%);
   font-family: var(--display-font); font-size: 120px; color: #fff;
@@ -124,92 +168,298 @@ canvas#game { display: block; width: 100%; height: 100%; }
 }
 #sub-msg.pop { animation: subPop 1.2s ease forwards; }
 @keyframes subPop { 0%{opacity:0; letter-spacing:24px;} 30%{opacity:1; letter-spacing:10px;} 85%{opacity:1;} 100%{opacity:0;} }
+#record-flash {
+  position: absolute; top: 55%; left: 50%; transform: translateX(-50%);
+  font-family: var(--tc-font); font-weight: 900; font-size: 30px; letter-spacing: 8px;
+  background: linear-gradient(100deg, #9be8ff 10%, #ffffff 38%, #ffe9b0 62%, var(--neon-amber) 90%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 14px rgba(77,216,255,0.85)) drop-shadow(0 0 34px rgba(255,181,77,0.5));
+  opacity: 0; white-space: nowrap;
+}
+#record-flash.pop { animation: recordPop 2s cubic-bezier(.2,1.4,.3,1) forwards; }
+@keyframes recordPop {
+  0% { opacity: 0; transform: translateX(-50%) scale(2.3); letter-spacing: 26px; filter: blur(10px) drop-shadow(0 0 0 rgba(77,216,255,0)); }
+  16% { opacity: 1; transform: translateX(-50%) scale(1); letter-spacing: 8px; filter: blur(0) drop-shadow(0 0 26px rgba(77,216,255,1)) drop-shadow(0 0 60px rgba(255,181,77,0.8)); }
+  30% { filter: blur(0) drop-shadow(0 0 12px rgba(77,216,255,0.8)) drop-shadow(0 0 30px rgba(255,181,77,0.45)); }
+  46% { filter: blur(0) drop-shadow(0 0 24px rgba(77,216,255,1)) drop-shadow(0 0 54px rgba(255,181,77,0.75)); }
+  85% { opacity: 1; transform: translateX(-50%) scale(1.02); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.92) translateY(-10px); }
+}
+
+/* ================= 選單畫面共用 ================= */
+.screen {
+  position: absolute; inset: 0; pointer-events: auto; z-index: 10;
+  display: none; flex-direction: column; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 110%, rgba(255,140,60,0.12), transparent 60%),
+    linear-gradient(180deg, rgba(4,7,14,0.82) 0%, rgba(4,7,14,0.66) 100%);
+  transition: opacity .6s ease;
+}
+.screen.on { display: flex; }
+.screen.fadeout { opacity: 0; pointer-events: none; }
+.menu-btn {
+  font-family: var(--hud-font); font-size: 15px; letter-spacing: 6px; color: #cfe9ff; cursor: pointer;
+  border: 1px solid rgba(77,216,255,0.35); padding: 13px 40px; text-align: center;
+  background: linear-gradient(rgba(77,216,255,0.08), rgba(77,216,255,0.08)) var(--glass-solid);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+.menu-btn:hover { background: linear-gradient(rgba(77,216,255,0.2), rgba(77,216,255,0.2)) var(--glass-solid); color: #fff; }
+.menu-btn.primary {
+  border-color: rgba(62,230,168,0.5); color: #eafff5;
+  background: linear-gradient(rgba(62,230,168,0.14), rgba(62,230,168,0.14)) var(--glass-solid);
+  animation: startBlink 1.8s ease-in-out infinite;
+}
+.menu-btn.primary:hover { background: linear-gradient(rgba(62,230,168,0.3), rgba(62,230,168,0.3)) var(--glass-solid); }
+@keyframes startBlink { 50% { opacity: .55; } }
+.menu-btn.ghost { border-color: rgba(140,170,200,0.25); color: #93a9c0; animation: none; }
 
 /* ---------- title screen ---------- */
-/* 標題整組靠左:把畫面右 2/3 讓給環繞運鏡中的台北 101,地標完整亮相不被 wordmark 遮擋 */
 #title-screen {
-  position: absolute; inset: 0; pointer-events: auto;
-  display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-  /* clamp 上邊距 + 預留下邊距:矮視窗時整組內容(含 READY chip)完整收在畫面內 */
-  padding-top: clamp(28px, 9vh, 110px); padding-left: 7vw; padding-bottom: 3vh;
-  overflow: hidden;
+  align-items: flex-start; justify-content: flex-start;
+  padding: clamp(24px, 8vh, 100px) 7vw 3vh;
   background:
     radial-gradient(ellipse 90% 60% at 50% 110%, rgba(255,140,60,0.13), transparent 60%),
     radial-gradient(ellipse 80% 70% at 22% 30%, rgba(4,7,14,0.55), transparent 70%),
     linear-gradient(105deg, rgba(4,7,14,0.78) 0%, rgba(4,7,14,0.55) 40%, rgba(4,7,14,0.18) 70%, rgba(4,7,14,0.1) 100%);
-  transition: opacity 1s ease; z-index: 10;
 }
-#title-screen.hidden { opacity: 0; pointer-events: none; }
-/* 標題畫面期間徹底隱藏 HUD/訊息層,避免鬼影透出 (visibility 而非 opacity) */
-#ui:has(#title-screen:not(.hidden)) :is(#race-pod, #speed-pod, #minimap-wrap, #wrongway, #center-msg, #sub-msg, #record-flash) { visibility: hidden; }
+#ui:has(.screen.on) :is(#race-pod, #speed-pod, #minimap-wrap, #wrongway, #center-msg, #sub-msg, #record-flash, #pos-pod, #wanted-pod, #touch-ui, #danger-vignette) { visibility: hidden; }
 #title-tower { font-family: var(--tc-font); font-weight: 300; font-size: 15px; letter-spacing: 18px; color: #8fb4d4; margin-bottom: 14px; }
 #title-main {
-  font-family: var(--display-font); font-size: clamp(40px, 6.6vw, 84px); line-height: 1.02;
+  font-family: var(--display-font); font-size: clamp(38px, 6.4vw, 82px); line-height: 1.02;
   background: linear-gradient(175deg, #ffffff 20%, #9be8cd 45%, var(--neon-jade) 70%, #1e8f68 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 0 30px rgba(62,230,168,0.45));
-  text-align: left; letter-spacing: 4px;
+  letter-spacing: 4px;
 }
 #title-zh {
-  font-family: var(--tc-font); font-weight: 900; font-size: clamp(28px, 4vw, 46px);
-  letter-spacing: 24px; margin-top: 18px;
+  font-family: var(--tc-font); font-weight: 900; font-size: clamp(26px, 3.8vw, 44px);
+  letter-spacing: 24px; margin-top: 16px;
   color: #fff; text-shadow: 0 0 24px rgba(255,181,77,0.85), 0 0 60px rgba(255,120,60,0.4);
 }
-#title-rule { width: 340px; height: 1px; margin: 32px 0 26px;
+#title-rule { width: 340px; max-width: 70vw; height: 1px; margin: 26px 0 22px;
   background: linear-gradient(90deg, rgba(62,230,168,0.7), transparent); }
-#press-start {
-  font-family: var(--hud-font); font-size: 16px; letter-spacing: 8px; color: #cfe9ff;
-  animation: startBlink 1.6s ease-in-out infinite; cursor: pointer;
-  border: 1px solid rgba(77,216,255,0.35); padding: 14px 44px;
-  /* 不透明底:CTA 後方不透出任何場景/文字 */
-  background: linear-gradient(rgba(77,216,255,0.08), rgba(77,216,255,0.08)) rgba(8,14,26,0.88);
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+#name-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+#name-label { font-family: var(--tc-font); font-size: 13px; letter-spacing: 4px; color: #8fb4d4; }
+#player-name {
+  font-family: var(--hud-font); font-size: 17px; letter-spacing: 2px; color: #fff;
+  background: var(--glass-solid); border: 1px solid rgba(62,230,168,0.35); outline: none;
+  padding: 10px 16px; width: 220px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
-#press-start:hover { background: linear-gradient(rgba(77,216,255,0.2), rgba(77,216,255,0.2)) rgba(8,14,26,0.92); color: #fff; }
-@keyframes startBlink { 50% { opacity: .45; } }
-#controls-hint { margin-top: clamp(18px, 3.5vh, 40px); display: flex; flex-wrap: wrap; gap: 14px 26px; font-size: 12px; color: #8fb4d4; letter-spacing: 2px; }
+#player-name:focus { border-color: var(--neon-jade); box-shadow: 0 0 14px rgba(62,230,168,0.3); }
+#title-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+#controls-hint { margin-top: clamp(16px, 3vh, 36px); display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 12px; color: #8fb4d4; letter-spacing: 2px; max-width: 620px; }
 #controls-hint b {
   color: #dcefff; font-weight: 600;
   background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
   border-radius: 4px; padding: 3px 8px; margin-right: 2px;
 }
-/* 狀態 chip:併入按鍵提示列尾端,與 hint 同語彙,不再孤懸左下角 */
-#loading-tag {
-  margin-top: 16px; font-size: 11px; letter-spacing: 3px; color: #8fb4d4;
-  border: 1px solid rgba(62,230,168,0.28); background: rgba(62,230,168,0.06);
-  border-radius: 4px; padding: 4px 12px;
+
+/* ---------- setup screen (模式/賽道/車型/變速箱) ---------- */
+#setup-screen, #board-screen { padding: clamp(18px, 5vh, 48px) 6vw 5vh; background: linear-gradient(180deg, rgba(4,7,14,0.9), rgba(4,7,14,0.8)); }
+.setup-title { font-family: var(--display-font); font-size: clamp(22px, 3vw, 34px); color: #eafff5; letter-spacing: 4px; text-shadow: 0 0 20px rgba(62,230,168,0.5); }
+.setup-sub { font-family: var(--tc-font); font-size: 12px; letter-spacing: 6px; color: #7fa8c9; margin-top: 6px; }
+.sec-label { font-family: var(--tc-font); font-size: 13px; font-weight: 700; letter-spacing: 6px; color: var(--neon-amber); margin: 26px 0 12px; display: flex; align-items: center; gap: 12px; }
+.sec-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,181,77,0.4), transparent); }
+.card-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.sel-card {
+  cursor: pointer; padding: 13px 16px; min-width: 150px; flex: 0 1 auto;
+  background: var(--glass); border: 1px solid rgba(120,150,180,0.2);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  transition: border-color .15s, background .15s;
 }
+.sel-card:hover { border-color: rgba(77,216,255,0.5); }
+.sel-card.sel {
+  border-color: var(--neon-jade);
+  background: linear-gradient(rgba(62,230,168,0.13), rgba(62,230,168,0.13)) var(--glass);
+  box-shadow: 0 0 18px rgba(62,230,168,0.25);
+}
+.sel-card .c-name { font-family: var(--tc-font); font-weight: 700; font-size: 15px; color: #eaf6ff; letter-spacing: 2px; }
+.sel-card .c-en { font-size: 10px; letter-spacing: 3px; color: #6d90b2; margin-top: 2px; }
+.sel-card .c-desc { font-family: var(--tc-font); font-size: 11px; color: #8fb4d4; margin-top: 7px; line-height: 1.5; max-width: 200px; }
+.sel-card .c-meta { font-size: 10px; color: var(--neon-amber); letter-spacing: 2px; margin-top: 6px; }
+.stat-bars { margin-top: 8px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; align-items: center; width: 160px; }
+.stat-bars .sk { font-size: 9px; letter-spacing: 2px; color: #6d90b2; font-family: var(--tc-font); }
+.stat-bars .sb { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.stat-bars .sb i { display: block; height: 100%; background: linear-gradient(90deg, #2b9d78, var(--neon-jade)); border-radius: 2px; }
+.track-mini { width: 120px; height: 74px; margin-top: 6px; }
+#setup-actions { display: flex; gap: 16px; margin-top: 34px; flex-wrap: wrap; }
+
+/* ---------- leaderboard screen ---------- */
+.tab-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.tab {
+  cursor: pointer; font-family: var(--tc-font); font-size: 13px; letter-spacing: 3px; color: #8fb4d4;
+  padding: 8px 18px; border: 1px solid rgba(120,150,180,0.2); background: var(--glass);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.tab.sel { color: #eafff5; border-color: var(--neon-jade); background: linear-gradient(rgba(62,230,168,0.12), rgba(62,230,168,0.12)) var(--glass); }
+#board-list { margin-top: 20px; max-width: 720px; }
+.board-row {
+  display: grid; grid-template-columns: 44px 1fr 130px 110px; gap: 10px; align-items: center;
+  padding: 9px 12px; border-bottom: 1px solid rgba(127,168,201,0.12);
+  font-variant-numeric: tabular-nums; font-size: 14px;
+}
+.board-row.head { color: #6d8fae; font-size: 11px; letter-spacing: 3px; font-family: var(--tc-font); }
+.board-row .rk { font-family: var(--display-font); color: var(--neon-amber); }
+.board-row:nth-child(2) .rk { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.6); }
+.board-row .nm { color: #eaf6ff; font-family: var(--tc-font); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-row .ip { color: #56789a; font-size: 12px; }
+.board-row .tm { color: var(--neon-jade); font-weight: 600; text-align: right; }
+#board-empty { padding: 30px 10px; color: #56789a; font-family: var(--tc-font); letter-spacing: 3px; font-size: 13px; }
+#board-src { font-size: 11px; letter-spacing: 3px; color: #56789a; margin-top: 10px; font-family: var(--tc-font); }
 
 /* ---------- results ---------- */
 #results {
   position: absolute; inset: 0; display: none; pointer-events: auto;
   flex-direction: column; align-items: center; justify-content: center;
   background: radial-gradient(ellipse at center, rgba(4,8,16,0.55), rgba(4,8,16,0.9));
-  z-index: 9;
+  z-index: 9; overflow-y: auto;
 }
 #results.on { display: flex; animation: resFade .8s ease; }
 @keyframes resFade { from { opacity: 0; } }
-#res-title { font-family: var(--display-font); font-size: 64px; color: #fff; text-shadow: 0 0 34px rgba(255,181,77,0.8); letter-spacing: 6px; }
+#res-title { font-family: var(--display-font); font-size: clamp(40px, 6vw, 64px); color: #fff; text-shadow: 0 0 34px rgba(255,181,77,0.8); letter-spacing: 6px; }
 #res-zh { font-family: var(--tc-font); font-weight: 900; font-size: 22px; letter-spacing: 14px; color: var(--neon-amber); margin-top: 10px; text-indent: 14px; }
-#res-table { margin-top: 36px; min-width: 320px; }
+#res-table { margin-top: 30px; min-width: min(320px, 84vw); }
 .res-row { display: flex; justify-content: space-between; padding: 9px 6px; font-size: 16px;
   border-bottom: 1px solid rgba(127,168,201,0.14); font-variant-numeric: tabular-nums; }
 .res-row .k { color: #7fa8c9; letter-spacing: 4px; font-size: 12px; align-self: center; font-family: var(--tc-font); }
 .res-row .v { color: #eaf6ff; letter-spacing: 1px; font-weight: 600; }
 .res-row.hl .v { color: var(--neon-jade); text-shadow: 0 0 12px rgba(62,230,168,0.6); font-size: 19px; }
-#res-restart { margin-top: 44px; font-size: 14px; letter-spacing: 6px; color: #cfe9ff; cursor: pointer;
-  border: 1px solid rgba(62,230,168,0.4); padding: 13px 40px; background: rgba(62,230,168,0.07);
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-  animation: startBlink 1.8s ease-in-out infinite; }
-#res-restart:hover { background: rgba(62,230,168,0.18); color: #fff; }
+#res-upload { margin-top: 14px; font-family: var(--tc-font); font-size: 12px; letter-spacing: 3px; color: #56789a; }
+#res-btns { display: flex; gap: 16px; margin-top: 34px; flex-wrap: wrap; justify-content: center; }
 
-/* ---------- new record flash ---------- */
-#record-flash {
-  position: absolute; top: 55%; left: 50%; transform: translateX(-50%);
-  font-family: var(--tc-font); font-weight: 900; font-size: 26px; letter-spacing: 8px;
-  color: var(--neon-cyan); text-shadow: 0 0 20px rgba(77,216,255,0.9); opacity: 0;
+/* ---------- 觸控操作 UI ---------- */
+#touch-ui { display: none; position: absolute; inset: 0; pointer-events: none; z-index: 5; font-family: var(--hud-font); }
+.tc-btn {
+  position: absolute; pointer-events: auto; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  width: 76px; height: 76px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 32%, rgba(120,170,215,0.14), rgba(9,15,28,0.62) 72%);
+  border: 2px solid rgba(120,170,215,0.42);
+  box-shadow: 0 0 16px rgba(77,216,255,0.14), inset 0 0 18px rgba(77,216,255,0.07), 0 3px 12px rgba(0,0,0,0.4);
+  color: #d7ecff; font-size: 26px; font-weight: 700;
+  backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  touch-action: none; -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+  transition: transform .08s ease, box-shadow .15s ease, border-color .15s ease;
 }
-#record-flash.pop { animation: subPop 1.6s ease forwards; }
+.tc-btn > * { pointer-events: none; }
+.tc-btn svg { display: block; filter: drop-shadow(0 0 6px currentColor); }
+.tc-btn .tc-cap { font-family: var(--tc-font); font-size: 10px; font-weight: 700; letter-spacing: 3px; text-indent: 3px; opacity: 0.85; }
+.tc-btn.press { transform: scale(0.92); }
+/* 轉向 (青) */
+#tc-left, #tc-right { border-color: rgba(77,216,255,0.5); color: #bfeaff; }
+#tc-left.press, #tc-right.press {
+  border-color: var(--neon-cyan); color: #fff;
+  background: radial-gradient(circle at 50% 32%, rgba(77,216,255,0.42), rgba(9,20,32,0.65) 75%);
+  box-shadow: 0 0 26px rgba(77,216,255,0.6), inset 0 0 22px rgba(77,216,255,0.28);
+}
+/* 油門 (翡翠) */
+#tc-gas { width: 88px; height: 88px; border-color: rgba(62,230,168,0.55); color: #aef5d9;
+  background: radial-gradient(circle at 50% 32%, rgba(62,230,168,0.16), rgba(8,20,16,0.62) 72%);
+  box-shadow: 0 0 18px rgba(62,230,168,0.22), inset 0 0 18px rgba(62,230,168,0.1), 0 3px 12px rgba(0,0,0,0.4); }
+#tc-gas.press { border-color: var(--neon-jade); color: #eafff5;
+  background: radial-gradient(circle at 50% 32%, rgba(62,230,168,0.5), rgba(8,24,18,0.68) 78%);
+  box-shadow: 0 0 32px rgba(62,230,168,0.7), inset 0 0 26px rgba(62,230,168,0.35); }
+/* 煞車 (紅) */
+#tc-brake { border-color: rgba(255,77,109,0.5); color: #ffc2ce;
+  background: radial-gradient(circle at 50% 32%, rgba(255,77,109,0.14), rgba(24,8,12,0.62) 72%);
+  box-shadow: 0 0 16px rgba(255,77,109,0.2), inset 0 0 18px rgba(255,77,109,0.09), 0 3px 12px rgba(0,0,0,0.4); }
+#tc-brake.press { border-color: var(--neon-red); color: #fff;
+  background: radial-gradient(circle at 50% 32%, rgba(255,77,109,0.45), rgba(28,8,14,0.7) 78%);
+  box-shadow: 0 0 30px rgba(255,77,109,0.65), inset 0 0 24px rgba(255,77,109,0.32); }
+/* 手煞 (琥珀) */
+#tc-hand { width: 64px; height: 64px; font-size: 14px; border-color: rgba(255,181,77,0.5); color: #ffdca8; }
+#tc-hand .tc-cap { font-size: 12px; }
+#tc-hand.press { border-color: var(--neon-amber); color: #fff;
+  background: radial-gradient(circle at 50% 32%, rgba(255,181,77,0.42), rgba(26,18,8,0.68) 78%);
+  box-shadow: 0 0 26px rgba(255,181,77,0.6), inset 0 0 22px rgba(255,181,77,0.28); }
+/* 位置:拇指弧線佈局 (左轉向、右油門/煞車) + iOS 安全區 */
+#tc-left  { left: calc(20px + env(safe-area-inset-left, 0px)); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+#tc-right { left: calc(122px + env(safe-area-inset-left, 0px)); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+#tc-gas   { right: calc(22px + env(safe-area-inset-right, 0px)); bottom: calc(42px + env(safe-area-inset-bottom, 0px)); }
+#tc-brake { right: calc(130px + env(safe-area-inset-right, 0px)); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+#tc-hand  { right: calc(136px + env(safe-area-inset-right, 0px)); bottom: calc(138px + env(safe-area-inset-bottom, 0px)); }
+#tc-up    { right: calc(34px + env(safe-area-inset-right, 0px)); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); width: 58px; height: 58px; display: none; }
+#tc-down  { right: calc(214px + env(safe-area-inset-right, 0px)); bottom: calc(26px + env(safe-area-inset-bottom, 0px)); width: 58px; height: 58px; display: none; }
+#touch-ui.manual #tc-up, #touch-ui.manual #tc-down { display: flex; }
+#tc-cam   { left: 50%; margin-left: -25px; top: calc(12px + env(safe-area-inset-top, 0px)); width: 50px; height: 50px; font-size: 17px; }
+body.touch #minimap-wrap { right: 16px; top: 92px; bottom: auto; width: 120px; height: 120px; }
+body.touch #speed-pod { left: 14px; bottom: calc(118px + env(safe-area-inset-bottom, 0px)); transform: scale(0.74); transform-origin: bottom left; }
+body.touch #controls-hint { display: none; }
+
+/* ---------- 手機直屏警告 ---------- */
+#rotate-overlay {
+  position: fixed; inset: 0; z-index: 100; display: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 110%, rgba(255,140,60,0.1), transparent 60%),
+    linear-gradient(180deg, #04070e 0%, #070d1a 100%);
+  text-align: center; pointer-events: auto;
+}
+#rotate-phone { color: var(--neon-jade); filter: drop-shadow(0 0 18px rgba(62,230,168,0.6)); animation: rotHint 2.2s ease-in-out infinite; }
+@keyframes rotHint {
+  0%, 18% { transform: rotate(0deg); }
+  50%, 78% { transform: rotate(-90deg); }
+  100% { transform: rotate(-90deg); opacity: 1; }
+}
+#rotate-title { font-family: var(--tc-font); font-weight: 900; font-size: 22px; letter-spacing: 8px; text-indent: 8px; color: #eafff5; text-shadow: 0 0 18px rgba(62,230,168,0.5); }
+#rotate-sub { font-family: var(--hud-font); font-size: 11px; letter-spacing: 5px; color: #7fa8c9; }
+@media (orientation: portrait) and (max-width: 699px) {
+  #rotate-overlay { display: flex; }
+}
+
+/* ---------- 響應式縮放 ---------- */
+@media (max-width: 900px) {
+  #race-pod { left: 16px; top: 14px; transform: scale(0.88); transform-origin: top left; }
+  #pos-pod, #wanted-pod { right: 16px; top: 14px; }
+  #center-msg { font-size: 76px; }
+  .board-row { grid-template-columns: 34px 1fr 90px 96px; font-size: 13px; }
+}
+/* 手機:選單單列可滾動 + 字級間距收斂 */
+@media (max-width: 700px) {
+  #title-screen { padding: 24px 6vw 32px; }
+  #title-tower { font-size: 12px; letter-spacing: 9px; margin-bottom: 10px; }
+  #title-zh { font-size: 22px; letter-spacing: 10px; margin-top: 12px; }
+  #title-rule { margin: 18px 0 16px; }
+  #name-row { width: 100%; max-width: 360px; }
+  #player-name { flex: 1; width: auto; min-width: 0; }
+  #title-btns { width: 100%; max-width: 360px; flex-direction: column; gap: 12px; }
+  .menu-btn { font-size: 14px; letter-spacing: 4px; padding: 13px 24px; }
+  #controls-hint { font-size: 11px; gap: 10px 16px; }
+  #setup-screen, #board-screen { padding: 20px 5vw 44px; }
+  .sec-label { margin: 20px 0 10px; }
+  .card-row { flex-direction: column; }
+  .sel-card { min-width: 0; width: 100%; }
+  .sel-card .c-desc { max-width: none; }
+  #setup-actions { flex-direction: column; margin-top: 26px; }
+  #record-flash { font-size: 20px; letter-spacing: 5px; }
+}
+/* 窄屏排行榜:折疊 IP 欄 */
+@media (max-width: 620px) {
+  .board-row { grid-template-columns: 34px 1fr 96px; }
+  .board-row .ip { display: none; }
+}
+@media (max-width: 600px) {
+  #race-pod { transform: scale(0.74); }
+  #minimap-wrap { width: 110px; height: 110px; right: 14px; bottom: 14px; }
+  #speed-pod { transform: scale(0.7); transform-origin: bottom left; left: 12px; bottom: 12px; }
+  #center-msg { font-size: 54px; }
+  #sub-msg { font-size: 14px; letter-spacing: 6px; }
+  #wrongway { font-size: 22px; letter-spacing: 6px; }
+}
+/* 橫屏手機 (高度受限):標題畫面垂直節奏壓縮 */
+@media (max-height: 500px) {
+  #title-screen { padding-top: 16px; padding-bottom: 20px; }
+  #title-tower { margin-bottom: 8px; }
+  #title-zh { margin-top: 8px; }
+  #title-rule { margin: 14px 0 12px; }
+  #name-row { margin-bottom: 12px; }
+  #controls-hint { margin-top: 12px; }
+  #setup-screen, #board-screen { padding-top: 16px; }
+  .sec-label { margin: 16px 0 8px; }
+}
 </style>
 </head>
 <body>
@@ -217,6 +467,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
 
 <div id="ui">
   <div id="vignette"></div>
+  <div id="danger-vignette"></div>
   <svg id="grain" width="100%" height="100%"><filter id="noiseF"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#noiseF)"/></svg>
 
   <div id="race-pod">
@@ -231,6 +482,15 @@ canvas#game { display: block; width: 100%; height: 100%; }
     <div class="time-row" id="t-best"><span class="k">BEST</span><span class="v empty">—</span></div>
   </div>
 
+  <div id="pos-pod">
+    <div id="pos-label">名次 POSITION</div>
+    <span id="pos-num">6</span><span id="pos-total">/ 6</span>
+  </div>
+  <div id="wanted-pod">
+    <div id="wanted-label">⚠ 攔截中 BUSTED</div>
+    <div id="wanted-bar"><div id="wanted-fill"></div></div>
+  </div>
+
   <div id="minimap-wrap"><canvas id="minimap" width="344" height="344"></canvas></div>
 
   <div id="speed-pod">
@@ -238,6 +498,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
     <div id="speed-readout">
       <span id="speed-num">0</span>
       <span id="speed-unit">KM/H</span>
+      <span id="gear-num">D1</span>
     </div>
     <span id="drift-tag">滑走 DRIFT</span>
   </div>
@@ -247,27 +508,109 @@ canvas#game { display: block; width: 100%; height: 100%; }
   <div id="sub-msg"></div>
   <div id="record-flash">★ 最速紀錄 NEW RECORD ★</div>
 
+  <!-- 觸控操作 -->
+  <div id="touch-ui">
+    <div class="tc-btn" id="tc-left">
+      <svg width="30" height="30" viewBox="0 0 24 24"><path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="tc-btn" id="tc-right">
+      <svg width="30" height="30" viewBox="0 0 24 24"><path d="M9 4 L17 12 L9 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="tc-btn" id="tc-gas">
+      <svg width="30" height="30" viewBox="0 0 24 24"><path d="M5 13 L12 6 L19 13 M5 20 L12 13 L19 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="tc-cap">油門</span>
+    </div>
+    <div class="tc-btn" id="tc-brake">
+      <svg width="26" height="26" viewBox="0 0 24 24"><path d="M5 4 L12 11 L19 4 M5 11 L12 18 L19 11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="tc-cap">煞車</span>
+    </div>
+    <div class="tc-btn" id="tc-hand"><span class="tc-cap">甩尾</span></div>
+    <div class="tc-btn" id="tc-up"><span>+</span></div>
+    <div class="tc-btn" id="tc-down"><span>−</span></div>
+    <div class="tc-btn" id="tc-cam">
+      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 8 h4 l2 -2.5 h4 L16 8 h4 v11 H4 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </div>
+  </div>
+
+  <!-- 結算 -->
   <div id="results">
     <div id="res-title">FINISH</div>
     <div id="res-zh">完 走 認 定</div>
     <div id="res-table"></div>
-    <div id="res-restart">再挑戰 RESTART — R</div>
+    <div id="res-upload"></div>
+    <div id="res-btns">
+      <div class="menu-btn primary" id="res-again">再挑戰 RETRY — R</div>
+      <div class="menu-btn ghost" id="res-menu">回主選單 MENU</div>
+    </div>
   </div>
 
-  <div id="title-screen">
+  <!-- 標題畫面 -->
+  <div class="screen on" id="title-screen">
     <div id="title-tower">TAIPEI 101 · XINYI DISTRICT</div>
     <div id="title-main">MIDNIGHT<br>CIRCUIT</div>
     <div id="title-zh">午 夜 疾 走</div>
     <div id="title-rule"></div>
-    <div id="press-start">按下 ENTER 出走 / PRESS START</div>
+    <div id="name-row">
+      <span id="name-label">車手代號</span>
+      <input id="player-name" type="text" maxlength="20" placeholder="輸入你的名字" autocomplete="off">
+    </div>
+    <div id="title-btns">
+      <div class="menu-btn primary" id="btn-start">開始遊戲 START — ENTER</div>
+      <div class="menu-btn" id="btn-board">排行榜 RANKINGS</div>
+    </div>
     <div id="controls-hint">
       <span><b>W A S D / ↑←↓→</b>&nbsp; 駕駛</span>
       <span><b>SPACE</b>&nbsp; 手煞車滑走</span>
+      <span><b>Q / E</b>&nbsp; 降檔 / 升檔 (手排)</span>
       <span><b>C</b>&nbsp; 視角</span>
       <span><b>R</b>&nbsp; 重新開始</span>
     </div>
-    <div id="loading-tag">LOADING XINYI GRID…</div>
   </div>
+
+  <!-- 賽事設定 -->
+  <div class="screen" id="setup-screen">
+    <div class="setup-title">RACE SETUP</div>
+    <div class="setup-sub">選 擇 你 的 戰 場 與 座 駕</div>
+    <div class="sec-label">遊戲模式 MODE</div>
+    <div class="card-row" id="mode-cards"></div>
+    <div class="sec-label">賽道 TRACK</div>
+    <div class="card-row" id="track-cards"></div>
+    <div class="sec-label">車型 CAR</div>
+    <div class="card-row" id="car-cards"></div>
+    <div class="sec-label">變速箱 TRANSMISSION</div>
+    <div class="card-row" id="trans-cards"></div>
+    <div id="setup-actions">
+      <div class="menu-btn primary" id="btn-go">出發 RACE — ENTER</div>
+      <div class="menu-btn ghost" id="btn-setup-back">返回 BACK</div>
+    </div>
+  </div>
+
+  <!-- 排行榜 -->
+  <div class="screen" id="board-screen">
+    <div class="setup-title">RANKINGS</div>
+    <div class="setup-sub">排 行 榜</div>
+    <div class="tab-row" id="board-mode-tabs"></div>
+    <div class="tab-row" id="board-track-tabs"></div>
+    <div id="board-list"></div>
+    <div id="board-src"></div>
+    <div id="setup-actions">
+      <div class="menu-btn ghost" id="btn-board-back">返回 BACK</div>
+    </div>
+  </div>
+</div>
+
+<!-- 手機直屏警告 -->
+<div id="rotate-overlay">
+  <div id="rotate-phone">
+    <svg width="72" height="72" viewBox="0 0 48 48">
+      <rect x="15" y="6" width="18" height="36" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <line x1="20" y1="37.5" x2="28" y2="37.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M40 18 a17 17 0 0 0 -7 -8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M40.5 11.5 L40 18 L33.8 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div id="rotate-title">請將裝置轉為橫向</div>
+  <div id="rotate-sub">ROTATE TO LANDSCAPE</div>
 </div>
 
 <script type="importmap">

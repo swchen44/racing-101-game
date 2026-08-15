@@ -103,6 +103,15 @@ export class Effects {
   setSize(w, h) { this.composer.setSize(w, h); }
   render(dt) { this.composer.render(dt); }
 
+  // 換賽道/重賽時清除暫存痕跡 (胎痕、煙、火花)
+  resetTransient() {
+    this.skidCursor = 0;
+    this.skidInst.count = 0;
+    this.skidInst.instanceMatrix.needsUpdate = true;
+    for (const s of this.smokes) { s.life = 0; s.sprite.visible = false; }
+    for (const s of this.sparks) s.life = 0;
+  }
+
   // ---------- 胎痕 ----------
   _initSkidMarks() {
     this.skidMax = 600;
@@ -254,22 +263,32 @@ export class Effects {
   }
 
   // ---------- 速度線 (細長 additive quad,高 DPI 也看得見;單一 draw call) ----------
+  // 頂點色 = 霓虹掠光:高速時路旁光源 (青/琥珀/粉/藍白) 水平掠過的光軌
   _initSpeedStreaks() {
-    this.streakCount = 48;
+    this.streakCount = 26;
     this.streakPts = [];
     for (let i = 0; i < this.streakCount; i++) this.streakPts.push(this._streakSpawn());
     const pos = new Float32Array(this.streakCount * 4 * 3);
+    const colArr = new Float32Array(this.streakCount * 4 * 3);
     const idx = new Uint16Array(this.streakCount * 6);
+    // 冷底掠光調色盤:幾乎全是淡藍白 (街燈掠過),偶有一絲暖黃;
+    // 高彩度色會讀成「滿天彩帶」,禁用
+    this._streakPalette = [
+      [0.52, 0.62, 0.76], [0.52, 0.62, 0.76], [0.52, 0.62, 0.76],
+      [0.52, 0.62, 0.76], [0.58, 0.66, 0.78], [0.72, 0.60, 0.38],
+    ];
     for (let i = 0; i < this.streakCount; i++) {
       const v = i * 4, o = i * 6;
       idx[o] = v; idx[o + 1] = v + 1; idx[o + 2] = v + 2;
       idx[o + 3] = v + 2; idx[o + 4] = v + 1; idx[o + 5] = v + 3;
+      this._streakSetColor(colArr, i);
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
     geo.setIndex(new THREE.BufferAttribute(idx, 1));
     this.streaks = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
-      color: 0x93aed0, transparent: true, opacity: 0,
+      color: 0xffffff, vertexColors: true, transparent: true, opacity: 0,
       blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
     }));
     this.streaks.frustumCulled = false;
@@ -279,13 +298,24 @@ export class Effects {
     this._sv2 = new THREE.Vector3();
   }
 
+  // 為第 i 條速度線的 4 個頂點填入同一霓虹色 (亮度微隨機)
+  _streakSetColor(colArr, i) {
+    const p = this._streakPalette[(Math.random() * this._streakPalette.length) | 0];
+    const b = 0.65 + Math.random() * 0.5;
+    for (let v = 0; v < 4; v++) {
+      const o = (i * 4 + v) * 3;
+      colArr[o] = p[0] * b; colArr[o + 1] = p[1] * b; colArr[o + 2] = p[2] * b;
+    }
+  }
+
   _streakSpawn(ahead) {
-    // 相機周圍圓環分布,避開正中央
+    // 相機周圍圓環分布,避開正中央;高度限制在路燈帶 (0.4~3.0m),
+    // 不得高於視平線太多 → 不會出現「天空彩帶」
     const a = Math.random() * Math.PI * 2;
-    const r = 2.5 + Math.random() * 6;
+    const r = 3.5 + Math.random() * 6;
     return new THREE.Vector3(
       Math.cos(a) * r,
-      -0.5 + Math.random() * 5,
+      0.4 + Math.random() * 2.6,
       Math.sin(a) * r,
     ).add(ahead || new THREE.Vector3());
   }
@@ -426,10 +456,10 @@ export class Effects {
       }
       const rox = this._rainAhead.x, roz = this._rainAhead.y;
       this.rain.position.set(camPos.x + rox, 0, camPos.z + roz);
-      // 速度越快雨絲越斜越長 (1.5~3.2m)
-      const len = Math.min(3.2, 1.5 + spd * 0.035);
-      // 表觀運動方向 = 下落 − 相機速度
-      let mx = -vx * 0.8, my = -30, mz = -vz * 0.8;
+      // 速度越快雨絲越斜越長 (1.4~4.2m)
+      const len = Math.min(4.2, 1.4 + spd * 0.05);
+      // 表觀運動方向 = 下落 − 相機速度 (係數加大 → 高速時雨絲明顯後掠,速度語言)
+      let mx = -vx * 1.3, my = -30, mz = -vz * 1.3;
       const mInv = len / Math.hypot(mx, my, mz);
       mx *= mInv; my *= mInv; mz *= mInv;
       const arr = this.rain.geometry.attributes.position.array;
@@ -466,7 +496,7 @@ export class Effects {
     // 速度線 (90 km/h 起淡入,細長 additive 面片朝向鏡頭)
     if (this.streaks && camPos) {
       const kmh = car ? car.speedKmh : 0;
-      const target = THREE.MathUtils.clamp((kmh - 95) / 80, 0, 1) * 0.55;
+      const target = THREE.MathUtils.clamp((kmh - 120) / 90, 0, 1) * 0.3;
       const mat = this.streaks.material;
       mat.opacity += (target - mat.opacity) * Math.min(1, dt * 6);
       this.streaks.visible = mat.opacity > 0.01;
@@ -484,6 +514,8 @@ export class Effects {
           const along = p.x * dx + p.z * dz;
           if (along < -22) {
             this.streakPts[i] = this._streakSpawn(this._sv2.set(dx * 25, 0, dz * 25));
+            this._streakSetColor(this.streaks.geometry.attributes.color.array, i);
+            this.streaks.geometry.attributes.color.needsUpdate = true;
           }
           // 寬度方向 = streak 方向 (dx,0,dz) × 相機→點向量 p → 面片永遠側對鏡頭可見
           const w = this._sv1.set(-dz * p.y, dz * p.x - dx * p.z, dx * p.y);

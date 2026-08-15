@@ -4,11 +4,22 @@ import { N_CHECKPOINTS } from './track.js';
 const $ = (id) => document.getElementById(id);
 
 export class HUD {
-  constructor(track) {
+  // opts: { maxKmh 速度表滿刻度, storageKey 最速單圈的 localStorage 鍵 (依賽道+模式) }
+  constructor(track, opts = {}) {
     this.track = track;
+    this.maxKmh = Math.ceil((opts.maxKmh || 230) / 20) * 20;
+    this.storageKey = opts.storageKey || 'mc101_best';
     this.gauge = $('speed-gauge').getContext('2d');
     this.minimap = $('minimap').getContext('2d');
     this.speedNum = $('speed-num');
+    this.gearNum = $('gear-num');
+    this.posPod = $('pos-pod');
+    this.posNum = $('pos-num');
+    this.posTotal = $('pos-total');
+    this.wantedPod = $('wanted-pod');
+    this.wantedFill = $('wanted-fill');
+    this.dangerVignette = $('danger-vignette');
+    this._lastPos = null; // 大獎賽名次 (偵測變化以觸發跳動動畫)
     this.lapNum = $('lap-num');
     this.tCurrent = $('t-current').querySelector('.v');
     this.tLast = $('t-last').querySelector('.v');
@@ -31,7 +42,7 @@ export class HUD {
     // LAST/BEST 空狀態:優雅的長破折號而非佔位錯誤感
     this.tLast.textContent = '—';
     this.tLast.classList.add('empty');
-    this.bestLap = parseFloat(localStorage.getItem('mc101_best') || 'NaN');
+    this.bestLap = parseFloat(localStorage.getItem(this.storageKey) || 'NaN');
     if (!isNaN(this.bestLap)) {
       this.tBest.textContent = formatTime(this.bestLap);
       this.tBest.classList.remove('empty');
@@ -87,7 +98,14 @@ export class HUD {
       this.speedNum.textContent = kmh;
       this._lastSpeedShown = kmh;
     }
-    this._drawGauge(car.speedKmh / 230, car.driftAmount);
+    this._drawGauge(car.speedKmh / this.maxKmh, car.driftAmount);
+    // 檔位顯示:EV 單速顯示「EV」;自排 D、手排 M + 檔位
+    if (this.gearNum) {
+      const label = car.tune.gears <= 1 ? 'EV'
+        : (car.transmission === 'manual' ? `M${car.gear}` : `D${car.gear}`);
+      if (this.gearNum.textContent !== label) this.gearNum.textContent = label;
+      this.gearNum.classList.toggle('limiter', !!car.revLimiter);
+    }
     this.driftTag.classList.toggle('on', car.drifting);
     this.wrongway.classList.toggle('on', car.wrongWay && race.state === 'racing');
 
@@ -102,6 +120,39 @@ export class HUD {
 
   setLastLap(t) { this.tLast.textContent = formatTime(t); this.tLast.classList.remove('empty'); }
   setBest(t) { this.tBest.textContent = formatTime(t); this.tBest.classList.remove('empty'); }
+
+  // 大獎賽名次顯示;名次變化時跳動 (超車=翡翠、被超=紅)
+  setPosition(p, total) {
+    this.posPod.classList.add('on');
+    if (p !== this._lastPos) {
+      this.posNum.textContent = `P${p}`;
+      if (this._lastPos !== null) {
+        this.posNum.classList.remove('bump', 'up', 'down');
+        void this.posNum.offsetWidth; // 重觸發動畫
+        this.posNum.classList.add('bump', p < this._lastPos ? 'up' : 'down');
+      }
+      this._lastPos = p;
+    }
+    this.posTotal.textContent = `/ ${total}`;
+  }
+  hidePosition() {
+    this.posPod.classList.remove('on');
+    this.posNum.classList.remove('bump', 'up', 'down');
+    this._lastPos = null;
+  }
+
+  // 警車追逐通緝條 (heat 0..1);危險時畫面邊緣紅色 vignette 脈動
+  setWanted(heat) {
+    this.wantedPod.classList.add('on');
+    this.wantedFill.style.width = `${Math.round(heat * 100)}%`;
+    const danger = heat > 0.55;
+    this.wantedPod.classList.toggle('danger', danger);
+    if (this.dangerVignette) this.dangerVignette.classList.toggle('on', danger);
+  }
+  hideWanted() {
+    this.wantedPod.classList.remove('on');
+    if (this.dangerVignette) this.dangerVignette.classList.remove('on');
+  }
 
   _drawGauge(ratio, drift) {
     // 一體式速度模組:數字讀數 (DOM) 疊在圓心,canvas 只畫弧/刻度/浮動指針
@@ -148,7 +199,7 @@ export class HUD {
       if (i === 6) {
         g.fillStyle = i / 12 <= clamped ? 'rgba(220,245,255,0.95)' : 'rgba(150,185,215,0.8)';
         const rl = r - 66;
-        g.fillText('120', cx + Math.cos(a) * rl, cy + Math.sin(a) * rl + 1);
+        g.fillText(String(Math.round(this.maxKmh / 2)), cx + Math.cos(a) * rl, cy + Math.sin(a) * rl + 1);
       }
     }
     // 浮動指針段 (只佔外圈環帶,圓心讓給數字讀數;無尾端配重)
@@ -264,14 +315,16 @@ export class HUD {
     g.lineWidth = 3;
     g.strokeStyle = '#3ee6a8';
     g.beginPath(); g.moveTo(sx - ux * 11 - uy * 3.5, sy - uy * 11 + ux * 3.5); g.lineTo(sx + ux * 11 - uy * 3.5, sy + uy * 11 + ux * 3.5); g.stroke();
-    // 101 位置
-    const [tx, ty] = toMap(0, -40);
-    g.fillStyle = '#3ee6a8';
-    g.shadowColor = '#3ee6a8'; g.shadowBlur = 8;
-    g.beginPath();
-    g.moveTo(tx, ty - 9); g.lineTo(tx + 5, ty + 6); g.lineTo(tx - 5, ty + 6);
-    g.closePath(); g.fill();
-    g.shadowBlur = 0;
+    // 101 位置 (僅信義賽道)
+    if ((this.track.theme?.landmark ?? 'tower101') === 'tower101') {
+      const [tx, ty] = toMap(0, -40);
+      g.fillStyle = '#3ee6a8';
+      g.shadowColor = '#3ee6a8'; g.shadowBlur = 8;
+      g.beginPath();
+      g.moveTo(tx, ty - 9); g.lineTo(tx + 5, ty + 6); g.lineTo(tx - 5, ty + 6);
+      g.closePath(); g.fill();
+      g.shadowBlur = 0;
+    }
     // 車輛拖尾 (每隔一小段距離記錄一點,畫 3 段漸淡)
     let last = this._trail[this._trail.length - 1];
     if (last && (last.x - car.pos.x) ** 2 + (last.z - car.pos.z) ** 2 > 3600) {

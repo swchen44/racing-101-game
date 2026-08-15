@@ -1,4 +1,4 @@
-// main.js — 場景組裝、遊戲狀態機、賽事邏輯、主迴圈
+// main.js — 場景組裝、選單流程、遊戲狀態機、三種模式、賽事邏輯、主迴圈
 import * as THREE from 'three';
 import { Track, N_CHECKPOINTS } from './track.js';
 import { Car } from './vehicle.js';
@@ -6,8 +6,20 @@ import { createTaipei101 } from './taipei101.js';
 import { createCity } from './city.js';
 import { Effects } from './effects.js';
 import { GameAudio } from './audio.js';
-import { HUD } from './hud.js';
+import { HUD, formatTime } from './hud.js';
 import { ChaseCamera } from './camera.js';
+import { TRACKS, CARS, MODES, trackById, carById, modeById } from './config.js';
+import {
+  loadProfile, saveProfile, saveLocalScore, topLocal,
+  uploadScore, topRemote, remoteEnabled,
+} from './leaderboard.js';
+import { Opponents } from './opponents.js';
+import { Police } from './police.js';
+import { initTouch, isTouchDevice } from './touch.js';
+import { disposeObject } from './cars/common.js';
+import { Reflections } from './reflections.js';
+
+const $ = (id) => document.getElementById(id);
 
 // ---------- 渲染器 ----------
 const canvas = document.getElementById('game');
@@ -22,20 +34,16 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 // ---------- 場景 ----------
 const scene = new THREE.Scene();
-// 光害藍紫大氣霧:遠中近景分層、柔化遠處貼圖噪點 (與天空 mid 色一致)
-scene.fog = new THREE.FogExp2(0x0a0f1e, 0.0028); // 統一霧色常數 0x0a0f1e (與 city.js 天空 shader 同源)
-
+scene.fog = new THREE.FogExp2(0x0a0f1e, 0.0028);
 const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 2600);
 
 // 環境反射 (讓濕路面 / 車漆反射霓虹)
 const pmrem = new THREE.PMREMGenerator(renderer);
 {
   const envScene = new THREE.Scene();
-  const envGrad = new THREE.Mesh(
+  envScene.add(new THREE.Mesh(
     new THREE.SphereGeometry(50, 16, 12),
-    new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x0a1420 }));
-  envScene.add(envGrad);
-  // 幾個亮色塊模擬霓虹反射源
+    new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x0a1420 })));
   const colors = [0x3ee6a8, 0xff4d6d, 0x4dd8ff, 0xffb54d, 0xffffff];
   for (let i = 0; i < 14; i++) {
     const p = new THREE.Mesh(
@@ -51,10 +59,7 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 }
 
 // ---------- 光照 ----------
-// 夜要夠黑:環境光壓低,可讀性交給路燈假光池與標線 emissive,光池才有「亮起來」的戲劇性
 scene.add(new THREE.HemisphereLight(0x35496e, 0x1a1622, 0.85));
-// 跟隨車輛的冷色補光:只微微托出暗部,明暗塑形交給月光方向光與 envMap 方向性高光
-// (強度過高會抹平車身形體光影,車漆讀成自發光塑膠)
 const carFill = new THREE.PointLight(0x9fb8e8, 3.5, 15, 1.7);
 carFill.position.set(0, 7, 0);
 scene.add(carFill);
@@ -72,24 +77,68 @@ moonLight.shadow.bias = -0.0006;
 scene.add(moonLight);
 scene.add(moonLight.target);
 
-// ---------- 世界 ----------
-const track = new Track();
-scene.add(track.buildMeshes());
-const tower = createTaipei101();
-scene.add(tower);
-const city = createCity(track);
-scene.add(city);
-const car = new Car(track);
-scene.add(car.mesh);
+// ---------- 玩家設定 (localStorage) ----------
+const profile = loadProfile();
+const setup = {
+  name: profile.name || '',
+  mode: profile.mode || 'solo',
+  trackId: profile.trackId || 'xinyi',
+  carId: profile.carId || 'gt',
+  transmission: profile.transmission || 'auto',
+};
+function persistSetup() {
+  saveProfile({ ...profile, ...setup });
+}
+
+// ---------- 世界生命週期 ----------
+let track = null;
+let worldGroup = null;
+let tower = null;
+let car = null;
+let hud = null;
+let opponents = null;
+let police = null;
+
+function buildWorld(trackDef) {
+  if (worldGroup) { scene.remove(worldGroup); disposeObject(worldGroup); }
+  if (tower) { scene.remove(tower); disposeObject(tower); tower = null; }
+  track = new Track(trackDef);
+  worldGroup = new THREE.Group();
+  worldGroup.add(track.buildMeshes());
+  worldGroup.add(createCity(track, trackDef.theme || {}));
+  scene.add(worldGroup);
+  if ((trackDef.theme?.landmark ?? 'tower101') === 'tower101') {
+    tower = createTaipei101();
+    scene.add(tower);
+  }
+}
+
+function buildCar(carDef, transmission) {
+  if (car) { scene.remove(car.mesh); disposeObject(car.mesh); }
+  car = new Car(track, carDef, { transmission });
+  scene.add(car.mesh);
+}
+
+function clearModeActors() {
+  if (opponents) { opponents.dispose(); opponents = null; }
+  if (police) { police.dispose(); police = null; }
+}
+
+// 初始世界:信義 (標題畫面背景)
+buildWorld(trackById('xinyi'));
+buildCar(carById(setup.carId), setup.transmission);
 
 const effects = new Effects(renderer, scene, camera);
 const audio = new GameAudio();
-const hud = new HUD(track);
 const chaseCam = new ChaseCamera(camera);
 chaseCam.snapTo(car);
 
+// 濕路面即時反射:標記場景中發光體 → 每幀鏡像渲染到 RT (路面材質在 track.js 內混入)
+const reflections = new Reflections(renderer, scene, camera);
+reflections.markScene(scene);
+
 // ---------- 輸入 ----------
-const input = { forward: false, backward: false, left: false, right: false, handbrake: false };
+const input = { forward: false, backward: false, left: false, right: false, handbrake: false, shiftUp: false, shiftDown: false };
 const keyMap = {
   KeyW: 'forward', ArrowUp: 'forward',
   KeyS: 'backward', ArrowDown: 'backward',
@@ -98,46 +147,240 @@ const keyMap = {
   Space: 'handbrake',
 };
 window.addEventListener('keydown', (e) => {
-  if (keyMap[e.code] !== undefined) { input[keyMap[e.code]] = true; e.preventDefault(); }
-  if (e.code === 'Enter' && race.state === 'title') startRace();
-  if (e.code === 'KeyR' && (race.state === 'racing' || race.state === 'finished')) restartRace();
+  const typing = document.activeElement === $('player-name');
+  if (typing && e.code !== 'Enter') return;
+  if (keyMap[e.code] !== undefined && !typing) { input[keyMap[e.code]] = true; e.preventDefault(); }
+  if (e.code === 'KeyE' && race.state === 'racing') input.shiftUp = true;
+  if (e.code === 'KeyQ' && race.state === 'racing') input.shiftDown = true;
+  if (e.code === 'Enter') {
+    if (ui.screen === 'title') showSetup();
+    else if (ui.screen === 'setup') startRace();
+  }
+  if (e.code === 'Escape') {
+    if (ui.screen === 'setup' || ui.screen === 'board') showTitle();
+  }
+  if (e.code === 'KeyR' && ui.screen === null && (race.state === 'racing' || race.state === 'finished')) restartRace();
   if (e.code === 'KeyC') chaseCam.cycleMode();
 });
 window.addEventListener('keyup', (e) => {
   if (keyMap[e.code] !== undefined) { input[keyMap[e.code]] = false; e.preventDefault(); }
 });
-document.getElementById('press-start').addEventListener('click', () => {
-  if (race.state === 'title') startRace();
+
+// 觸控
+const touch = initTouch(input, { onCycleCam: () => chaseCam.cycleMode() });
+if (isTouchDevice()) document.body.classList.add('touch');
+
+// ---------- UI 導航 ----------
+const ui = { screen: 'title' };  // 'title' | 'setup' | 'board' | null(比賽中)
+function switchScreen(name) {
+  for (const id of ['title-screen', 'setup-screen', 'board-screen']) {
+    $(id).classList.toggle('on', id === `${name}-screen`);
+  }
+  ui.screen = name;
+}
+function showTitle() { switchScreen('title'); }
+function showSetup() {
+  setup.name = ($('player-name').value || '').trim() || '匿名車手';
+  persistSetup();
+  renderSetupCards();
+  switchScreen('setup');
+}
+function showBoard() {
+  setup.name = ($('player-name').value || '').trim() || setup.name;
+  renderBoard();
+  switchScreen('board');
+}
+
+$('player-name').value = setup.name;
+$('btn-start').addEventListener('click', showSetup);
+$('btn-board').addEventListener('click', showBoard);
+$('btn-setup-back').addEventListener('click', showTitle);
+$('btn-board-back').addEventListener('click', showTitle);
+$('btn-go').addEventListener('click', startRace);
+$('res-again').addEventListener('click', restartRace);
+$('res-menu').addEventListener('click', () => {
+  $('results').classList.remove('on');
+  race.state = 'title';
+  showTitle();
 });
-document.getElementById('res-restart').addEventListener('click', restartRace);
+
+// ---------- 選單卡片 ----------
+function card(html, sel, onClick) {
+  const div = document.createElement('div');
+  div.className = 'sel-card' + (sel ? ' sel' : '');
+  div.innerHTML = html;
+  div.addEventListener('click', onClick);
+  return div;
+}
+
+function trackMiniSvg(def) {
+  // 迷你賽道形狀 (polyline 正規化到 120x74)
+  const pts = def.controlPoints;
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  for (const [x, z] of pts) {
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+    minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
+  }
+  const s = Math.min(110 / (maxX - minX), 64 / (maxZ - minZ));
+  const ox = (120 - (maxX - minX) * s) / 2, oy = (74 - (maxZ - minZ) * s) / 2;
+  const path = pts.map(([x, z]) =>
+    `${(ox + (x - minX) * s).toFixed(1)},${(74 - oy - (z - minZ) * s).toFixed(1)}`).join(' ');
+  return `<svg class="track-mini" viewBox="0 0 120 74"><polygon points="${path}" fill="none" stroke="#3ee6a8" stroke-width="3" stroke-linejoin="round" opacity="0.9"/></svg>`;
+}
+
+function renderSetupCards() {
+  const mc = $('mode-cards');
+  mc.innerHTML = '';
+  for (const m of MODES) {
+    mc.appendChild(card(
+      `<div class="c-name">${m.icon} ${m.name}</div><div class="c-en">${m.nameEn}</div><div class="c-desc">${m.desc}</div>`,
+      setup.mode === m.id,
+      () => { setup.mode = m.id; persistSetup(); renderSetupCards(); }));
+  }
+  const tc = $('track-cards');
+  tc.innerHTML = '';
+  for (const t of TRACKS) {
+    tc.appendChild(card(
+      `<div class="c-name">${t.name}</div><div class="c-en">${t.nameEn}</div>${trackMiniSvg(t)}` +
+      `<div class="c-desc">${t.desc}</div><div class="c-meta">${t.lengthKm} KM ・ 難度 ${'★'.repeat(t.difficulty)}${'☆'.repeat(3 - t.difficulty)}</div>`,
+      setup.trackId === t.id,
+      () => { setup.trackId = t.id; persistSetup(); renderSetupCards(); }));
+  }
+  const cc = $('car-cards');
+  cc.innerHTML = '';
+  for (const c of CARS) {
+    const bars = ['speed', 'accel', 'grip', 'drift'].map((k) => {
+      const labels = { speed: '極速', accel: '加速', grip: '抓地', drift: '甩尾' };
+      return `<span class="sk">${labels[k]}</span><span class="sb"><i style="width:${c.stats[k] * 20}%"></i></span>`;
+    }).join('');
+    cc.appendChild(card(
+      `<div class="c-name">${c.name}</div><div class="c-en">${c.nameEn} ・ ${c.class}</div>` +
+      `<div class="stat-bars">${bars}</div>` +
+      `<div class="c-meta">極速 ${Math.round(c.tune.maxSpeed * 3.6)} KM/H</div>` +
+      `<div class="c-desc">${c.desc}</div>`,
+      setup.carId === c.id,
+      () => { setup.carId = c.id; persistSetup(); renderSetupCards(); }));
+  }
+  const trc = $('trans-cards');
+  trc.innerHTML = '';
+  for (const [id, name, en, desc] of [
+    ['auto', '自排', 'AUTOMATIC', '自動換檔,專心過彎'],
+    ['manual', '手排', 'MANUAL', 'Q 降檔 / E 升檔,貼著紅線換檔更快'],
+  ]) {
+    trc.appendChild(card(
+      `<div class="c-name">${name}</div><div class="c-en">${en}</div><div class="c-desc">${desc}</div>`,
+      setup.transmission === id,
+      () => { setup.transmission = id; persistSetup(); renderSetupCards(); }));
+  }
+}
+
+// ---------- 排行榜畫面 ----------
+const board = { mode: 'solo', trackId: 'xinyi' };
+async function renderBoard() {
+  const mt = $('board-mode-tabs');
+  mt.innerHTML = '';
+  for (const m of MODES) {
+    const el = document.createElement('div');
+    el.className = 'tab' + (board.mode === m.id ? ' sel' : '');
+    el.textContent = m.name;
+    el.addEventListener('click', () => { board.mode = m.id; renderBoard(); });
+    mt.appendChild(el);
+  }
+  const tt = $('board-track-tabs');
+  tt.innerHTML = '';
+  for (const t of TRACKS) {
+    const el = document.createElement('div');
+    el.className = 'tab' + (board.trackId === t.id ? ' sel' : '');
+    el.textContent = t.name;
+    el.addEventListener('click', () => { board.trackId = t.id; renderBoard(); });
+    tt.appendChild(el);
+  }
+  const list = $('board-list');
+  const src = $('board-src');
+  const localRows = topLocal(board.mode, board.trackId, 20);
+  let rows = localRows.map((e) => ({ ...e, src: '本機' }));
+  src.textContent = remoteEnabled() ? '讀取全球排行榜中…' : '本機成績 (全球排行榜未設定 — 見 SETUP-LEADERBOARD.md)';
+  renderBoardRows(list, rows);
+  if (remoteEnabled()) {
+    try {
+      const remote = await topRemote(board.mode, board.trackId, 20);
+      if (remote) {
+        rows = remote.map((e) => ({ ...e, src: '全球' }));
+        src.textContent = '🌏 全球排行榜';
+        renderBoardRows(list, rows);
+      }
+    } catch {
+      src.textContent = '全球排行榜連線失敗,顯示本機成績';
+    }
+  }
+}
+function renderBoardRows(list, rows) {
+  let html = '<div class="board-row head"><span>#</span><span>車手</span><span>IP</span><span style="text-align:right">時間</span></div>';
+  if (!rows.length) {
+    html += '<div id="board-empty">尚無紀錄 — 快去跑一場!</div>';
+  } else {
+    rows.forEach((e, i) => {
+      html += `<div class="board-row"><span class="rk">${i + 1}</span>` +
+        `<span class="nm">${escapeHtml(e.name || '匿名')}</span>` +
+        `<span class="ip">${e.maskedIp || 'local'}</span>` +
+        `<span class="tm">${formatTime(e.timeMs / 1000)}</span></div>`;
+    });
+  }
+  list.innerHTML = html;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 // ---------- 賽事狀態 ----------
 const race = {
-  state: 'title',       // title | countdown | racing | finished
+  state: 'title',       // title | countdown | racing | finished | busted
+  mode: 'solo',
   totalLaps: 3,
   lap: 1,
   lapTimes: [],
   currentLapTime: 0,
   totalTime: 0,
-  nextCheckpoint: 1,    // 0 = 起跑線
+  nextCheckpoint: 1,
   countdownT: 0,
   countdownStep: 4,
 };
 
 function startRace() {
   audio.start();
-  document.getElementById('title-screen').classList.add('hidden');
-  hud.show();
-  race.state = 'countdown';
-  race.countdownT = 0;
-  race.countdownStep = 4;
-  car.reset();
-  chaseCam.snapTo(car);
-}
+  setup.name = ($('player-name').value || '').trim() || setup.name || '匿名車手';
+  persistSetup();
+  const trackDef = trackById(setup.trackId);
+  const carDef = carById(setup.carId);
+  const mode = modeById(setup.mode);
 
-function restartRace() {
-  hud.hideResults();
+  // 重建世界 (換賽道) 與車輛
+  buildWorld(trackDef);
+  buildCar(carDef, setup.transmission);
+  clearModeActors();
+  if (setup.mode === 'gp') opponents = new Opponents(scene, track, 5);
+  if (setup.mode === 'police') police = new Police(scene, track, 2);
+
+  reflections.markScene(scene); // 世界/車輛/AI 重建後重新標記發光體
+
+  hud = new HUD(track, {
+    maxKmh: car.maxKmh + 10,
+    storageKey: `mc101_best_${setup.trackId}_${setup.mode}`,
+  });
+  effects.resetTransient?.();
+
+  switchScreen('none'); // 全部隱藏
+  ui.screen = null;
+  $('results').classList.remove('on');
+  hud.show();
+  if (setup.mode === 'gp') hud.setPosition(6, 6); else hud.hidePosition();
+  if (setup.mode === 'police') hud.setWanted(0); else hud.hideWanted();
+  touch.setVisible(isTouchDevice());
+  touch.setManual(setup.transmission === 'manual');
+
+  race.mode = setup.mode;
   race.state = 'countdown';
+  race.totalLaps = mode.laps;
   race.countdownT = 0;
   race.countdownStep = 4;
   race.lap = 1;
@@ -149,6 +392,10 @@ function restartRace() {
   chaseCam.snapTo(car);
 }
 
+function restartRace() {
+  startRace();
+}
+
 function updateRace(dt) {
   if (race.state === 'countdown') {
     race.countdownT += dt;
@@ -157,7 +404,8 @@ function updateRace(dt) {
       race.countdownStep = step;
       if (step >= 1 && step <= 3) { hud.centerMessage(String(step)); audio.countdownBeep(); }
       else if (step === 0) {
-        hud.centerMessage('GO'); hud.subMessage('出 走 信 義 區');
+        hud.centerMessage('GO');
+        hud.subMessage(race.mode === 'police' ? '甩 開 條 子' : '出 走 信 義 區');
         audio.goBeep();
         race.state = 'racing';
       }
@@ -169,21 +417,18 @@ function updateRace(dt) {
   race.currentLapTime += dt;
   race.totalTime += dt;
 
-  // 檢查點:進度 s ∈ [0,1),檢查點位於 k/N
   const s = car.progress;
   const target = race.nextCheckpoint / N_CHECKPOINTS;
-  // 判定通過:s 越過 target (在 ±0.04 窗格內,避免抄捷徑)
   const diff = (s - target + 1) % 1;
   if (diff < 0.045) {
     if (race.nextCheckpoint === 0) {
-      // 通過起跑線 → 完成一圈
       race.lapTimes.push(race.currentLapTime);
       const lapT = race.currentLapTime;
       race.currentLapTime = 0;
       const isRecord = isNaN(hud.bestLap) || lapT < hud.bestLap;
       if (isRecord) {
         hud.bestLap = lapT;
-        localStorage.setItem('mc101_best', String(lapT));
+        localStorage.setItem(hud.storageKey, String(lapT));
         hud.setBest(lapT);
         hud.flashRecord();
         audio.recordBeep();
@@ -202,83 +447,146 @@ function updateRace(dt) {
       race.nextCheckpoint = (race.nextCheckpoint + 1) % N_CHECKPOINTS;
     }
   }
+
+  // ---- 模式邏輯 ----
+  const playerTotal = (race.lap - 1) + car.progress;
+  if (opponents) {
+    opponents.update(dt, car, playerTotal);
+    hud.setPosition(opponents.playerPosition(playerTotal), opponents.cars.length + 1);
+  }
+  if (police) {
+    const st = police.update(dt, car, performance.now() / 1000);
+    hud.setWanted(st.heat);
+    if (st.busted) bustedRace();
+  }
 }
 
 function finishRace() {
   race.state = 'finished';
   audio.finishFanfare();
-  hud.showResults(race);
+  showResultsScreen(false);
 }
 
-// ---------- 碰撞音效/震動橋接 ----------
-let lastCollision = 0;
+function bustedRace() {
+  race.state = 'busted';
+  hud.centerMessage('BUSTED', true);
+  hud.subMessage('你 被 攔 停 了');
+  audio.collision(1);
+  setTimeout(() => showResultsScreen(true), 1600);
+}
 
-// ---------- 主迴圈 (固定時間步物理) ----------
+function showResultsScreen(busted) {
+  const table = $('res-table');
+  const bestLapS = race.lapTimes.length ? Math.min(...race.lapTimes) : NaN;
+  $('res-title').textContent = busted ? 'BUSTED' : 'FINISH';
+  $('res-zh').textContent = busted ? '攔 停 出 局' : '完 走 認 定';
+  let html = '';
+  html += `<div class="res-row"><span class="k">車手</span><span class="v">${escapeHtml(setup.name)}</span></div>`;
+  html += `<div class="res-row"><span class="k">模式 / 賽道</span><span class="v">${modeById(race.mode).name} ・ ${trackById(setup.trackId).name}</span></div>`;
+  race.lapTimes.forEach((t, i) => {
+    const isBest = t === bestLapS;
+    html += `<div class="res-row${isBest ? ' hl' : ''}"><span class="k">第 ${i + 1} 圈</span><span class="v">${formatTime(t)}</span></div>`;
+  });
+  if (!busted) {
+    html += `<div class="res-row"><span class="k">總時間</span><span class="v">${formatTime(race.totalTime)}</span></div>`;
+    if (race.mode === 'gp' && opponents) {
+      const pos = opponents.playerPosition(race.totalLaps);
+      html += `<div class="res-row hl"><span class="k">最終名次</span><span class="v">P${pos} / ${opponents.cars.length + 1}</span></div>`;
+    }
+    if (!isNaN(bestLapS)) {
+      html += `<div class="res-row hl"><span class="k">最速單圈</span><span class="v">${formatTime(bestLapS)}</span></div>`;
+    }
+  }
+  table.innerHTML = html;
+  $('results').classList.add('on');
+
+  // 成績入榜 (busted 不記)
+  const uploadEl = $('res-upload');
+  if (!busted) {
+    const entry = {
+      mode: race.mode, trackId: setup.trackId, carId: setup.carId,
+      name: setup.name, timeMs: race.totalTime * 1000, bestLapMs: (bestLapS || 0) * 1000,
+    };
+    saveLocalScore(entry);
+    if (remoteEnabled()) {
+      uploadEl.textContent = '上傳全球排行榜中…';
+      uploadScore(entry)
+        .then(() => { uploadEl.textContent = '🌏 已上傳全球排行榜'; })
+        .catch(() => { uploadEl.textContent = '全球排行榜上傳失敗 (成績已存本機)'; });
+    } else {
+      uploadEl.textContent = '成績已存本機排行榜';
+    }
+  } else {
+    uploadEl.textContent = '';
+  }
+}
+
+// ---------- 主迴圈 ----------
 const FIXED_DT = 1 / 120;
 let accumulator = 0;
 let lastT = performance.now() / 1000;
 let fpsSamples = [];
 let quality = 1;
+let lastCollision = 0;
 
 function tick() {
   requestAnimationFrame(tick);
   const now = performance.now() / 1000;
-  let frameDt = Math.min(0.1, now - lastT);
+  const frameDt = Math.min(0.1, now - lastT);
   lastT = now;
 
-  // 物理 (固定步) — 只有比賽/倒數時車輛可動
   accumulator += frameDt;
   const driving = race.state === 'racing';
   while (accumulator >= FIXED_DT) {
     if (driving) {
       car.update(FIXED_DT, input);
-    } else if (race.state === 'countdown' || race.state === 'finished') {
-      car.update(FIXED_DT, { forward: false, backward: race.state === 'finished', left: false, right: false, handbrake: true });
+    } else if (race.state === 'countdown' || race.state === 'finished' || race.state === 'busted') {
+      car.update(FIXED_DT, { forward: false, backward: race.state !== 'countdown', left: false, right: false, handbrake: true });
     }
     accumulator -= FIXED_DT;
   }
 
-  // 撞牆回饋
   if (car.collisionImpulse > 0.3 && now - lastCollision > 0.25) {
     lastCollision = now;
     audio.collision(car.collisionImpulse);
     chaseCam.addShake(car.collisionImpulse * 0.8);
   }
 
-  updateRace(frameDt);
+  if (ui.screen === null) updateRace(frameDt);
 
-  // 相機 + 特效 + HUD
-  if (race.state !== 'title') {
+  if (ui.screen === null) {
     chaseCam.update(frameDt, car, now);
   } else {
-    // 標題畫面:環繞 101 的電影運鏡 — 「左字右塔」海報構圖
-    // 拉遠至 R=380 讓塔尖完整入鏡;lookAt 依當前 fov/aspect 動態左偏,
-    // 塔穩定鎖在畫面 ~76% 寬處 (右 1/3),任何視窗比例都不貫穿 wordmark
-    const a = now * 0.07;
+    // 選單背景:環繞地標的電影運鏡
+    const a = now * 0.06;
     const R = 425;
-    const cx = Math.cos(a) * R, cz = -40 + Math.sin(a) * R;
-    camera.position.set(cx, 92 + Math.sin(now * 0.3) * 8, cz);
+    camera.position.set(Math.cos(a) * R, 110 + Math.sin(now * 0.25) * 24, -40 + Math.sin(a) * R);
     camera.fov = 55;
     camera.updateProjectionMatrix();
-    const dx = -cx, dz = -40 - cz;             // 水平視線方向 (指向塔)
-    const dist = Math.hypot(dx, dz);
-    const inv = 1 / dist;
-    const halfW = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * camera.aspect;
-    const off = halfW * 0.52;                  // 塔落在 0.5 + 0.26 ≈ 右 3/4 處
-    camera.lookAt(dz * inv * off, 131, -40 - dx * inv * off); // 塔位置 + 視線左向量*off (目標點下移留塔尖 headroom)
+    // 望向 101 (或賽道中心) — 動態左偏讓地標落在畫面右 1/3
+    const lookX = 0, lookZ = -40;
+    const camDir = new THREE.Vector3(lookX - camera.position.x, 0, lookZ - camera.position.z).normalize();
+    const rightDir = new THREE.Vector3(-camDir.z, 0, camDir.x);
+    const shift = Math.tan(THREE.MathUtils.degToRad(camera.fov * camera.aspect * 0.5) * 0.42) * R;
+    camera.lookAt(lookX + rightDir.x * shift * 0.35, 165, lookZ + rightDir.z * shift * 0.35);
   }
 
-  // 月光陰影跟隨車輛
   moonLight.position.set(car.pos.x - 120, 260, car.pos.z - 160);
   moonLight.target.position.set(car.pos.x, 0, car.pos.z);
-  carFill.position.set(car.pos.x, 9, car.pos.z);
+  carFill.position.set(car.pos.x, 7, car.pos.z);
 
-  tower.userData.update(now);
-  city.children.forEach((c) => c.userData.update && c.userData.update(now));
-  effects.update(frameDt, race.state === 'title' ? null : car, camera.position, now, input);
+  if (tower) tower.userData.update(now);
+  if (worldGroup) {
+    for (const c of worldGroup.children) {
+      if (c.userData.update) c.userData.update(now);
+      for (const cc of c.children) if (cc.userData?.update) cc.userData.update(now);
+    }
+  }
+  effects.update(frameDt, ui.screen === null ? car : null, camera.position, now, input);
   audio.update(car, frameDt, race.state === 'racing');
-  if (race.state !== 'title') hud.update(car, race);
+  if (ui.screen === null && hud) hud.update(car, race);
 
+  reflections.update();   // 主渲染前:鏡像相機渲染發光體到反射 RT
   effects.render(frameDt);
 
   // 效能自動調節
@@ -298,7 +606,6 @@ function tick() {
   }
 }
 
-// ---------- Resize ----------
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -306,33 +613,22 @@ window.addEventListener('resize', () => {
   effects.setSize(window.innerWidth, window.innerHeight);
 });
 
-document.getElementById('loading-tag').textContent = 'READY — 信義區已就緒';
-
-// QA/除錯掛鉤:允許自動化測試控制遊戲 (teleport、讀狀態)
+// ---------- QA 掛鉤 ----------
 window.__game = {
-  car, race, track, camera, chaseCam, startRace, restartRace,
-  teleport(s, speedKmh = 0) {
-    s = ((Number(s) % 1) + 1) % 1;
-    const v = Number(speedKmh) / 3.6;
-    const p = track.pointAt(s);
-    const tan = track.tangentAt(s);
+  get car() { return car; },
+  get race() { return race; },
+  get track() { return track; },
+  camera, chaseCam, startRace, restartRace, setup, showSetup, showTitle,
+  teleport(sVal, speedKmh = 0) {
+    const p = track.pointAt(sVal);
+    const tan = track.tangentAt(sVal);
     car.pos.set(p.x, 0, p.z);
     car.heading = Math.atan2(tan.x, tan.z);
-    // 完整重設運動狀態:vel 與 speed 同步 (physics 以 vel 為準、HUD 讀 speed),
-    // 並清掉殘留的轉向/側滑/碰撞衝量,避免瞬移後被舊狀態拖停或推向護欄
-    car.vel.set(tan.x, 0, tan.z).multiplyScalar(v);
-    car.speed = v;
-    car.lateralVel = 0;
-    car.steer = 0;
-    car.visualYaw = 0;
-    car.collisionImpulse = 0;
+    car.vel.set(tan.x, 0, tan.z).multiplyScalar(speedKmh / 3.6);
     car.trackHint = track.nearest(car.pos, -1);
-    car.progress = s;
-    // 檢查點對齊瞬移位置,賽事邏輯不會因跳過檢查點而卡住
-    race.nextCheckpoint = (Math.floor(s * N_CHECKPOINTS) + 1) % N_CHECKPOINTS;
-    accumulator = 0; // 丟棄瞬移前累積的物理步,避免用舊輸入偷跑
     chaseCam.snapTo(car);
   },
 };
 
+touch.setVisible(false);
 tick();

@@ -12,17 +12,45 @@ const NEON_TEXTS = [
   ['台北之夜', '#44eeff'], ['機車行', '#88ff66'], ['藥局', '#33ff99'],
 ];
 
-export function createCity(track) {
+// 灣岸港區:物流/港運/加油站的稀疏冷色招牌
+const HARBOR_TEXTS = [
+  ['台北港運', '#37a8ff'], ['東岸物流', '#7a5cff'], ['貨櫃集散', '#2ee6d0'],
+  ['灣岸加油', '#ff9d4d'], ['報關行', '#37a8ff'], ['漁市 24H', '#2ee6d0'],
+  ['倉儲中心', '#7a5cff'], ['燈塔咖啡', '#ffffff'],
+];
+
+// GP 賽場:賽事贊助商風格招牌
+const GP_TEXTS = [
+  ['MIDNIGHT GP', '#ff2e4d'], ['101 RACING', '#37e0ff'], ['PIT HOTEL', '#ffffff'],
+  ['賽車用品', '#ffd23e'], ['冠軍輪胎', '#ff2e4d'], ['燃料補給', '#37e0ff'],
+];
+
+export function createCity(track, theme = {}) {
+  const landmark = theme.landmark ?? 'tower101';
   const group = new THREE.Group();
   // 濕路反射 streak 收集器:建築霓虹/燈箱柱/路燈都往這裡丟 {x,z,angle,color,w,len}
   const streaks = [];
-  group.add(createGround());
-  group.add(createSky());
-  group.add(createBuildings(track, streaks));
-  group.add(createStreetlights(track, streaks));
-  group.add(createStreetClutter(track));
-  group.add(createSkylineSilhouette());
+  group.add(createGround(theme, landmark));
+  group.add(createSky(theme, landmark));
+  if (landmark === 'mountain') {
+    // 山道:無城市建築/霓虹,改環形山巒 + 滿山樹木 + 護欄反光柱 + 民宅廟宇
+    group.add(createMountainRidges());
+    group.add(createMountainEnv(track, streaks));
+    group.add(createStreetlights(track, streaks, { spacing: 70 }));
+  } else {
+    group.add(createBuildings(track, streaks, theme));
+    group.add(createStreetlights(track, streaks,
+      landmark === 'harbor' ? { lampColor: '#dfe9ff', spacing: 42 }
+        : landmark === 'grandstand' ? { lampColor: '#eef2ff' } : {}));
+    group.add(createSkylineSilhouette());
+    if (landmark === 'tower101') group.add(createStreetClutter(track));
+    if (landmark === 'harbor') group.add(createHarborEnv(track, streaks));
+    if (landmark === 'grandstand') group.add(createGrandPrixEnv(track, streaks));
+  }
   group.add(createReflectionStreaks(streaks));
+  // 匯總子群 update (霓虹閃爍等):main.js 只巡訪 worldGroup 直接子層
+  const updatables = group.children.filter((c) => c.userData.update);
+  group.userData.update = (t) => { for (const u of updatables) u.userData.update(t); };
   return group;
 }
 
@@ -295,34 +323,49 @@ function attachGlowDistanceFade(sprite, baseOpacity) {
 }
 
 // ---------- 地面 ----------
-function createGround() {
+function createGround(theme = {}, landmark = 'tower101') {
+  const tint = theme.groundTint ?? 0x101318;
+  const tr = (tint >> 16) & 255, tg = (tint >> 8) & 255, tb = tint & 255;
   const c = document.createElement('canvas');
   c.width = c.height = 512;
   const g = c.getContext('2d');
-  g.fillStyle = '#101318';
+  g.fillStyle = `rgb(${tr},${tg},${tb})`;
   g.fillRect(0, 0, 512, 512);
-  // 大尺度明暗斑塊:打破「一望無際的均勻死平面」,遠看有城市地表的不均勻感
-  for (let i = 0; i < 14; i++) {
+  // 大尺度明暗斑塊:打破「一望無際的均勻死平面」,遠看有地表的不均勻感
+  const blobCount = landmark === 'mountain' ? 22 : 14;
+  for (let i = 0; i < blobCount; i++) {
     const px = Math.random() * 512, py = Math.random() * 512;
     const r = 60 + Math.random() * 140;
-    const lighter = Math.random() < 0.5;
+    const lighter = Math.random() < (landmark === 'mountain' ? 0.35 : 0.5);
     const grad = g.createRadialGradient(px, py, 0, px, py, r);
-    grad.addColorStop(0, lighter ? 'rgba(48,56,72,0.16)' : 'rgba(2,3,6,0.22)');
+    grad.addColorStop(0, lighter
+      ? `rgba(${tr + 32},${tg + 38},${tb + 40},0.16)`
+      : 'rgba(2,3,6,0.24)');
     grad.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = grad;
     g.fillRect(px - r, py - r, r * 2, r * 2);
   }
   for (let i = 0; i < 9000; i++) {
-    const v = 10 + Math.random() * 22;
-    g.fillStyle = `rgba(${v},${v + 3},${v + 8},0.5)`;
+    const v = Math.random() * 22;
+    g.fillStyle = `rgba(${tr * 0.8 + v | 0},${tg * 0.8 + v | 0},${tb * 0.8 + v | 0},0.5)`;
     g.fillRect(Math.random() * 512, Math.random() * 512, 1.5, 1.5);
   }
-  // 街廓格線 (遠景暗示街道)
-  g.strokeStyle = 'rgba(60,70,85,0.5)';
-  g.lineWidth = 4;
-  for (let i = 0; i <= 8; i++) {
-    g.beginPath(); g.moveTo(i * 64, 0); g.lineTo(i * 64, 512); g.stroke();
-    g.beginPath(); g.moveTo(0, i * 64); g.lineTo(512, i * 64); g.stroke();
+  if (landmark === 'tower101' || landmark === 'grandstand') {
+    // 街廓格線 (遠景暗示街道)
+    g.strokeStyle = 'rgba(60,70,85,0.5)';
+    g.lineWidth = 4;
+    for (let i = 0; i <= 8; i++) {
+      g.beginPath(); g.moveTo(i * 64, 0); g.lineTo(i * 64, 512); g.stroke();
+      g.beginPath(); g.moveTo(0, i * 64); g.lineTo(512, i * 64); g.stroke();
+    }
+  } else if (landmark === 'harbor') {
+    // 港區大混凝土板塊縫:稀疏寬格線
+    g.strokeStyle = 'rgba(55,64,80,0.35)';
+    g.lineWidth = 5;
+    for (let i = 0; i <= 4; i++) {
+      g.beginPath(); g.moveTo(i * 128, 0); g.lineTo(i * 128, 512); g.stroke();
+      g.beginPath(); g.moveTo(0, i * 128); g.lineTo(512, i * 128); g.stroke();
+    }
   }
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -339,31 +382,43 @@ function createGround() {
 }
 
 // ---------- 夜空 ----------
-function createSky() {
+function createSky(theme = {}, landmark = 'tower101') {
   const group = new THREE.Group();
-  // 漸層天空穹頂:地平線帶混入與 FogExp2(0x0a0e18) 同色溫的 haze,
-  // 讓「被霧染色的中景建築 → 遠景剪影 → 天空」三層在同一色階上銜接
+  // 主題化天空:horizonColor 控制地平線光害暈 (×0.25 壓到閾下),
+  // skyMid/skyZenith 可覆蓋中天/天頂基色 (灣岸偏藍紫、山道更暗更透)
+  const hor = theme.horizonColor ?? [0.28, 0.16, 0.10];
+  const mid = theme.skyMid ?? [0.04, 0.06, 0.13];
+  const zen = theme.skyZenith ?? [0.012, 0.02, 0.05];
+  // 漸層天空穹頂:地平線帶混入與 FogExp2 同色溫的 haze,
+  // 讓「被霧染色的中景 → 遠景剪影 → 天空」三層在同一色階上銜接
   const skyGeo = new THREE.SphereGeometry(1250, 24, 16);
   const skyMat = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
-    uniforms: {},
+    uniforms: {
+      uHorizon: { value: new THREE.Vector3(...hor) },
+      uMid: { value: new THREE.Vector3(...mid) },
+      uZenith: { value: new THREE.Vector3(...zen) },
+    },
     vertexShader: `
       varying vec3 vPos;
       void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: `
       varying vec3 vPos;
+      uniform vec3 uHorizon;
+      uniform vec3 uMid;
+      uniform vec3 uZenith;
       void main() {
         float h = normalize(vPos).y;
-        vec3 zenith = vec3(0.012, 0.02, 0.05);
-        vec3 mid    = vec3(0.04, 0.06, 0.13);
+        vec3 zenith = uZenith;
+        vec3 mid    = uMid;
         vec3 fogCol = vec3(0.048, 0.062, 0.10);   // 霧色 0x0a0e18 的微亮版
         vec3 col = mix(mid, zenith, smoothstep(0.25, 0.9, h));
         // 低空 haze:貼近地平線時收斂到霧色,消除遠景/天空色相斷裂
         col = mix(fogCol, col, smoothstep(-0.02, 0.22, h));
-        // 城市光害暖暈:比日落淡、比日落寬,讀成「光害」而非「夕陽」(壓到閾下)
+        // 地平線光害暈:比日落淡、比日落寬,讀成「光害」而非「夕陽」(壓到閾下)
         float band = exp(-pow(max(h, 0.0) * 5.5, 1.5));
-        col += vec3(0.07, 0.038, 0.024) * band;
+        col += uHorizon * 0.25 * band;
         // 低對比模糊雲帶 ×2:給上半幀一點戲,午夜城市的薄雲反光
         vec3 dir = normalize(vPos);
         float az = atan(dir.z, dir.x);
@@ -379,8 +434,9 @@ function createSky() {
   });
   group.add(new THREE.Mesh(skyGeo, skyMat));
 
-  // 星星
-  const starCount = 900;
+  // 星星:山道光害少 → 星更多更亮 (theme.stars 覆蓋)
+  const starCfg = theme.stars ?? {};
+  const starCount = starCfg.count ?? 900;
   const starPos = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
     const theta = Math.random() * Math.PI * 2;
@@ -393,8 +449,8 @@ function createSky() {
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
   const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
-    color: 0xbfd4ff, size: 2.0, sizeAttenuation: false,
-    transparent: true, opacity: 0.55, depthWrite: false,
+    color: 0xbfd4ff, size: starCfg.size ?? 2.0, sizeAttenuation: false,
+    transparent: true, opacity: starCfg.opacity ?? 0.55, depthWrite: false,
   }));
   group.add(stars);
 
@@ -686,9 +742,59 @@ function neonSignTexture(text, color, vertical) {
   return tex;
 }
 
-function createBuildings(track, streaks) {
+// 找最長連續直線段 (GP 大直線佈置看台/維修站、建築禁建走廊用)
+function findMainStraight(track) {
+  const N = track.samples.length;
+  const straightAt = (i) => track.samples[i].tan.dot(track.samples[(i + 20) % N].tan) > 0.9995;
+  // 從一個彎中開始掃,避免直線跨越環狀接縫被切兩半
+  let start = 0;
+  while (start < N && straightAt(start)) start++;
+  if (start >= N) start = 0;
+  let best = { i0: 0, len: 1 };
+  let runStart = -1;
+  for (let k = 0; k <= N; k++) {
+    const i = (start + k) % N;
+    if (k < N && straightAt(i)) { if (runStart < 0) runStart = k; }
+    else if (runStart >= 0) {
+      const len = k - runStart;
+      if (len > best.len) best = { i0: (start + runStart) % N, len };
+      runStart = -1;
+    }
+  }
+  const indices = [];
+  for (let k = 0; k < best.len; k++) indices.push((best.i0 + k) % N);
+  const near = (x, z, margin) => {
+    for (let k = 0; k < indices.length; k += 8) {
+      const p = track.samples[indices[k]].pos;
+      const dx = x - p.x, dz = z - p.z;
+      if (dx * dx + dz * dz < margin * margin) return true;
+    }
+    return false;
+  };
+  return { indices, near };
+}
+
+function createBuildings(track, streaks, theme = {}) {
   const group = new THREE.Group();
   const neonSigns = [];
+  const landmark = theme.landmark ?? 'tower101';
+  const hasTower = landmark === 'tower101';
+  // 主題化招牌:文案組 + 色盤覆蓋 (theme.neonColors)
+  const texts = landmark === 'harbor' ? HARBOR_TEXTS
+    : landmark === 'grandstand' ? GP_TEXTS : NEON_TEXTS;
+  const palette = theme.neonColors || null;
+  const pickSign = (idx) => {
+    const [text, baseColor] = texts[idx % texts.length];
+    return [text, palette ? palette[idx % palette.length] : baseColor];
+  };
+  const warehouse = landmark === 'harbor'; // 低矮寬扁倉庫,少招牌
+  // 主題禁建區:港區南側讓給海面;GP 大直線讓給看台/維修站
+  let themeOk = () => true;
+  if (landmark === 'harbor') themeOk = (x, z) => z > -228;
+  if (landmark === 'grandstand') {
+    const straight = findMainStraight(track);
+    themeOk = (x, z) => !straight.near(x, z, 48);
+  }
 
   // 以賽道取樣建立「不可蓋」快查
   const isNearTrack = (x, z, margin) => {
@@ -700,6 +806,7 @@ function createBuildings(track, streaks) {
     return false;
   };
   const isNearTower = (x, z, margin) => {
+    if (!hasTower) return false;
     const dx = x - TOWER_POS.x, dz = z - TOWER_POS.z;
     return dx * dx + dz * dz < margin * margin;
   };
@@ -720,6 +827,7 @@ function createBuildings(track, streaks) {
   const anchors = [];
   for (let i = 0; i < track.samples.length; i += 30) anchors.push(track.samples[i].pos);
   const inTowerCorridor = (x, z) => {
+    if (!hasTower) return false;
     for (const a of anchors) {
       const tx = TOWER_POS.x - a.x, tz = TOWER_POS.z - a.z;
       const len = Math.hypot(tx, tz);
@@ -774,18 +882,21 @@ function createBuildings(track, streaks) {
   const roofs = [];      // 屋頂 {x,z,w,d,h,angle} → 水塔/機房 instanced
 
   let signCount = 0;
+  const skip = theme.buildingSkip ?? 0.25; // 越高建築越稀疏 (山道/高速公路用)
   for (let i = 0; i < track.samples.length; i += 14) {
     const sm = track.samples[i];
     for (const side of [1, -1]) {
-      if (Math.random() < 0.25) continue;
+      if (Math.random() < skip) continue;
       const setback = 24 + Math.random() * 26;
       const x = sm.pos.x + sm.normal.x * setback * side + (Math.random() - 0.5) * 8;
       const z = sm.pos.z + sm.normal.z * setback * side + (Math.random() - 0.5) * 8;
-      if (isNearTrack(x, z, 21) || isNearTower(x, z, 130)) continue;
-      const w = 14 + Math.random() * 18;
-      const d = 14 + Math.random() * 18;
+      if (isNearTrack(x, z, 21) || isNearTower(x, z, 130) || !themeOk(x, z)) continue;
+      const w = warehouse ? 26 + Math.random() * 24 : 14 + Math.random() * 18;
+      const d = warehouse ? 18 + Math.random() * 14 : 14 + Math.random() * 18;
       if (!tryPlace(x, z, w, d)) continue;
-      let h = 18 + Math.random() * Math.random() * 120;
+      let h = warehouse
+        ? (Math.random() < 0.12 ? 30 + Math.random() * 30 : 9 + Math.random() * 10)
+        : 18 + Math.random() * Math.random() * 120;
       // 視廊限高:保留低層裙樓不留空洞,但別擋住 101
       if (inTowerCorridor(x, z)) h = Math.min(h, 14);
 
@@ -839,10 +950,12 @@ function createBuildings(track, streaks) {
       }
 
       // 面向道路的霓虹招牌組:貼牆大橫幅/直幅 + 垂直外挑雙面燈箱 (台北騎樓節奏)
-      if (setback < 40 && signCount < 40 && Math.random() < 0.7) {
+      const signCap = warehouse ? 14 : 40;
+      const signProb = warehouse ? 0.35 : 0.7;
+      if (setback < 40 && signCount < signCap && Math.random() < signProb) {
         signCount++;
         // signCount*4+side 保證相鄰招牌落在不同色系
-        const [rawText, color] = NEON_TEXTS[(signCount * 4 + (side > 0 ? 0 : 7)) % NEON_TEXTS.length];
+        const [rawText, color] = pickSign(signCount * 4 + (side > 0 ? 0 : 7));
         const vertical = Math.random() < 0.5;
         const text = vertical ? rawText.replace(/\s/g, '').slice(0, 4) : rawText;
         const tex2 = neonSignTexture(text, color, vertical);
@@ -883,8 +996,8 @@ function createBuildings(track, streaks) {
         }
 
         // 垂直外挑雙面燈箱 (不同色系),掛在牆角、垂直於牆面
-        if (Math.random() < 0.7) {
-          const [pText, pColor] = NEON_TEXTS[(signCount * 4 + 5 + (side > 0 ? 0 : 7)) % NEON_TEXTS.length];
+        if (Math.random() < (warehouse ? 0.3 : 0.7)) {
+          const [pText, pColor] = pickSign(signCount * 4 + 5 + (side > 0 ? 0 : 7));
           const vt = pText.replace(/\s/g, '').slice(0, 3);
           const ptex = neonSignTexture(vt, pColor, true);
           const pw = 1.7, ph = 1.7 * vt.length;
@@ -1041,8 +1154,8 @@ function createBuildings(track, streaks) {
     }
   }
 
-  // 跨街燈箱柱:沿賽道 wall 外側的直式中文燈箱,保證行車視野內常有可讀招牌
-  const pillarCount = 12;
+  // 跨街燈箱柱:沿賽道 wall 外側的直式燈箱,保證行車視野內常有可讀招牌
+  const pillarCount = warehouse ? 6 : landmark === 'grandstand' ? 8 : 12;
   const pStep = Math.floor(track.samples.length / pillarCount);
   const glowTexCache = new Map();
   for (let k = 0; k < pillarCount; k++) {
@@ -1051,7 +1164,8 @@ function createBuildings(track, streaks) {
     const px = sm.pos.x + sm.normal.x * 10.4 * side;
     const pz = sm.pos.z + sm.normal.z * 10.4 * side;
     if (isNearTower(px, pz, 60)) continue;
-    const [text, color] = NEON_TEXTS[(k * 5 + 3) % NEON_TEXTS.length];
+    // GP 燈箱柱固定取中文文案 (英文直排截字會讀成亂碼)
+    const [text, color] = landmark === 'grandstand' ? pickSign(3 + (k % 3)) : pickSign(k * 5 + 3);
     const vText = text.replace(/\s/g, '').slice(0, 4);
     const tex = neonSignTexture(vText, color, true);
     const sw = 2.6, sh = 2.6 * vText.length;

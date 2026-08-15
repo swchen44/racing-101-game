@@ -1,8 +1,13 @@
-// audio.js — Web Audio 程序化音效:引擎、甩尾、碰撞、風切、環境、UI
+// audio.js — Web Audio 程序化音效:引擎、甩尾、碰撞、風切、環境、UI、警笛、超車呼嘯
+let ACTIVE = null; // 給 police/opponents 取得音效實例 (main.js 不傳入)
+export function activeAudio() { return ACTIVE; }
+
 export class GameAudio {
   constructor() {
     this.ctx = null;
     this.started = false;
+    this.sirenOsc = null;
+    ACTIVE = this;
   }
 
   // 必須在使用者手勢後呼叫
@@ -110,11 +115,9 @@ export class GameAudio {
   update(car, dt, racing) {
     if (!this.started || !car) return;
     const t = this.ctx.currentTime;
-    const speedRatio = Math.min(1, car.speedKmh / 220);
-    // 模擬檔位:rpm 隨速度在各檔內爬升
-    const gearCount = 6;
-    const gearPos = (speedRatio * gearCount) % 1;
-    const rpm = 0.25 + gearPos * 0.75;
+    const speedRatio = Math.min(1, car.speedKmh / (car.maxKmh || 220));
+    // 使用車輛真實變速箱轉速 (EV 單速時 rpm 直接映射車速)
+    const rpm = 0.22 + Math.min(1, car.rpm ?? speedRatio) * 0.78;
     const throttleBoost = car.throttleSmooth * 0.3;
 
     const baseFreq = 55 + rpm * 260 + throttleBoost * 60;
@@ -173,6 +176,78 @@ export class GameAudio {
     gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
     osc.connect(gain).connect(this.master);
     osc.start(); osc.stop(t + dur + 0.02);
+  }
+
+  // ---- 警笛:雙音高交替 wail (police 模式) ----
+  sirenStart() {
+    if (!this.started || this.sirenOsc) return;
+    const ctx = this.ctx;
+    this.sirenOsc = ctx.createOscillator();     // 主音 (三角波,近似警笛純音)
+    this.sirenOsc.type = 'triangle';
+    this.sirenOsc.frequency.value = 660;
+    this.sirenOsc2 = ctx.createOscillator();    // 低八度增厚
+    this.sirenOsc2.type = 'sawtooth';
+    this.sirenOsc2.frequency.value = 330;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 950;
+    filter.Q.value = 0.9;
+    const osc2Gain = ctx.createGain();
+    osc2Gain.gain.value = 0.22;
+    this.sirenGain = ctx.createGain();
+    this.sirenGain.gain.value = 0;
+    this.sirenOsc.connect(filter);
+    this.sirenOsc2.connect(osc2Gain).connect(filter);
+    filter.connect(this.sirenGain).connect(this.master);
+    this.sirenOsc.start();
+    this.sirenOsc2.start();
+    this.sirenT0 = ctx.currentTime;
+  }
+
+  // 每幀呼叫:dist = 最近警車距離 (m),音量隨距離衰減;wail 在兩個音高間滑移
+  sirenUpdate(dist) {
+    if (!this.sirenOsc) return;
+    const t = this.ctx.currentTime;
+    const hi = Math.floor((t - this.sirenT0) / 0.55) % 2 === 0;
+    const f = hi ? 880 : 640;
+    this.sirenOsc.frequency.setTargetAtTime(f, t, 0.13);   // 時間常數造成上滑/下滑 wail
+    this.sirenOsc2.frequency.setTargetAtTime(f * 0.5, t, 0.13);
+    const near = Math.max(0, 1 - dist / 170);
+    this.sirenGain.gain.setTargetAtTime(0.015 + near * near * 0.17, t, 0.12);
+  }
+
+  sirenStop() {
+    if (!this.sirenOsc) return;
+    const t = this.ctx.currentTime;
+    this.sirenGain.gain.setTargetAtTime(0, t, 0.2);
+    this.sirenOsc.stop(t + 1.2);
+    this.sirenOsc2.stop(t + 1.2);
+    this.sirenOsc = null;
+    this.sirenOsc2 = null;
+  }
+
+  // ---- 超車呼嘯:pitch 下滑的短噪音 (都卜勒感),被超/超車瞬間觸發 ----
+  whoosh(intensity = 1) {
+    if (!this.started) return;
+    const now = performance.now();
+    if (now - (this._lastWhoosh || 0) < 380) return; // 防連發
+    this._lastWhoosh = now;
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = this._noiseBuffer(0.6);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.value = 1.5;
+    filter.frequency.setValueAtTime(2400, t);
+    filter.frequency.exponentialRampToValueAtTime(320, t + 0.45); // 頻率下滑 = 都卜勒
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(Math.min(0.24, 0.1 + intensity * 0.14), t + 0.07);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    src.connect(filter).connect(gain).connect(this.master);
+    src.start();
+    src.stop(t + 0.6);
   }
 
   countdownBeep() { this.beep(440, 0.22, 0.3); }

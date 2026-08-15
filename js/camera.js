@@ -47,12 +47,13 @@ export class ChaseCamera {
     const speedRatio = Math.min(1, car.speedKmh / 230);
     const sin = Math.sin(car.heading), cos = Math.cos(car.heading);
 
-    // ---- 101 地標讓位:車頭朝向塔 ±40° 且距離 <320m → 抬鏡頭+大幅抬視線,讓塔進畫面上 1/3 ----
+    // ---- 101 地標讓位:僅信義賽道;車頭朝向塔 ±40° 且距離 <320m → 抬鏡頭讓塔進畫面上 1/3 ----
+    const hasTower = (car.track?.theme?.landmark ?? 'tower101') === 'tower101';
     const tdx = TOWER_X - car.pos.x, tdz = TOWER_Z - car.pos.z;
     const towerDist = Math.hypot(tdx, tdz);
     let towerTarget = 0;
     let sideTarget = this._towerSide;
-    if (towerDist < 320 && towerDist > 1) {
+    if (hasTower && towerDist < 320 && towerDist > 1) {
       const angToTower = Math.atan2(tdx, tdz);
       let dAng = angToTower - car.heading;
       while (dAng > Math.PI) dAng -= Math.PI * 2;
