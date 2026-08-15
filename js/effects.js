@@ -5,7 +5,6 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { radialGlowTexture } from './taipei101.js';
 import { WALL_HALF_WIDTH } from './track.js';
 
 // 超輕量全螢幕色彩分級:暗部壓藍紫、高光偏暖、飽和 +13%、vignette、
@@ -42,9 +41,9 @@ const GradeShader = {
         c = mix(c, acc * 0.2, blurW);
       }
       float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-      // 暗部收緊並往藍紫壓 (夜色底色 #0a0d1a),黑位仍保留一絲可讀 lift
+      // 暗部收緊並往藍紫壓 (夜色底色 #0a0d1a),lift 減半讓夜真正黑下去、光池對比拉開
       float sh = 1.0 - smoothstep(0.0, 0.35, l);
-      c = mix(c, c * vec3(0.86, 0.90, 1.16) + vec3(0.008, 0.010, 0.026), sh);
+      c = mix(c, c * vec3(0.86, 0.90, 1.16) + vec3(0.004, 0.005, 0.013), sh);
       // 高光偏暖 (鈉燈/霓虹城市光害) — teal-orange 對抗
       c *= mix(vec3(1.0), vec3(1.06, 1.0, 0.90), smoothstep(0.5, 2.0, l));
       // 飽和度 +13%
@@ -166,74 +165,92 @@ export class Effects {
     this.smokeCursor = 0;
   }
 
-  addSmoke(x, z, vx, vz) {
+  // small=true → 中低速手煞的小號煙 (scale 0.6、opacity 減半)
+  addSmoke(x, z, vx, vz, small = false) {
     const s = this.smokes[this.smokeCursor % this.smokeMax];
     this.smokeCursor++;
     s.life = 0.5 + Math.random() * 0.35;
     s.maxLife = s.life;
     s.rotSpd = (Math.random() - 0.5) * 2.4;
+    s.opacityMul = small ? 0.5 : 1;
     s.sprite.visible = true;
     s.sprite.material.rotation = Math.random() * Math.PI * 2;
-    s.sprite.position.set(x + (Math.random() - 0.5) * 0.5, 0.28, z + (Math.random() - 0.5) * 0.5);
-    s.sprite.scale.setScalar(0.9 + Math.random() * 0.5);
+    s.sprite.position.set(x + (Math.random() - 0.5) * 0.5, 0.2, z + (Math.random() - 0.5) * 0.5);
+    s.sprite.scale.setScalar((small ? 0.6 : 1) * (0.9 + Math.random() * 0.5));
     s.vel.set(vx * 0.3 + (Math.random() - 0.5) * 1.4, 0.9 + Math.random() * 1.0, vz * 0.3 + (Math.random() - 0.5) * 1.4);
   }
 
-  // ---------- 火花 ----------
+  // ---------- 火花 (細長 line streak 沿速度向量,短生命+強重力+地面彈跳 → 金屬刮擦感) ----------
   _initSparks() {
     this.sparkMax = 70;
     this.sparks = [];
-    const tex = radialGlowTexture('#ffcf7a');
     for (let i = 0; i < this.sparkMax; i++) {
-      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: tex, transparent: true, opacity: 0, depthWrite: false,
-        blending: THREE.AdditiveBlending, toneMapped: false,
-      }));
-      sprite.visible = false;
-      this.scene.add(sprite);
-      this.sparks.push({ sprite, life: 0, vel: new THREE.Vector3() });
+      this.sparks.push({ pos: new THREE.Vector3(), vel: new THREE.Vector3(), life: 0, maxLife: 1 });
     }
     this.sparkCursor = 0;
+    const pos = new Float32Array(this.sparkMax * 2 * 3);
+    const col = new Float32Array(this.sparkMax * 2 * 3);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    // additive + 黑色頂點 = 不可見 → 死亡火花免 visible 管理,單 draw call
+    this.sparkLines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 1, depthWrite: false,
+      blending: THREE.AdditiveBlending, toneMapped: false,
+    }));
+    this.sparkLines.frustumCulled = false;
+    this.scene.add(this.sparkLines);
   }
 
-  burstSparks(x, y, z, count) {
+  // (x,y,z) = 實際接觸點 (輪拱/護欄高度);bvx,bvz = 基底速度 (火花順著車行方向拖尾噴出)
+  burstSparks(x, y, z, count, bvx = 0, bvz = 0) {
     for (let i = 0; i < count; i++) {
       const s = this.sparks[this.sparkCursor % this.sparkMax];
       this.sparkCursor++;
-      s.life = 0.25 + Math.random() * 0.35;
+      s.life = 0.12 + Math.random() * 0.18;           // 0.12~0.3s 短生命
       s.maxLife = s.life;
-      s.sprite.visible = true;
-      s.sprite.position.set(x, y + Math.random() * 0.6, z);
-      s.sprite.scale.setScalar(0.25 + Math.random() * 0.3);
-      s.vel.set((Math.random() - 0.5) * 14, Math.random() * 6, (Math.random() - 0.5) * 14);
+      s.pos.set(x, y + (Math.random() - 0.35) * 0.2, z);
+      s.vel.set(
+        bvx * 0.55 + (Math.random() - 0.5) * 7,
+        1.5 + Math.random() * 3.5,
+        bvz * 0.55 + (Math.random() - 0.5) * 7);
     }
   }
 
   // ---------- 雨 (LineSegments 雨絲,拉長 + 淡青色 + 高度漸淡,不像頭皮屑) ----------
   _initRain() {
-    this.rainCount = 980;
+    this.rainCount = 680;                                  // 密度 -30%:集中在鏡頭前反而顯得雨更大
     this.rainSpan = 90;
     this.rainHeight = 45;
     this.rainDrops = new Float32Array(this.rainCount * 4); // x, y, z, fallSpeed
     this.rainBright = new Float32Array(this.rainCount);    // 每滴隨機亮度 (0.35~1)
+    this.rainTint = new Float32Array(this.rainCount * 3);  // 每滴冷暖微色相 (被城市光染色的雨)
     for (let i = 0; i < this.rainCount; i++) {
       this.rainDrops[i * 4] = (Math.random() - 0.5) * this.rainSpan;
       this.rainDrops[i * 4 + 1] = Math.random() * this.rainHeight;
       this.rainDrops[i * 4 + 2] = (Math.random() - 0.5) * this.rainSpan;
       this.rainDrops[i * 4 + 3] = 26 + Math.random() * 9; // 25~35 m/s 下落
       this.rainBright[i] = 0.35 + Math.random() * 0.65;
+      // 偏青與偏琥珀交錯 (約 2:1),微色相不搶戲
+      if (Math.random() < 0.65) {
+        this.rainTint[i * 3] = 0.62; this.rainTint[i * 3 + 1] = 0.78; this.rainTint[i * 3 + 2] = 0.92;
+      } else {
+        this.rainTint[i * 3] = 0.92; this.rainTint[i * 3 + 1] = 0.76; this.rainTint[i * 3 + 2] = 0.55;
+      }
     }
     const pos = new Float32Array(this.rainCount * 2 * 3);
     const col = new Float32Array(this.rainCount * 2 * 3);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    // 色相全交給 vertex color;整體 opacity 再 -30% (夜雨在暗處要隱沒)
     this.rain = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
-      color: 0xa8c8e0, transparent: true, opacity: 0.38, vertexColors: true,
+      color: 0xffffff, transparent: true, opacity: 0.27, vertexColors: true,
       blending: THREE.AdditiveBlending, depthWrite: false,
     }));
     this.rain.frustumCulled = false;
     this.scene.add(this.rain);
+    this._rainAhead = new THREE.Vector2();                 // 平滑後的「雨量集中在行進前方」偏移
   }
 
   // ---------- 速度線 (細長 additive quad,高 DPI 也看得見;單一 draw call) ----------
@@ -294,7 +311,7 @@ export class Effects {
       s.sprite.scale.multiplyScalar(1 + dt * 1.4);
       s.sprite.material.rotation += s.rotSpd * dt;
       const lifeRatio = s.life / s.maxLife;
-      s.sprite.material.opacity = lifeRatio * 0.3;
+      s.sprite.material.opacity = lifeRatio * 0.3 * (s.opacityMul || 1);
       // 尾燈染煙:距車尾 3.5m 內 lerp 向紅,離開後回深藍灰
       let tint = 0;
       if (car) {
@@ -315,70 +332,112 @@ export class Effects {
       }
       this.skidInst.instanceColor.needsUpdate = true;
     }
-    // 火花
-    for (const s of this.sparks) {
-      if (!s.sprite.visible) continue;
-      s.life -= dt;
-      if (s.life <= 0) { s.sprite.visible = false; continue; }
-      s.vel.y -= 22 * dt;
-      s.sprite.position.addScaledVector(s.vel, dt);
-      s.sprite.material.opacity = (s.life / s.maxLife);
+    // 火花:強重力 + 地面彈跳,line streak 沿速度向量拉出 0.25~0.5m 尾巴
+    {
+      const pArr = this.sparkLines.geometry.attributes.position.array;
+      const cArr = this.sparkLines.geometry.attributes.color.array;
+      for (let i = 0; i < this.sparkMax; i++) {
+        const s = this.sparks[i];
+        const o = i * 6;
+        if (s.life <= 0) {
+          // 黑色 + 零長度 = additive 下完全不可見
+          cArr[o] = cArr[o + 1] = cArr[o + 2] = 0;
+          cArr[o + 3] = cArr[o + 4] = cArr[o + 5] = 0;
+          pArr[o] = pArr[o + 3] = s.pos.x; pArr[o + 1] = pArr[o + 4] = -5;
+          pArr[o + 2] = pArr[o + 5] = s.pos.z;
+          continue;
+        }
+        s.life -= dt;
+        s.vel.y -= 42 * dt;                       // 強重力,拋物線短促才像金屬火花
+        s.pos.addScaledVector(s.vel, dt);
+        if (s.pos.y < 0.02) {                     // 地面彈跳
+          s.pos.y = 0.02;
+          s.vel.y *= -0.45;
+          s.vel.x *= 0.7; s.vel.z *= 0.7;
+        }
+        const spd = s.vel.length();
+        const tail = spd > 0.001 ? Math.min(0.5, Math.max(0.12, spd * 0.032)) / spd : 0;
+        pArr[o] = s.pos.x; pArr[o + 1] = s.pos.y; pArr[o + 2] = s.pos.z;
+        pArr[o + 3] = s.pos.x - s.vel.x * tail;
+        pArr[o + 4] = s.pos.y - s.vel.y * tail;
+        pArr[o + 5] = s.pos.z - s.vel.z * tail;
+        const k = Math.max(0, s.life / s.maxLife);
+        // 頭亮白橙 → 尾暗橙紅,隨生命衰減
+        cArr[o] = 1.0 * k; cArr[o + 1] = 0.72 * k; cArr[o + 2] = 0.30 * k;
+        cArr[o + 3] = 0.55 * k; cArr[o + 4] = 0.18 * k; cArr[o + 5] = 0.03 * k;
+      }
+      this.sparkLines.geometry.attributes.position.needsUpdate = true;
+      this.sparkLines.geometry.attributes.color.needsUpdate = true;
     }
     // 車輛驅動的粒子
     if (car) {
       const sin = Math.sin(car.heading), cos = Math.cos(car.heading);
       const spd = Math.hypot(car.vel.x, car.vel.z);
-      // 甩尾煙/胎痕:drifting 或手煞中速滑行觸發
-      const driftFx = (car.drifting || (input && input.handbrake && Math.abs(car.speed) > 10))
+      // 甩尾煙/胎痕:完整濃煙維持高速門檻;手煞 |speed|>3 就給小號煙+短胎痕,
+      // 中低速甩尾反饋立刻開始堆疊,不再全押在高速觸發鏈上
+      const fullFx = (car.drifting || (input && input.handbrake && Math.abs(car.speed) > 10))
         && Math.abs(car.speed) > 6;
+      const miniFx = !fullFx && input && input.handbrake && Math.abs(car.speed) > 3;
       this.smokeTimer -= dt;
-      if (driftFx) {
+      if (fullFx || miniFx) {
         // 胎痕沿速度向量對齊 + 依每幀位移拉長 → 連續無縫弧線
         const velAngle = spd > 1 ? Math.atan2(car.vel.x, car.vel.z) : car.heading;
-        const stampLen = THREE.MathUtils.clamp(spd * dt * 2.2, 0.9, 2.2);
+        const stampLen = miniFx
+          ? THREE.MathUtils.clamp(spd * dt * 2.2, 0.5, 1.2)
+          : THREE.MathUtils.clamp(spd * dt * 2.2, 0.9, 2.2);
         for (const sx of [0.86, -0.86]) {
           // 後輪局部座標 (sx, 0, -1.42) 旋轉至世界座標
           const bx = car.pos.x + sx * cos + (-1.42) * sin;
           const bz = car.pos.z - sx * sin + (-1.42) * cos;
           this.addSkid(bx, bz, velAngle, stampLen);
-          // 煙:節流 spawn;低速 (<15km/h) 不噴,避免原地堆成白棉花
-          if (this.smokeTimer <= 0 && car.speedKmh > 15) {
-            this.addSmoke(bx, bz, car.vel.x, car.vel.z);
+          // 煙:節流 spawn;完整煙 0.035s、小號煙 0.07s 間隔
+          if (this.smokeTimer <= 0 && (fullFx ? car.speedKmh > 15 : true)) {
+            this.addSmoke(bx, bz, car.vel.x, car.vel.z, miniFx);
           }
         }
-        if (this.smokeTimer <= 0) this.smokeTimer = 0.035;
+        if (this.smokeTimer <= 0) this.smokeTimer = miniFx ? 0.07 : 0.035;
       }
-      // 瞬間撞擊火花
+      // 車側接觸點 (輪拱高度):lateral 左正、車輛局部 +x 為左側 → 接觸側 = 局部 x 軸 * sgn
+      const latSgn = car.lateral !== undefined && car.lateral !== 0 ? Math.sign(car.lateral) : 1;
+      const sideX = car.pos.x + cos * latSgn * 1.05;
+      const sideZ = car.pos.z - sin * latSgn * 1.05;
+      // 瞬間撞擊火花:錨在實際接觸側輪拱高度,順車速方向噴出
       if (car.collisionImpulse > 0.35) {
-        this.burstSparks(car.pos.x + sin * 1.5, 0.5, car.pos.z + cos * 1.5, 10);
+        this.burstSparks(sideX, 0.32, sideZ, 10, car.vel.x, car.vel.z);
         car.collisionImpulse *= 0.4;
       }
       // 持續刮牆火花:貼著護欄且有速度時,在車側接觸點連續冒火花
       const scrapeLimit = WALL_HALF_WIDTH - 1.02 - 0.15;
       if (car.lateral !== undefined && Math.abs(car.lateral) > scrapeLimit
         && car.speedKmh > 15 && Math.random() < 0.3) {
-        const sgn = Math.sign(car.lateral);
-        // 車輛局部 +x 為左側;lateral 左正 → 接觸側 = 局部 x 軸 * sgn
-        const cx2 = car.pos.x + cos * sgn * 1.05;
-        const cz2 = car.pos.z - sin * sgn * 1.05;
-        this.burstSparks(cx2, 0.35, cz2, 2);
+        this.burstSparks(sideX, 0.3, sideZ, 2, car.vel.x, car.vel.z);
       }
     }
-    // 雨:跟著攝影機平移,雨絲沿 (下落 + 車速反向) 拉長 2-3 倍,天空區域淡出
+    // 雨:雨量集中在行進前方,雨絲依速度傾斜拉長,亮度依「視距+高度」衰減
     if (this.rain && camPos) {
-      this.rain.position.set(camPos.x, 0, camPos.z);
       const vx = car ? car.vel.x : 0;
       const vz = car ? car.vel.z : 0;
       const spd = Math.hypot(vx, vz);
-      const len = Math.min(2.6, 1.5 + spd * 0.02); // 1.5~2.6m 長雨絲
+      // 雨體積中心平滑地偏向行進方向 (~18m),密度感集中在鏡頭前
+      if (spd > 2) {
+        const k = Math.min(1, dt * 2.5);
+        this._rainAhead.x += (vx / spd * 18 - this._rainAhead.x) * k;
+        this._rainAhead.y += (vz / spd * 18 - this._rainAhead.y) * k;
+      }
+      const rox = this._rainAhead.x, roz = this._rainAhead.y;
+      this.rain.position.set(camPos.x + rox, 0, camPos.z + roz);
+      // 速度越快雨絲越斜越長 (1.5~3.2m)
+      const len = Math.min(3.2, 1.5 + spd * 0.035);
       // 表觀運動方向 = 下落 − 相機速度
-      let mx = -vx * 0.6, my = -30, mz = -vz * 0.6;
+      let mx = -vx * 0.8, my = -30, mz = -vz * 0.8;
       const mInv = len / Math.hypot(mx, my, mz);
       mx *= mInv; my *= mInv; mz *= mInv;
       const arr = this.rain.geometry.attributes.position.array;
       const colArr = this.rain.geometry.attributes.color.array;
       const drops = this.rainDrops;
+      const tints = this.rainTint;
       const invH = 1 / this.rainHeight;
+      const camY = camPos.y;
       for (let i = 0; i < this.rainCount; i++) {
         let y = drops[i * 4 + 1] - drops[i * 4 + 3] * dt;
         if (y < 0) {
@@ -391,10 +450,15 @@ export class Effects {
         const o = i * 6;
         arr[o] = x; arr[o + 1] = y; arr[o + 2] = z;
         arr[o + 3] = x - mx; arr[o + 4] = y - my; arr[o + 5] = z - mz;
-        // 亮度 = 每滴隨機 × 高度漸淡 (路面附近密、天空稀)
-        const b = this.rainBright[i] * (1 - y * invH * 0.72);
-        colArr[o] = b; colArr[o + 1] = b; colArr[o + 2] = b;
-        colArr[o + 3] = b; colArr[o + 4] = b; colArr[o + 5] = b;
+        // 視距衰減:近處 ~1.0、50m 外降到 ~0.2 (雨在遠處隱沒,不再像整片雜訊)
+        const ddx = x + rox, ddy = y - camY, ddz = z + roz;
+        const dist = Math.sqrt(ddx * ddx + ddy * ddy + ddz * ddz);
+        const depthFade = THREE.MathUtils.clamp(1.15 - dist * 0.019, 0.2, 1);
+        // 亮度 = 每滴隨機 × 高度漸淡 (路面附近密、天空稀) × 視距衰減
+        const b = this.rainBright[i] * (1 - y * invH * 0.72) * depthFade;
+        const tr = tints[i * 3] * b, tg = tints[i * 3 + 1] * b, tb = tints[i * 3 + 2] * b;
+        colArr[o] = tr; colArr[o + 1] = tg; colArr[o + 2] = tb;
+        colArr[o + 3] = tr; colArr[o + 4] = tg; colArr[o + 5] = tb;
       }
       this.rain.geometry.attributes.position.needsUpdate = true;
       this.rain.geometry.attributes.color.needsUpdate = true;

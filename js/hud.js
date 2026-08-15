@@ -131,9 +131,9 @@ export class HUD {
       g.beginPath(); g.arc(cx, cy, r, a0, a0 + (a1 - a0) * clamped); g.stroke();
       g.shadowBlur = 0;
     }
-    // 刻度:12 格,只留 0/120/230 三個主刻度數字 (小尺寸下保持可讀)
+    // 刻度:12 格。端點數字 0/230 不畫 —— 它們會落在 DOM 的 KM/H 兩側打架;
+    // 只留頂部 '120' 一個錨點,圓心維持「大數字 + KM/H」兩層乾淨層級
     g.lineWidth = 3;
-    const labels = ['0', '120', '230'];
     g.font = '600 26px "Chakra Petch", sans-serif';
     g.textAlign = 'center';
     g.textBaseline = 'middle';
@@ -145,10 +145,10 @@ export class HUD {
       g.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
       g.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
       g.stroke();
-      if (i % 6 === 0) {
+      if (i === 6) {
         g.fillStyle = i / 12 <= clamped ? 'rgba(220,245,255,0.95)' : 'rgba(150,185,215,0.8)';
         const rl = r - 66;
-        g.fillText(labels[i / 6], cx + Math.cos(a) * rl, cy + Math.sin(a) * rl + 1);
+        g.fillText('120', cx + Math.cos(a) * rl, cy + Math.sin(a) * rl + 1);
       }
     }
     // 浮動指針段 (只佔外圈環帶,圓心讓給數字讀數;無尾端配重)
@@ -197,9 +197,9 @@ export class HUD {
       pad + (x - b.minX) * scale + (W - pad * 2 - (b.maxX - b.minX) * scale) / 2,
       W - (pad + (z - b.minZ) * scale + (W - pad * 2 - (b.maxZ - b.minZ) * scale) / 2),
     ];
-    // 賽道外框光暈
+    // 賽道外框光暈 (9px 外光暈 + 6px 暗色芯:172px 顯示下仍讀得出賽道形狀)
     g.strokeStyle = 'rgba(62,230,168,0.9)';
-    g.lineWidth = 7;
+    g.lineWidth = 9;
     g.lineJoin = 'round';
     g.shadowColor = 'rgba(62,230,168,0.8)';
     g.shadowBlur = 10;
@@ -214,7 +214,7 @@ export class HUD {
     g.shadowBlur = 0;
     // 賽道內色
     g.strokeStyle = 'rgba(8,14,22,0.95)';
-    g.lineWidth = 4;
+    g.lineWidth = 6;
     g.stroke();
     // 檢查點菱形:下一個目標 = 琥珀色大菱形 + 脈動光暈,其餘維持青色
     // (_cpPoints[k-1] 對應 race.nextCheckpoint === k;nextCheckpoint 0 = 起終點線)
@@ -223,7 +223,7 @@ export class HUD {
       const cp = this._cpPoints[i];
       const [px, py] = toMap(cp.x, cp.z);
       const isNext = i === nextIdx;
-      const sz = isNext ? 9 + pulse * 2 : 5;
+      const sz = isNext ? 9 + pulse * 2 : 7;
       if (isNext) {
         // 脈動光暈
         g.fillStyle = `rgba(255,181,77,${0.12 + pulse * 0.2})`;
@@ -259,11 +259,11 @@ export class HUD {
     }
     g.lineWidth = finishIsNext ? 4.5 : 3;
     g.strokeStyle = finishIsNext ? '#ffd9a0' : '#ffffff';
-    g.beginPath(); g.moveTo(sx - ux * 8, sy - uy * 8); g.lineTo(sx + ux * 8, sy + uy * 8); g.stroke();
+    g.beginPath(); g.moveTo(sx - ux * 11, sy - uy * 11); g.lineTo(sx + ux * 11, sy + uy * 11); g.stroke();
     g.shadowBlur = 0;
     g.lineWidth = 3;
     g.strokeStyle = '#3ee6a8';
-    g.beginPath(); g.moveTo(sx - ux * 8 - uy * 3.5, sy - uy * 8 + ux * 3.5); g.lineTo(sx + ux * 8 - uy * 3.5, sy + uy * 8 + ux * 3.5); g.stroke();
+    g.beginPath(); g.moveTo(sx - ux * 11 - uy * 3.5, sy - uy * 11 + ux * 3.5); g.lineTo(sx + ux * 11 - uy * 3.5, sy + uy * 11 + ux * 3.5); g.stroke();
     // 101 位置
     const [tx, ty] = toMap(0, -40);
     g.fillStyle = '#3ee6a8';

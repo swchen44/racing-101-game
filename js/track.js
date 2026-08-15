@@ -325,9 +325,10 @@ export class Track {
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      opacity: 0.3,   // 低調:是路面上的倒影光暈,不能搶過標線
+      opacity: 0.24,  // 低調:是路面上的倒影光暈,不能搶過標線
     });
-    const NEON = [0x37e0ff, 0xff43c8, 0xffb347, 0x3ee6a8, 0x8fb7ff, 0xffd23e];
+    // 只用飽和霓虹色:偏白的顏色在側視角會讀成路面白色汙痕
+    const NEON = [0x37e0ff, 0xff43c8, 0xffb347, 0x3ee6a8, 0xffd23e];
     const step = 11;
     const count = Math.floor(N_SAMPLES / step);
     const inst = new THREE.InstancedMesh(geo, mat, count);
@@ -345,7 +346,7 @@ export class Track {
         ? side * (ROAD_HALF_WIDTH - 1.0) * (0.55 + Math.random() * 0.42)
         : (Math.random() - 0.5) * 4;
       const width = 0.55 + Math.random() * 0.85;
-      const len = 4 + Math.random() * 7;
+      const len = 3 + Math.random() * 4;   // 收短:過長的條在垂直視角會橫貫路面
       m4.compose(
         new THREE.Vector3(
           sm.pos.x + sm.normal.x * lat,

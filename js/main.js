@@ -23,7 +23,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 // ---------- 場景 ----------
 const scene = new THREE.Scene();
 // 光害藍紫大氣霧:遠中近景分層、柔化遠處貼圖噪點 (與天空 mid 色一致)
-scene.fog = new THREE.FogExp2(0x0a1226, 0.0028);
+scene.fog = new THREE.FogExp2(0x0a0f1e, 0.0028); // 統一霧色常數 0x0a0f1e (與 city.js 天空 shader 同源)
 
 const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 2600);
 
@@ -51,10 +51,11 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 }
 
 // ---------- 光照 ----------
-scene.add(new THREE.HemisphereLight(0x35496e, 0x1a1622, 1.3));
-// 跟隨車輛的冷色補光:只負責把車從黑暗中托出來,明暗塑形交給月光方向光
-// (先前 intensity 40 會把車漆打成整片螢光平面色塊)
-const carFill = new THREE.PointLight(0xbfd4ff, 11, 15, 1.7);
+// 夜要夠黑:環境光壓低,可讀性交給路燈假光池與標線 emissive,光池才有「亮起來」的戲劇性
+scene.add(new THREE.HemisphereLight(0x35496e, 0x1a1622, 0.85));
+// 跟隨車輛的冷色補光:只微微托出暗部,明暗塑形交給月光方向光與 envMap 方向性高光
+// (強度過高會抹平車身形體光影,車漆讀成自發光塑膠)
+const carFill = new THREE.PointLight(0x9fb8e8, 3.5, 15, 1.7);
 carFill.position.set(0, 7, 0);
 scene.add(carFill);
 const moonLight = new THREE.DirectionalLight(0x9fb8e8, 1.0);
@@ -264,7 +265,7 @@ function tick() {
     const inv = 1 / dist;
     const halfW = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * camera.aspect;
     const off = halfW * 0.52;                  // 塔落在 0.5 + 0.26 ≈ 右 3/4 處
-    camera.lookAt(dz * inv * off, 146, -40 - dx * inv * off); // 塔位置 + 視線左向量*off
+    camera.lookAt(dz * inv * off, 131, -40 - dx * inv * off); // 塔位置 + 視線左向量*off (目標點下移留塔尖 headroom)
   }
 
   // 月光陰影跟隨車輛

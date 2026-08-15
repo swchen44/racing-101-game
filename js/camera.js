@@ -47,17 +47,17 @@ export class ChaseCamera {
     const speedRatio = Math.min(1, car.speedKmh / 230);
     const sin = Math.sin(car.heading), cos = Math.cos(car.heading);
 
-    // ---- 101 地標讓位:車頭朝向塔 ±25° 且距離 <200m → 抬鏡頭+抬視線,讓塔進畫面上 1/3 ----
+    // ---- 101 地標讓位:車頭朝向塔 ±40° 且距離 <320m → 抬鏡頭+大幅抬視線,讓塔進畫面上 1/3 ----
     const tdx = TOWER_X - car.pos.x, tdz = TOWER_Z - car.pos.z;
     const towerDist = Math.hypot(tdx, tdz);
     let towerTarget = 0;
     let sideTarget = this._towerSide;
-    if (towerDist < 200 && towerDist > 1) {
+    if (towerDist < 320 && towerDist > 1) {
       const angToTower = Math.atan2(tdx, tdz);
       let dAng = angToTower - car.heading;
       while (dAng > Math.PI) dAng -= Math.PI * 2;
       while (dAng < -Math.PI) dAng += Math.PI * 2;
-      if (Math.abs(dAng) < THREE.MathUtils.degToRad(25)) {
+      if (Math.abs(dAng) < THREE.MathUtils.degToRad(40)) {
         towerTarget = 1;
         // 橫向讓位:鏡頭往塔偏離車頭的反側平移,拉出「車在一側、塔在另一側」
         // 的乾淨對角構圖,同時把車正前方大樓從『車->塔』視線上錯開
@@ -67,11 +67,14 @@ export class ChaseCamera {
     this._towerLift += (towerTarget - this._towerLift) * Math.min(1, dt * 2.2);
     this._towerSide += (sideTarget - this._towerSide) * Math.min(1, dt * 2.2);
     const lift = this._towerLift;
+    // 抬視線讓塔進畫面上 1/3,但幅度收斂 (近塔 +7m、遠端 +4.5m):
+    // 搭配下方 dist 隨 lift 拉遠,塔與主角車必須同框 — 車被裁出畫面是取景失格
+    const towerLookY = lift * (4.5 + 2.5 * (1 - Math.min(1, towerDist / 320)));
     // 垂直於『車->塔』連線的水平單位向量 (塔太近時退化為 0)
     const invTd = towerDist > 1 ? 1 / towerDist : 0;
     const perpX = -tdz * invTd, perpZ = tdx * invTd;
-    const towerShiftX = perpX * this._towerSide * lift * 2.6;
-    const towerShiftZ = perpZ * this._towerSide * lift * 2.6;
+    const towerShiftX = perpX * this._towerSide * lift * 5.5;
+    const towerShiftZ = perpZ * this._towerSide * lift * 5.5;
 
     // ---- 彎道曲率預讀:提前看向彎心,產生不對稱構圖 ----
     // 用賽道取樣的切線方向差 (前方約 35m) 推算即將到來的轉向量
@@ -91,12 +94,13 @@ export class ChaseCamera {
 
     // ---- 期望位置:車後方 (甩尾時稍微甩向外側增加動感) ----
     const driftOffset = car.driftAmount * Math.sign(car.steer || 0.0001) * 2.2;
-    const dist = m.dist + speedRatio * 2.2;
-    // 高速貼地:speedRatio>0.6 時鏡頭微降,強化速度感;面向101時反向抬升 0.5m
+    // 面向101時同步拉遠鏡頭,塔與車同框
+    const dist = m.dist + speedRatio * 2.2 + lift * 2.2;
+    // 高速貼地:speedRatio>0.6 時鏡頭微降,強化速度感;面向101時反向抬升 1.2m
     const speedDip = Math.max(0, (speedRatio - 0.6) / 0.4) * 0.4;
     this._desired.set(
       car.pos.x - sin * dist + cos * driftOffset + towerShiftX,
-      m.height + speedRatio * 0.5 - speedDip + lift * 0.5,
+      m.height + speedRatio * 0.5 - speedDip + lift * 1.2,
       car.pos.z - cos * dist - sin * driftOffset + towerShiftZ);
 
     // 彈簧平滑 (指數趨近)
@@ -108,11 +112,11 @@ export class ChaseCamera {
 
     // ---- 注視點:車前方 + 速度垂直構圖 + 彎心橫移 + 101 抬視線 ----
     // lookTarget.y 隨速度 1.1→2.2:高速時地平線下移、車落到畫面下 1/3、路面透視拉長
-    // 面向 101 時再抬 ~3m (等效 pitch +3~5°),把塔放進畫面上 1/3
+    // 面向 101 時依距離動態抬 8~12m (等效 pitch +10° 以上),塔身確實進畫面上 1/3
     const rightX = cos, rightZ = -sin; // 車右側方向
     this.lookTarget.set(
       car.pos.x + sin * m.lookAhead + rightX * this._curveShift,
-      1.1 + speedRatio * 1.1 + lift * 3.0,
+      1.1 + speedRatio * 1.1 + towerLookY,
       car.pos.z + cos * m.lookAhead + rightZ * this._curveShift);
 
     // 震動:高速 + 碰撞

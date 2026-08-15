@@ -1,10 +1,13 @@
 // taipei101.js — 台北101 程序化模型:基座裙樓、8 節斗形塔身、塔尖、夜間打光
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const TOWER_POS = new THREE.Vector3(0, 0, -40);
 
-function windowTexture(cols, rows, litRatio, tint) {
-  // 玻璃帷幕:清晰的水平樓層帶 (細亮線 + 寬暗帶),重現 101 夜間的橫向節奏
+function windowTexture(cols, rows, litRatio, tint, warmRows = []) {
+  // 玻璃帷幕:整齊的水平樓層帶。亮段以 4~8 段連續 run 為單位點亮 (而非逐窗擲骰),
+  // 恢復 101 玻璃帷幕最具辨識度的橫向連續節奏;窗色統一玉綠、明度集中在窄區間,
+  // 暖白窗只出現在 warmRows 指定的少數樓層 (觀景台/餐廳層),讀成金點而非彩色雜訊。
   const W = 256, H = 512;
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
@@ -13,27 +16,33 @@ function windowTexture(cols, rows, litRatio, tint) {
   g.fillRect(0, 0, W, H);
   const ch = H / rows;          // 每樓層高度
   const segW = W / cols;        // 每樓層水平分段寬
+  const warmSet = new Set(warmRows);
   for (let r = 0; r < rows; r++) {
     const lineY = Math.round(r * ch + ch * 0.18);
-    // 樓層帶:細亮線 (2~3px),逐段隨機亮/暗,litRatio 控制亮段比例
-    for (let s = 0; s < cols; s++) {
-      const x = Math.round(s * segW) + 1;
-      const w = Math.round(segW) - 2;
+    // 底層連續微光帶:整條全寬低亮度,保底水平連續感 (亮 run 疊在其上)。
+    // 加厚+提亮:遠景 mipmap 平均後塔身仍保有可見的玉綠底光,不再整節全黑
+    g.fillStyle = `rgba(${tint[0] >> 1},${tint[1] >> 1},${tint[2] >> 1},0.55)`;
+    g.fillRect(0, lineY + 1, W, 4);
+    const isWarmRow = warmSet.has(r);
+    // 亮段:以 4~8 段連續 run 為單位整組點亮/熄滅
+    let s = 0;
+    while (s < cols) {
+      const len = Math.min(4 + (Math.random() * 5 | 0), cols - s);
       if (Math.random() < litRatio) {
-        // 三色層次:綠玻璃幕牆泛光 vs 暖白辦公室內光 (暖窗更亮、更厚,佔 0.35)
-        const warm = Math.random() < 0.35;
-        if (warm) {
-          g.fillStyle = `rgba(255,${218 + Math.random() * 30 | 0},168,${0.92 + Math.random() * 0.08})`;
-          g.fillRect(x, lineY - 1, w, 4);
+        const x = Math.round(s * segW) + 1;
+        const w = Math.round(len * segW) - 2;
+        if (isWarmRow && Math.random() < 0.6) {
+          // 暖白亮帶:僅限指定樓層,更亮更厚,形成 2~3 條金色水平簽名帶
+          g.fillStyle = `rgba(255,${222 + Math.random() * 20 | 0},170,${0.9 + Math.random() * 0.1})`;
+          g.fillRect(x, lineY - 1, w, 6);
         } else {
-          g.fillStyle = `rgba(${tint[0]},${tint[1]},${tint[2]},${0.7 + Math.random() * 0.3})`;
-          g.fillRect(x, lineY, w, 3);
+          // 玉綠幕牆光:明度集中在窄區間 (alpha 0.78~0.9),整體一致不閃斑。
+          // 帶高 3→6px:提高每樓層亮帶覆蓋率,遠景縮圖後亮度不塌陷
+          g.fillStyle = `rgba(${tint[0]},${tint[1]},${tint[2]},${0.78 + Math.random() * 0.12})`;
+          g.fillRect(x, lineY, w, 6);
         }
-      } else if (Math.random() < 0.5) {
-        // 微亮的殘光段,維持樓層帶連續感但明顯偏暗
-        g.fillStyle = `rgba(${tint[0] >> 2},${tint[1] >> 2},${tint[2] >> 2},0.5)`;
-        g.fillRect(x, lineY + 1, w, 2);
       }
+      s += len;
     }
     // 每 5 層一條 2px 深色樓層分隔線,強化水平節奏
     if (r % 5 === 4) {
@@ -52,12 +61,21 @@ export function createTaipei101() {
 
   // ---- 材質:翡翠綠玻璃帷幕 ----
   // 三色層次:綠玻璃幕牆 (中亮) + 暖白辦公窗 (最亮,貼圖內建) + 節冠金光 (bloom 簽名)
-  const emissiveTex = windowTexture(16, 40, 0.3, [120, 255, 200]);
+  // litRatio 0.55 + run 點亮 → 每層讀成大段連續亮帶;暖白只留 3 個指定樓層 (整體佔比 ~0.08)
+  const emissiveTex = windowTexture(16, 40, 0.55, [120, 255, 200], [8, 21, 33]);
   const glassMat = new THREE.MeshPhysicalMaterial({
     color: 0x11362a,
     metalness: 0.85, roughness: 0.18,
-    emissive: 0xd9ffe9, emissiveMap: emissiveTex, emissiveIntensity: 1.2,
+    emissive: 0xd9ffe9, emissiveMap: emissiveTex, emissiveIntensity: 1.7,
     envMapIntensity: 1.8,
+  });
+  // 翡翠泛光殼:各節玻璃體外一層微膨脹的加法半透殼 (合併成 1 mesh / 1 draw call)。
+  // 夜間遠景時每節「體」被這層低亮度翡翠光罩住 → 塔身連續可讀,不再只剩節間燈帶;
+  // 亮度極低 (額定 ~0.14),遠低於 bloom threshold 0.85,不會炸 bloom
+  const shellGeos = [];
+  const shellMat = new THREE.MeshBasicMaterial({
+    color: 0x1e8a5f, transparent: true, opacity: 0.14,
+    blending: THREE.AdditiveBlending, depthWrite: false,
   });
   // 節間橫向燈帶:高 emissive + toneMapped:false 讓 bloom 咬住,300m 外仍是亮環
   const trimMat = new THREE.MeshStandardMaterial({
@@ -69,26 +87,47 @@ export function createTaipei101() {
     color: 0xffd27f, metalness: 0.6, roughness: 0.4,
     emissive: 0xffd27f, emissiveIntensity: 3.0,
   });
-  // 如意飾:加大加亮,讓輪廓特徵 200m 外仍可讀
+  // 如意飾:收斂尺寸與亮度,貼齊節底收腰處,讀成鑲飾而非漂浮圓圈
   const ruyiMat = new THREE.MeshStandardMaterial({
     color: 0xd9b45b, metalness: 0.85, roughness: 0.35,
-    emissive: 0xffca55, emissiveIntensity: 0.9,
+    emissive: 0xffca55, emissiveIntensity: 0.6,
   });
 
-  // ---- 裙樓基座 (倒角方塔, 4 層階梯) ----
+  // ---- 裙樓基座 (倒角方塔, 3 層階梯) ----
+  // 素面方盒 → 帶窗貼圖的商場裙樓:簡化窗貼圖 (8列x6行) + 每層簷口亮邊 + 底層入口暖光帶
+  const podiumTex = windowTexture(8, 6, 0.5, [120, 255, 200], [4]);
   const podiumMat = new THREE.MeshStandardMaterial({
     color: 0x28343a, metalness: 0.5, roughness: 0.4,
-    emissive: 0x77ddff, emissiveIntensity: 0.06,
+    emissive: 0xd9ffe9, emissiveMap: podiumTex, emissiveIntensity: 0.85,
   });
   let py = 0;
   const podiumTiers = [[62, 14], [54, 10], [46, 10]];
+  // 每層 tier 頂邊一圈細亮簷口 (復用節冠材質,instanced → 1 draw call)
+  const tierEdges = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 1, 1), crownEdgeMat, podiumTiers.length);
+  const pm4 = new THREE.Matrix4();
+  const pQuat = new THREE.Quaternion();
+  let tierIdx = 0;
   for (const [w, h] of podiumTiers) {
     const tier = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), podiumMat);
     tier.position.y = py + h / 2;
     tier.castShadow = true;
     group.add(tier);
     py += h;
+    pm4.compose(new THREE.Vector3(0, py - 0.2, 0), pQuat, new THREE.Vector3(w + 0.5, 0.4, w + 0.5));
+    tierEdges.setMatrixAt(tierIdx++, pm4);
   }
+  tierEdges.instanceMatrix.needsUpdate = true;
+  group.add(tierEdges);
+  // 底層入口暖光帶:一圈暖色亮帶環繞基座,近鏡運鏡掃過時的地面層生氣
+  const entryBand = new THREE.Mesh(
+    new THREE.BoxGeometry(62.6, 2.0, 62.6),
+    new THREE.MeshStandardMaterial({
+      color: 0x3a2a14, metalness: 0.2, roughness: 0.6,
+      emissive: 0xffc98a, emissiveIntensity: 1.6,
+    }));
+  entryBand.position.y = 1.6;
+  group.add(entryBand);
 
   // ---- 塔身核心柱 (基部) ----
   const baseH = 46;
@@ -96,6 +135,7 @@ export function createTaipei101() {
   base.position.y = py + baseH / 2;
   base.castShadow = true;
   group.add(base);
+  shellGeos.push(makeTaperBox(31.4, 25.4, baseH + 0.6).translate(0, py + baseH / 2, 0));
   let y = py + baseH;
 
   // ---- 8 節斗形樓層 (每節上寬下窄,如意造型) ----
@@ -107,7 +147,7 @@ export function createTaipei101() {
   const crownEdges = new THREE.InstancedMesh(
     new THREE.BoxGeometry(SEG_TOP + 2.2, 0.45, SEG_TOP + 2.2), crownEdgeMat, 8);
   const ruyis = new THREE.InstancedMesh(
-    new THREE.TorusGeometry(1.8, 0.5, 8, 16), ruyiMat, 32);
+    new THREE.TorusGeometry(1.1, 0.32, 8, 16), ruyiMat, 32);
   const m4 = new THREE.Matrix4();
   const rotZero = new THREE.Quaternion();
   const rotY90 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
@@ -119,6 +159,9 @@ export function createTaipei101() {
     seg.position.y = y + SEG_H / 2;
     seg.castShadow = true;
     group.add(seg);
+    // 泛光殼:上下各多 0.35m,與相鄰節的殼幾乎相接 → 節與節之間視覺連續
+    shellGeos.push(makeTaperBox(SEG_BOTTOM + 1.4, SEG_TOP + 1.4, SEG_H + 0.7)
+      .translate(0, y + SEG_H / 2, 0));
 
     // 斗形收腰處一圈 8 點小光暈:4 角 + 4 面中點,模擬 101 分節輪廓照明
     {
@@ -135,11 +178,11 @@ export function createTaipei101() {
     m4.compose(new THREE.Vector3(0, y + SEG_H - 0.65, 0), rotZero, one);
     crownEdges.setMatrixAt(i, m4);
 
-    // 每節四面的「如意」裝飾圓飾
-    const half = SEG_TOP / 2 + 0.55;
+    // 每節四面的「如意」裝飾圓飾:貼齊節底收腰處 (與收腰光暈同高),讀成建築鑲飾
+    const half = SEG_BOTTOM / 2 + 0.45;
     for (const [sx, sz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       m4.compose(
-        new THREE.Vector3(sx * half, y + SEG_H - 4.0, sz * half),
+        new THREE.Vector3(sx * half, y + 1.6, sz * half),
         sx !== 0 ? rotY90 : rotZero, one);
       ruyis.setMatrixAt(ruyiIdx++, m4);
     }
@@ -165,6 +208,7 @@ export function createTaipei101() {
   const crown = new THREE.Mesh(makeTaperBox(17, 12, 20), glassMat);
   crown.position.y = y + 10;
   group.add(crown);
+  shellGeos.push(makeTaperBox(18.4, 13.4, 20.6).translate(0, y + 10, 0));
   y += 20;
   // 頂樓收束塔用較收斂的燈帶材質 (避免整塊實心體被 toneMapped:false 高 emissive 打爆)
   const crown2Mat = trimMat.clone();
@@ -173,16 +217,28 @@ export function createTaipei101() {
   const crown2 = new THREE.Mesh(makeTaperBox(11, 7, 12), crown2Mat);
   crown2.position.y = y + 6;
   group.add(crown2);
+  shellGeos.push(makeTaperBox(12.2, 8.2, 12.4).translate(0, y + 6, 0));
   y += 12;
+
+  // 泛光殼合併 → 單一 mesh (1 draw call)
+  group.add(new THREE.Mesh(mergeGeometries(shellGeos), shellMat));
 
   // ---- 塔尖 ----
   const spireMat = new THREE.MeshStandardMaterial({
     color: 0xbcd8d0, metalness: 0.95, roughness: 0.25,
-    emissive: 0xaaffe0, emissiveIntensity: 1.2,
+    emissive: 0xaaffe0, emissiveIntensity: 2.4,
   });
   const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 2.6, 42, 8), spireMat);
   spire.position.y = y + 21;
   group.add(spire);
+  // 塔尖泛光 sprite:縱向拉長的翡翠光柱,夜間遠景保證塔尖可見、剪影收頂
+  const spireGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: radialGlowTexture('#7dffd0'), transparent: true, opacity: 0.32,
+    blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+  }));
+  spireGlow.scale.set(11, 52, 1);
+  spireGlow.position.y = y + 21;
+  group.add(spireGlow);
   y += 42;
 
   // 航空警示燈 (紅色, sin 呼吸閃爍 emissiveIntensity 0~6, 吃 bloom 成為地標信標)
@@ -256,6 +312,7 @@ export function radialGlowTexture(color) {
   const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
   grad.addColorStop(0, color);
   grad.addColorStop(0.25, color + 'aa');
+  grad.addColorStop(0.55, color + '33'); // 中段補一站:加法混合下尾緣不再出現可讀圓邊
   grad.addColorStop(1, 'rgba(0,0,0,0)');
   g.fillStyle = grad;
   g.fillRect(0, 0, 128, 128);
