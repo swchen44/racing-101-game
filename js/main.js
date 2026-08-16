@@ -20,6 +20,7 @@ import { disposeObject } from './cars/common.js';
 import { Reflections, reflectionUniforms } from './reflections.js';
 import { t, pick, setLang, getLang, applyStatic } from './i18n.js';
 import { attachSpin, clearSpins } from './carpreview.js';
+import { createSponsorBillboards, loadSponsors, ImpressionTracker } from './sponsors.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -133,6 +134,8 @@ function buildWorld(trackDef, weather = weatherById('night')) {
   worldGroup = new THREE.Group();
   worldGroup.add(track.buildMeshes());
   worldGroup.add(createCity(track, theme));
+  // 廣告看板:每條賽道固定 2 個位 (無廣告主時顯示「歡迎刊登廣告」)
+  worldGroup.add(createSponsorBillboards(track, trackDef.id || 'xinyi', weather.id));
   applyWeatherLighting(weather);
   // 無雨設定:路面為乾燥柏油,即時反射整組停用 (連同每幀反射 pass,省一次場景渲染)
   reflectionUniforms.uReflectStrength.value = 0;
@@ -153,6 +156,8 @@ function clearModeActors() {
   if (opponents) { opponents.dispose(); opponents = null; }
   if (police) { police.dispose(); police = null; }
 }
+
+loadSponsors(); // 預載廣告主檔期 (Supabase;無資料時全部顯示佔位看板)
 
 // 初始世界:信義 (標題畫面背景)
 buildWorld(trackById('xinyi'));
@@ -428,6 +433,9 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+let adTracker = null;   // 廣告曝光統計 (每圈每看板一次)
+let adPrevLap = 1;
+
 // ---------- 賽事狀態 ----------
 const race = {
   state: 'title',       // title | countdown | racing | finished | busted
@@ -486,6 +494,8 @@ function startRace() {
 
   race.mode = setup.mode;
   race.paused = false;
+  adTracker = new ImpressionTracker(setup.trackId);
+  adPrevLap = 1;
   race.state = 'countdown';
   race.totalLaps = mode.laps;
   race.countdownT = 0;
@@ -553,6 +563,12 @@ function updateRace(dt) {
     } else {
       race.nextCheckpoint = (race.nextCheckpoint + 1) % N_CHECKPOINTS;
     }
+  }
+
+  // 廣告曝光:每圈經過 2 個看板各記一次
+  if (adTracker) {
+    adTracker.update(car.progress, race.lap !== adPrevLap);
+    adPrevLap = race.lap;
   }
 
   // ---- 模式邏輯 ----
