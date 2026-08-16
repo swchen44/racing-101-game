@@ -23,6 +23,7 @@
 - **[管理者手冊](docs/ADMIN-GUIDE.md)** — 部署、Supabase 資料庫、排行榜與廣告管理
 - **[遊戲設計手冊](docs/GAME-DESIGN.md)** — 場景、規則、物理/AI 模型、資料流
 - **[廣告刊登方案](docs/AD-SALES-KIT.md)** — 看板位置、素材規格、上架 SOP
+- **[itch.io 上架指南](docs/ITCH-PUBLISH.md)** — 打包、頁面設定、文案與更新流程
 
 ---
 
