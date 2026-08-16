@@ -40,9 +40,10 @@ export function saveLocalScore(entry) {
   localStorage.setItem(LS_SCORES, JSON.stringify(trimmed));
 }
 
-export function topLocal(mode, trackId, n = 10) {
+export function topLocal(mode, trackId, n = 10, difficulty = null) {
   return loadScores()
-    .filter((e) => e.mode === mode && (!trackId || e.trackId === trackId))
+    .filter((e) => e.mode === mode && (!trackId || e.trackId === trackId)
+      && (!difficulty || (e.difficulty || 'normal') === difficulty))
     .sort((a, b) => a.timeMs - b.timeMs)
     .slice(0, n);
 }
@@ -98,6 +99,7 @@ export async function uploadScore(entry) {
       mode: entry.mode,
       track_id: entry.trackId,
       car_id: entry.carId,
+      difficulty: entry.difficulty || 'normal',
       name: String(entry.name || '匿名').slice(0, 20),
       time_ms: Math.round(entry.timeMs),
       best_lap_ms: Math.round(entry.bestLapMs || 0),
@@ -107,12 +109,13 @@ export async function uploadScore(entry) {
   return true;
 }
 
-export async function topRemote(mode, trackId, n = 20) {
+export async function topRemote(mode, trackId, n = 20, difficulty = null) {
   if (!remoteEnabled()) return null;
-  const filter = trackId ? `&track_id=eq.${trackId}` : '';
+  const filter = (trackId ? `&track_id=eq.${trackId}` : '')
+    + (difficulty ? `&difficulty=eq.${difficulty}` : '');
   const rows = await sb(
     `scores?mode=eq.${mode}${filter}&order=time_ms.asc&limit=${n}` +
-    `&select=name,masked_ip,time_ms,best_lap_ms,car_id,track_id,created_at`);
+    `&select=name,masked_ip,time_ms,best_lap_ms,car_id,track_id,difficulty,created_at`);
   return rows.map((r) => ({
     name: r.name, maskedIp: r.masked_ip, timeMs: r.time_ms,
     bestLapMs: r.best_lap_ms, carId: r.car_id, trackId: r.track_id, date: r.created_at,

@@ -199,8 +199,8 @@ canvas#game { display: block; width: 100%; height: 100%; }
 .screen.on { display: flex; }
 .screen.fadeout { opacity: 0; pointer-events: none; }
 .menu-btn {
-  font-family: var(--hud-font); font-size: 15px; letter-spacing: 6px; color: #cfe9ff; cursor: pointer;
-  border: 1px solid rgba(77,216,255,0.35); padding: 13px 40px; text-align: center;
+  font-family: var(--hud-font); font-size: 19px; letter-spacing: 6px; color: #cfe9ff; cursor: pointer;
+  border: 1px solid rgba(77,216,255,0.35); padding: 16px 46px; text-align: center;
   background: linear-gradient(rgba(77,216,255,0.08), rgba(77,216,255,0.08)) var(--glass-solid);
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
 }
@@ -224,7 +224,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
     linear-gradient(105deg, rgba(4,7,14,0.78) 0%, rgba(4,7,14,0.55) 40%, rgba(4,7,14,0.18) 70%, rgba(4,7,14,0.1) 100%);
 }
 #ui:has(.screen.on) :is(#race-pod, #speed-pod, #minimap-wrap, #wrongway, #center-msg, #sub-msg, #record-flash, #pos-pod, #wanted-pod, #touch-ui, #danger-vignette) { visibility: hidden; }
-#title-tower { font-family: var(--tc-font); font-weight: 300; font-size: 15px; letter-spacing: 18px; color: #8fb4d4; margin-bottom: 14px; }
+#title-tower { font-family: var(--tc-font); font-weight: 300; font-size: 18px; letter-spacing: 18px; color: #8fb4d4; margin-bottom: 14px; }
 #title-main {
   font-family: var(--display-font); font-size: clamp(38px, 6.4vw, 82px); line-height: 1.02;
   background: linear-gradient(175deg, #ffffff 20%, #9be8cd 45%, var(--neon-jade) 70%, #1e8f68 100%);
@@ -240,16 +240,16 @@ canvas#game { display: block; width: 100%; height: 100%; }
 #title-rule { width: 340px; max-width: 70vw; height: 1px; margin: 26px 0 22px;
   background: linear-gradient(90deg, rgba(62,230,168,0.7), transparent); }
 #name-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-#name-label { font-family: var(--tc-font); font-size: 13px; letter-spacing: 4px; color: #8fb4d4; }
+#name-label { font-family: var(--tc-font); font-size: 17px; letter-spacing: 4px; color: #a8c8e2; }
 #player-name {
-  font-family: var(--hud-font); font-size: 17px; letter-spacing: 2px; color: #fff;
+  font-family: var(--hud-font); font-size: 20px; letter-spacing: 2px; color: #fff;
   background: var(--glass-solid); border: 1px solid rgba(62,230,168,0.35); outline: none;
   padding: 10px 16px; width: 220px;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 #player-name:focus { border-color: var(--neon-jade); box-shadow: 0 0 14px rgba(62,230,168,0.3); }
 #title-btns { display: flex; gap: 16px; flex-wrap: wrap; }
-#controls-hint { margin-top: clamp(16px, 3vh, 36px); display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 12px; color: #8fb4d4; letter-spacing: 2px; max-width: 620px; }
+#controls-hint { margin-top: clamp(16px, 3vh, 36px); display: flex; flex-wrap: wrap; gap: 13px 26px; font-size: 15px; color: #9fc0da; letter-spacing: 2px; max-width: 760px; }
 #controls-hint b {
   color: #dcefff; font-weight: 600;
   background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
@@ -260,7 +260,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
 #setup-screen, #board-screen { padding: clamp(18px, 5vh, 48px) 6vw 5vh; background: linear-gradient(180deg, rgba(4,7,14,0.9), rgba(4,7,14,0.8)); }
 .setup-title { font-family: var(--display-font); font-size: clamp(22px, 3vw, 34px); color: #eafff5; letter-spacing: 4px; text-shadow: 0 0 20px rgba(62,230,168,0.5); }
 .setup-sub { font-family: var(--tc-font); font-size: 12px; letter-spacing: 6px; color: #7fa8c9; margin-top: 6px; }
-.sec-label { font-family: var(--tc-font); font-size: 13px; font-weight: 700; letter-spacing: 6px; color: var(--neon-amber); margin: 26px 0 12px; display: flex; align-items: center; gap: 12px; }
+.sec-label { font-family: var(--tc-font); font-size: 16px; font-weight: 700; letter-spacing: 6px; color: var(--neon-amber); margin: 26px 0 12px; display: flex; align-items: center; gap: 12px; }
 .sec-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,181,77,0.4), transparent); }
 .card-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .sel-card {
@@ -275,9 +275,9 @@ canvas#game { display: block; width: 100%; height: 100%; }
   background: linear-gradient(rgba(62,230,168,0.13), rgba(62,230,168,0.13)) var(--glass);
   box-shadow: 0 0 18px rgba(62,230,168,0.25);
 }
-.sel-card .c-name { font-family: var(--tc-font); font-weight: 700; font-size: 15px; color: #eaf6ff; letter-spacing: 2px; }
+.sel-card .c-name { font-family: var(--tc-font); font-weight: 700; font-size: 18px; color: #eaf6ff; letter-spacing: 2px; }
 .sel-card .c-en { font-size: 10px; letter-spacing: 3px; color: #6d90b2; margin-top: 2px; }
-.sel-card .c-desc { font-family: var(--tc-font); font-size: 11px; color: #8fb4d4; margin-top: 7px; line-height: 1.5; max-width: 200px; }
+.sel-card .c-desc { font-family: var(--tc-font); font-size: 13px; color: #9fc0da; margin-top: 7px; line-height: 1.55; max-width: 220px; }
 .sel-card .c-meta { font-size: 10px; color: var(--neon-amber); letter-spacing: 2px; margin-top: 6px; }
 .stat-bars { margin-top: 8px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; align-items: center; width: 160px; }
 .stat-bars .sk { font-size: 9px; letter-spacing: 2px; color: #6d90b2; font-family: var(--tc-font); }
@@ -296,7 +296,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
 .tab.sel { color: #eafff5; border-color: var(--neon-jade); background: linear-gradient(rgba(62,230,168,0.12), rgba(62,230,168,0.12)) var(--glass); }
 #board-list { margin-top: 20px; max-width: 720px; }
 .board-row {
-  display: grid; grid-template-columns: 44px 1fr 130px 110px; gap: 10px; align-items: center;
+  display: grid; grid-template-columns: 44px 1fr 120px 110px 110px; gap: 10px; align-items: center;
   padding: 9px 12px; border-bottom: 1px solid rgba(127,168,201,0.12);
   font-variant-numeric: tabular-nums; font-size: 14px;
 }
@@ -305,6 +305,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
 .board-row:nth-child(2) .rk { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.6); }
 .board-row .nm { color: #eaf6ff; font-family: var(--tc-font); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .board-row .ip { color: #56789a; font-size: 12px; }
+.board-row .dt { color: #6d8fae; font-size: 12px; font-variant-numeric: tabular-nums; }
 .board-row .tm { color: var(--neon-jade); font-weight: 600; text-align: right; }
 #board-empty { padding: 30px 10px; color: #56789a; font-family: var(--tc-font); letter-spacing: 3px; font-size: 13px; }
 #board-src { font-size: 11px; letter-spacing: 3px; color: #56789a; margin-top: 10px; font-family: var(--tc-font); }
@@ -331,6 +332,21 @@ canvas#game { display: block; width: 100%; height: 100%; }
 
 /* ---------- 觸控操作 UI ---------- */
 #touch-ui { display: none; position: absolute; inset: 0; pointer-events: none; z-index: 5; font-family: var(--hud-font); }
+/* 手機/平板 (粗指標):按鈕全面加大 + 間距拉開,避免誤觸 */
+@media (pointer: coarse) {
+  .tc-btn { width: 104px; height: 104px; font-size: 34px; }
+  #tc-left  { left: 20px; bottom: 150px; }
+  #tc-right { left: 148px; bottom: 150px; }
+  #tc-gas   { right: 20px; bottom: 172px; width: 122px; height: 122px; }
+  #tc-brake { right: 166px; bottom: 148px; width: 104px; height: 104px; }
+  #tc-hand  { right: 46px; bottom: 316px; width: 88px; height: 88px; font-size: 20px; }
+  #tc-boost { right: 288px; bottom: 140px; width: 88px; height: 88px; }
+  #tc-up    { right: 166px; bottom: 274px; width: 78px; height: 78px; }
+  #tc-down  { right: 262px; bottom: 244px; width: 78px; height: 78px; }
+  #tc-cam   { right: 20px; top: 104px; width: 64px; height: 64px; font-size: 22px; }
+  #tc-mirror { right: 20px; top: 180px; width: 64px; height: 64px; font-size: 22px; }
+  body.touch #speed-pod { transform: scale(0.72); left: 10px; bottom: 264px; }
+}
 .tc-btn {
   position: absolute; pointer-events: auto; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
@@ -412,10 +428,12 @@ body.touch #controls-hint { display: none; }
 
 /* ---------- 響應式縮放 ---------- */
 @media (max-width: 900px) {
+  #mirror-frame { width: min(30vw, 300px); }
   #race-pod { left: 16px; top: 14px; transform: scale(0.88); transform-origin: top left; }
   #pos-pod, #wanted-pod { right: 16px; top: 14px; }
   #center-msg { font-size: 76px; }
-  .board-row { grid-template-columns: 34px 1fr 90px 96px; font-size: 13px; }
+  .board-row { grid-template-columns: 34px 1fr 96px; font-size: 13px; }
+  .board-row .ip, .board-row .dt { display: none; }
 }
 /* 手機:選單單列可滾動 + 字級間距收斂 */
 @media (max-width: 700px) {
@@ -482,7 +500,7 @@ body.touch #controls-hint { display: none; }
 #btn-mirror { top: 138px; left: 34px; }
 #mirror-frame {
   position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
-  width: min(30vw, 380px); aspect-ratio: 3.2; display: none;
+  width: min(38vw, 560px); aspect-ratio: 3.2; display: none;
   border: 2px solid rgba(120,160,200,0.55); border-radius: 8px;
   box-shadow: 0 0 24px rgba(0,0,0,0.65), inset 0 0 14px rgba(0,0,0,0.4);
   pointer-events: none;
@@ -517,7 +535,7 @@ body.touch #controls-hint { display: none; }
 #confirm-btns { display: flex; gap: 14px; margin-top: 28px; justify-content: center; flex-wrap: wrap; }
 #lang-row { display: flex; gap: 8px; margin-bottom: 16px; }
 .lang-btn {
-  cursor: pointer; font-size: 13px; letter-spacing: 2px; color: #7fa0be; padding: 6px 18px;
+  cursor: pointer; font-size: 16px; letter-spacing: 2px; color: #7fa0be; padding: 8px 22px;
   border: 1px solid rgba(120,150,180,0.3); background: var(--glass);
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
@@ -548,7 +566,7 @@ body.touch #controls-hint { display: none; }
   padding: 2px 8px; border-radius: 3px;
 }
 .c-intro {
-  font-family: var(--tc-font); font-size: 11px; color: #8fb4d4; margin-top: 8px;
+  font-family: var(--tc-font); font-size: 13px; color: #9fc0da; margin-top: 8px;
   line-height: 1.65; max-width: 236px;
 }
 .car-spin {
@@ -724,6 +742,7 @@ body.touch #controls-hint { display: none; }
     <div class="setup-sub">排 行 榜</div>
     <div class="tab-row" id="board-mode-tabs"></div>
     <div class="tab-row" id="board-track-tabs"></div>
+    <div class="tab-row" id="board-diff-tabs"></div>
     <div id="board-list"></div>
     <div id="board-src"></div>
     <div id="setup-actions">

@@ -91,7 +91,8 @@ export class HUD {
     el.classList.add('pop');
   }
 
-  update(car, race) {
+  update(car, race, others = null) {
+    this._others = others;
     // 速度數字
     const kmh = Math.round(car.speedKmh);
     if (kmh !== this._lastSpeedShown) {
@@ -118,7 +119,7 @@ export class HUD {
     const lapTotalEl = $('lap-total');
     if (lapTotalEl.textContent !== totalTxt) lapTotalEl.textContent = totalTxt;
 
-    this._drawMinimap(car, race);
+    this._drawMinimap(car, race, this._others);
   }
 
   setLastLap(t) { this.tLast.textContent = formatTime(t); this.tLast.classList.remove('empty'); }
@@ -247,7 +248,7 @@ export class HUD {
     }
   }
 
-  _drawMinimap(car, race) {
+  _drawMinimap(car, race, others) {
     const g = this.minimap;
     const W = 344;
     const t = performance.now() * 0.001;
@@ -355,6 +356,21 @@ export class HUD {
       const fade = (i + 1) / (this._trail.length + 1);
       g.fillStyle = `rgba(255,181,77,${0.15 + fade * 0.35})`;
       g.beginPath(); g.arc(px, py, 2 + fade * 1.5, 0, Math.PI * 2); g.fill();
+    }
+    // 其他車輛 (GP 對手 = 各自車色圓點;警車 = 紅藍閃爍圓點)
+    if (others && others.length) {
+      const blink = Math.floor(t * 5) % 2 === 0;
+      for (const o of others) {
+        const [ox, oy] = toMap(o.x, o.z);
+        g.fillStyle = o.police ? (blink ? '#ff3355' : '#3f6cff') : (o.color || '#c8d4e2');
+        g.shadowColor = g.fillStyle;
+        g.shadowBlur = o.police ? 9 : 5;
+        g.beginPath(); g.arc(ox, oy, o.police ? 5.5 : 4.5, 0, Math.PI * 2); g.fill();
+        g.shadowBlur = 0;
+        g.strokeStyle = 'rgba(10,14,22,0.9)';
+        g.lineWidth = 1.5;
+        g.stroke();
+      }
     }
     // 車 (放大箭頭 + 白色描邊,深色賽道上一眼可辨)
     const [cx2, cy2] = toMap(car.pos.x, car.pos.z);

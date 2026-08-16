@@ -248,10 +248,18 @@ export class Police {
         const gapM = gap * this.track.length;   // 正 = 玩家在前 (已超越)
         const playerTop = (playerCar.tune?.maxSpeed ?? 55);
         if (u.caughtUp) {
-          // 堵路中:維持前方 22m;極速上限 = 玩家車 96% → 技術好可硬拉直線超掉
-          const hold = -22 - gapM; // >0 需要加速拉開
-          const target = Math.min(playerTop * 0.96, playerSpeed + hold * 0.35);
-          u.speed += THREE.MathUtils.clamp(target - u.speed, -30 * dt, 13 * dt);
+          // 堵路中:貼在玩家前方 ~18m 等玩家,絕不自己跑遠。
+          // distAhead = 警車領先玩家的公尺數;超過 18m → 減速等待 (拉更遠減更兇),
+          // 不足 → 微加速拉開;極速上限 = 玩家車 96% → 技術好可硬拉直線超掉
+          const distAhead = -gapM;
+          let target;
+          if (distAhead > 18) {
+            target = Math.max(4, playerSpeed - (distAhead - 18) * 0.6);
+          } else {
+            target = playerSpeed + (18 - distAhead) * 0.4;
+          }
+          target = Math.min(target, playerTop * 0.96);
+          u.speed += THREE.MathUtils.clamp(target - u.speed, -34 * dt, 13 * dt);
           // 車道鏡像 (刻意慢半拍):玩家換道 ~0.8s 後才跟上
           u.lane += (playerCar.lateral - u.lane) * Math.min(1, dt * 1.15);
           if (gapM > 12) u.caughtUp = false; // 被超越 → 轉入追趕

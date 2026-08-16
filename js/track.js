@@ -281,6 +281,75 @@ export class Track {
     return tex;
   }
 
+
+  // 乾燥柏油法線貼圖:雜訊高度場 → 有限差分轉法線,骨材顆粒在車燈/路燈下有立體感
+  _asphaltNormalMap() {
+    const S = 256;
+    const hgt = new Float32Array(S * S);
+    for (let i = 0; i < S * S; i++) hgt[i] = Math.random();
+    // 一次 3x3 盒狀模糊:顆粒直徑 ~2px,像 5mm 骨材
+    const blur = new Float32Array(S * S);
+    for (let y = 0; y < S; y++) {
+      for (let x = 0; x < S; x++) {
+        let sum = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          sum += hgt[((y + dy + S) % S) * S + ((x + dx + S) % S)];
+        }
+        blur[y * S + x] = sum / 9;
+      }
+    }
+    const c = document.createElement('canvas');
+    c.width = c.height = S;
+    const g = c.getContext('2d');
+    const img = g.createImageData(S, S);
+    for (let y = 0; y < S; y++) {
+      for (let x = 0; x < S; x++) {
+        const hL = blur[y * S + ((x - 1 + S) % S)], hR = blur[y * S + ((x + 1) % S)];
+        const hU = blur[((y - 1 + S) % S) * S + x], hD = blur[((y + 1) % S) * S + x];
+        const nx = (hL - hR) * 2.2, ny = (hU - hD) * 2.2;
+        const o = (y * S + x) * 4;
+        img.data[o] = 128 + nx * 127;
+        img.data[o + 1] = 128 + ny * 127;
+        img.data[o + 2] = 255;
+        img.data[o + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(6, 40);   // 顆粒實際尺寸 ~幾公分
+    tex.anisotropy = 4;
+    return tex;
+  }
+
+  // 粗糙度斑駁:大尺度磨亮車轍 (較低粗糙) + 顆粒微變化
+  _asphaltRoughMap() {
+    const S = 256;
+    const c = document.createElement('canvas');
+    c.width = c.height = S;
+    const g = c.getContext('2d');
+    g.fillStyle = '#d2d2d2';   // 基準粗糙 (乘上 material.roughness)
+    g.fillRect(0, 0, S, S);
+    for (let i = 0; i < 5200; i++) {
+      const v = 165 + Math.random() * 90 | 0;
+      g.fillStyle = `rgb(${v},${v},${v})`;
+      g.fillRect(Math.random() * S, Math.random() * S, 2, 2);
+    }
+    // 車轍帶較平滑 (被輪胎磨亮 → 粗糙度略低)
+    for (const cx of [S * 0.31, S * 0.69]) {
+      const grad = g.createLinearGradient(cx - 26, 0, cx + 26, 0);
+      grad.addColorStop(0, 'rgba(160,160,160,0)');
+      grad.addColorStop(0.5, 'rgba(150,150,150,0.55)');
+      grad.addColorStop(1, 'rgba(160,160,160,0)');
+      g.fillStyle = grad;
+      g.fillRect(cx - 26, 0, 52, S);
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(1, 18);
+    return tex;
+  }
+
   _roadMesh() {
     const geo = this._ribbonGeometry(ROAD_HALF_WIDTH, 0.02, 2, 1 / 16);
     const { map, emissiveMap } = this._roadTextures();
@@ -289,8 +358,11 @@ export class Track {
       emissive: 0xffffff,
       emissiveMap,
       emissiveIntensity: (this.theme.weatherId === 'day' ? 0.06 : this.theme.weatherId === 'dusk' ? 0.3 : 0.55), // 標線自發光:夜亮/昏半/日近零
-      roughness: 0.32,           // 濕潤感:低粗糙度拉出天空/霓虹光澤
-      metalness: 0.22,
+      roughness: 0.82,           // 乾燥柏油:高粗糙度,質感靠法線+粗糙度貼圖的顆粒
+      metalness: 0.04,
+      normalMap: this._asphaltNormalMap(),
+      normalScale: new THREE.Vector2(0.55, 0.55),
+      roughnessMap: this._asphaltRoughMap(),
       envMap: this._envTexture(),
       envMapIntensity: 0.7,
     });

@@ -55,8 +55,7 @@ export function createCity(track, theme = {}) {
   group.add(createTrackFurniture(track, streaks, landmark, wid));
   // 天空飛行器:定期航班 + 巡邏直升機
   group.add(createSkyTraffic(landmark, wid));
-  // 濕路反射:白天路面乾燥 → 不生成;黃昏保留但由各光源亮度自然變弱
-  if (wid !== 'day') group.add(createReflectionStreaks(streaks, wid));
+  // 無雨設定:路面乾燥,濕路反射條全時段停用 (程式保留供未來雨天模式)
   // 匯總子群 update (霓虹閃爍等):main.js 只巡訪 worldGroup 直接子層
   const updatables = group.children.filter((c) => c.userData.update);
   group.userData.update = (t) => { for (const u of updatables) u.userData.update(t); };

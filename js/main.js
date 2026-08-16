@@ -134,8 +134,8 @@ function buildWorld(trackDef, weather = weatherById('night')) {
   worldGroup.add(track.buildMeshes());
   worldGroup.add(createCity(track, theme));
   applyWeatherLighting(weather);
-  // 白天路面乾燥:即時反射強度壓到近零;黃昏減半
-  reflectionUniforms.uReflectStrength.value = weather.id === 'day' ? 0.06 : weather.id === 'dusk' ? 0.6 : 1.15;
+  // 無雨設定:路面為乾燥柏油,即時反射整組停用 (連同每幀反射 pass,省一次場景渲染)
+  reflectionUniforms.uReflectStrength.value = 0;
   scene.add(worldGroup);
   if ((trackDef.theme?.landmark ?? 'tower101') === 'tower101') {
     tower = createTaipei101();
@@ -349,7 +349,7 @@ function renderSetupCards() {
 window.__i18nLenDiff = (tr) => t('lengthDiff', tr.lengthKm, '★'.repeat(tr.difficulty) + '☆'.repeat(3 - tr.difficulty));
 
 // ---------- 排行榜畫面 ----------
-const board = { mode: 'solo', trackId: 'xinyi' };
+const board = { mode: 'solo', trackId: 'xinyi', difficulty: 'normal' };
 async function renderBoard() {
   const mt = $('board-mode-tabs');
   mt.innerHTML = '';
@@ -369,15 +369,25 @@ async function renderBoard() {
     el.addEventListener('click', () => { board.trackId = t.id; renderBoard(); });
     tt.appendChild(el);
   }
+  // 難度分榜 (低/中/高分開排名)
+  const dt = $('board-diff-tabs');
+  dt.innerHTML = '';
+  for (const d of DIFFICULTIES) {
+    const el = document.createElement('div');
+    el.className = 'tab' + (board.difficulty === d.id ? ' sel' : '');
+    el.textContent = pick(d);
+    el.addEventListener('click', () => { board.difficulty = d.id; renderBoard(); });
+    dt.appendChild(el);
+  }
   const list = $('board-list');
   const src = $('board-src');
-  const localRows = topLocal(board.mode, board.trackId, 20);
+  const localRows = topLocal(board.mode, board.trackId, 20, board.difficulty);
   let rows = localRows.map((e) => ({ ...e, src: '本機' }));
   src.textContent = remoteEnabled() ? t('boardLoading') : t('boardLocalOnly');
   renderBoardRows(list, rows);
   if (remoteEnabled()) {
     try {
-      const remote = await topRemote(board.mode, board.trackId, 20);
+      const remote = await topRemote(board.mode, board.trackId, 20, board.difficulty);
       if (remote) {
         rows = remote.map((e) => ({ ...e, src: '全球' }));
         src.textContent = t('boardGlobal');
@@ -390,14 +400,25 @@ async function renderBoard() {
 }
 function renderBoardRows(list, rows) {
   const hd = t('boardHead');
-  let html = `<div class="board-row head"><span>${hd[0]}</span><span>${hd[1]}</span><span>${hd[2]}</span><span style="text-align:right">${hd[3]}</span></div>`;
+  let html = `<div class="board-row head"><span>${hd[0]}</span><span>${hd[1]}</span><span>${hd[2]}</span><span>${hd[4]}</span><span style="text-align:right">${hd[3]}</span></div>`;
   if (!rows.length) {
     html += `<div id="board-empty">${t('boardEmpty')}</div>`;
   } else {
     rows.forEach((e, i) => {
+      // DB 存 UTC (created_at) / 本機存 ISO;Date 物件轉為瀏覽器時區顯示
+      let when = '—';
+      const iso = e.date;
+      if (iso) {
+        const d = new Date(iso);
+        if (!isNaN(d)) {
+          when = d.toLocaleString(getLang() === 'en' ? 'en-US' : 'zh-TW',
+            { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+      }
       html += `<div class="board-row"><span class="rk">${i + 1}</span>` +
         `<span class="nm">${escapeHtml(e.name || '匿名')}</span>` +
         `<span class="ip">${e.maskedIp || 'local'}</span>` +
+        `<span class="dt">${when}</span>` +
         `<span class="tm">${formatTime(e.timeMs / 1000)}</span></div>`;
     });
   }
@@ -506,7 +527,7 @@ function updateRace(dt) {
   const s = car.progress;
   const target = race.nextCheckpoint / N_CHECKPOINTS;
   const diff = (s - target + 1) % 1;
-  if (diff < 0.045) {
+  if (diff < 0.06) {  // 判定窗 ~96m:高速+碰撞推擠也不會漏掉終點
     if (race.nextCheckpoint === 0) {
       race.lapTimes.push(race.currentLapTime);
       const lapT = race.currentLapTime;
@@ -591,6 +612,7 @@ function showResultsScreen(busted) {
   if (!busted) {
     const entry = {
       mode: race.mode, trackId: setup.trackId, carId: setup.carId,
+      difficulty: setup.difficulty,
       name: setup.name, timeMs: race.totalTime * 1000, bestLapMs: (bestLapS || 0) * 1000,
     };
     saveLocalScore(entry);
@@ -640,7 +662,8 @@ function toggleMirror() {
 $('btn-mirror').addEventListener('click', toggleMirror);
 function renderMirror() {
   const W = window.innerWidth, H = window.innerHeight;
-  const w = Math.min(W * 0.3, 380), h = w / 3.2;
+  const w = W > 900 ? Math.min(W * 0.38, 560) : Math.min(W * 0.3, 300);
+  const h = w / 3.2;
   const x = (W - w) / 2, y = H - 24 - h - 2; // 對齊 CSS #mirror-frame (top:24)
   mirrorCam.aspect = w / h;
   mirrorCam.updateProjectionMatrix();
@@ -725,7 +748,25 @@ function tick() {
   effects.update(frameDt, ui.screen === null ? car : null, camera.position, now, input);
   audio.update(car, frameDt, race.state === 'racing');
   if (ui.screen === null && hud) {
-    hud.update(car, race);
+    // 小地圖上的其他車輛 (GP 對手各自車色 / 警車紅藍閃)
+    let mapOthers = null;
+    if (opponents || police) {
+      mapOthers = [];
+      if (opponents) {
+        for (const ai of opponents.cars) {
+          mapOthers.push({
+            x: ai.mesh.position.x, z: ai.mesh.position.z,
+            color: '#' + (ai.spec?.paint ?? 0xc8d4e2).toString(16).padStart(6, '0'),
+          });
+        }
+      }
+      if (police) {
+        for (const u of police.units) {
+          mapOthers.push({ x: u.mesh.position.x, z: u.mesh.position.z, police: true });
+        }
+      }
+    }
+    hud.update(car, race, mapOthers);
     hud.updateBoost(car);
   }
   // 駕駛艙視角:顯示儀表框、隱藏自車車身 (免遮擋)
@@ -736,7 +777,7 @@ function tick() {
     if (car.bodyGroup) car.bodyGroup.visible = !rigid;
   }
 
-  reflections.update();   // 主渲染前:鏡像相機渲染發光體到反射 RT
+  // 反射停用 (乾燥柏油):不再執行反射 pass — reflections.update()
   effects.render(frameDt);
   if (mirrorOn && ui.screen === null) renderMirror();
 

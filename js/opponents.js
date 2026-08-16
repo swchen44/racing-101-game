@@ -18,9 +18,10 @@ const AI_ROSTER = [
 // 難度 → AI 技術帶與橡皮筋強度。skillJitter 讓每台車能力隨機拉開差距,
 // 避免整群 AI 擠成一坨 (每場隨機,同場內每台不同)
 const DIFFICULTY_TUNE = {
-  easy: { skillLo: 0.68, skillHi: 0.84, rubber: 0.5, catchUp: 0.08, holdBack: -0.1 },
-  normal: { skillLo: 0.84, skillHi: 0.99, rubber: 0.32, catchUp: 0.07, holdBack: -0.05 },
-  hard: { skillLo: 0.96, skillHi: 1.1, rubber: 0.12, catchUp: 0.04, holdBack: -0.02 },
+  // holdBack=0:AI 不等玩家,領先照樣全速;rubber 只作用於落後追趕
+  easy: { skillLo: 0.68, skillHi: 0.84, rubber: 0.5, catchUp: 0.08, holdBack: 0 },
+  normal: { skillLo: 0.84, skillHi: 0.99, rubber: 0.32, catchUp: 0.07, holdBack: 0 },
+  hard: { skillLo: 0.96, skillHi: 1.1, rubber: 0.12, catchUp: 0.04, holdBack: 0 },
 };
 
 export class Opponents {
@@ -51,7 +52,7 @@ export class Opponents {
       this.cars.push({
         mesh, parts, spec,
         s: startS, lane, laneTarget: lane,
-        speed: 0, skill, laps: 0, wheelSpin: 0,
+        speed: 0, skill, laps: -1, wheelSpin: 0,  // 出生於起跑線前:首次過線後歸 0,與玩家圈數計法對齊
         finished: false,
         reaction: 0.12 + i * 0.09 + Math.random() * 0.22, // 綠燈後起步反應時間
         laneBias: (Math.random() - 0.5) * 1.6,            // 個人走線偏好
@@ -78,10 +79,16 @@ export class Opponents {
     ai.mesh.rotation.y = Math.atan2(tan.x, tan.z) + ai.wobbleYaw;
   }
 
+  // 帶符號的進度位移:前跨線 +1 圈、回跨線 -1 圈 (碰撞把車推回線後不會灌圈數)
+  _shiftS(ai, ds) {
+    let ns = ai.s + ds;
+    while (ns >= 1) { ns -= 1; ai.laps++; }
+    while (ns < 0) { ns += 1; ai.laps--; }
+    ai.s = ns;
+  }
+
   _advance(ai, dt) {
-    const prevS = ai.s;
-    ai.s = (ai.s + (ai.speed * dt) / this.track.length) % 1;
-    if (ai.s < prevS - 0.5) ai.laps++;
+    this._shiftS(ai, (ai.speed * dt) / this.track.length);
     ai.wheelSpin += (ai.speed / 0.48) * dt;
     if (ai.parts.wheels) {
       for (const w of ai.parts.wheels) w.spinner.rotation.x = ai.wheelSpin % (Math.PI * 2);
@@ -144,10 +151,12 @@ export class Opponents {
       // 完賽 → 減速滑行 (沿賽道慢慢停下)
       if (!ai.finished && ai.laps >= this.totalLaps) ai.finished = true;
       if (ai.finished) {
-        ai.speed = Math.max(0, ai.speed - 8 * dt);
+        // 完賽:滑行 + 靠到最外側路肩停車,絕不堵在賽道中央/終點線
+        ai.speed = Math.max(0, ai.speed - 6 * dt);
         ai.upset = 0;
         ai.wobbleYaw *= 1 - Math.min(1, dt * 4);
-        ai.lane += (ai.laneBias - ai.lane) * Math.min(1, dt * 0.6);
+        const side = ai.laneBias >= 0 ? 5.6 : -5.6;
+        ai.lane += (side - ai.lane) * Math.min(1, dt * 1.2);
         this._advance(ai, dt);
         this._place(ai);
         continue;
@@ -200,6 +209,7 @@ export class Opponents {
     for (const ai of this.cars) {
       if (!ai.finished) this._place(ai);
 
+      if (ai.finished) { ai.prevAhead = null; continue; } // 完賽車已靠邊,不參與碰撞
       // 與玩家的實體碰撞:位置分離 (雙方各半) + 法向速度反彈 → 不再互相穿越
       const dx = playerCar.pos.x - ai.mesh.position.x;
       const dz = playerCar.pos.z - ai.mesh.position.z;
@@ -216,7 +226,7 @@ export class Opponents {
         const tan = this.track.tangentAt(ai.s);
         const tnx = -tan.z, tnz = tan.x;
         ai.lane = THREE.MathUtils.clamp(ai.lane - (nx * tnx + nz * tnz) * overlap * 0.5, -5.8, 5.8);
-        ai.s = (ai.s - ((nx * tan.x + nz * tan.z) * overlap * 0.5) / this.track.length + 1) % 1;
+        this._shiftS(ai, -((nx * tan.x + nz * tan.z) * overlap * 0.5) / this.track.length);
         // 法向速度反彈 (approaching 時才作用,restitution 0.35)
         const aiVx = tan.x * ai.speed, aiVz = tan.z * ai.speed;
         const relVn = (playerCar.vel.x - aiVx) * nx + (playerCar.vel.z - aiVz) * nz;
