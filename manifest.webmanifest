@@ -1,0 +1,16 @@
+{
+  "name": "TAIPEI 101 午夜疾走 Midnight Circuit",
+  "short_name": "午夜疾走",
+  "description": "環繞台北101的 3D 街機賽車 — 4 賽道、8 車型、3 模式、全球排行榜",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#060a12",
+  "theme_color": "#060a12",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
