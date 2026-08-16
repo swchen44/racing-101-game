@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import {
   getCarEnvTexture, makeWheels, makeHeadlights, makeHeadlightPool,
-  makeUnderglow, makePaint, makeTailBar,
+  makeUnderglow, makePaint, makeTailBar, bevelBox,
 } from './common.js';
 
 export function build(def = {}) {
@@ -74,7 +74,7 @@ export function build(def = {}) {
   car.add(cabin);
 
   // ---- 深色下段:側裙 + 車底封板 + 平整前唇 (無進氣口)
-  const rocker = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.2, 1.7), darkTrim);
+  const rocker = new THREE.Mesh(bevelBox(1.82, 0.2, 1.7, 0.06, 2), darkTrim);
   rocker.position.set(0, 0.44, 0);
   car.add(rocker);
   const floorPan = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 3.9), matteWell);
@@ -150,7 +150,7 @@ export function build(def = {}) {
     [0.94, 0.46, -1.48, false], [-0.94, 0.46, -1.48, false],
   ];
   const wellGeo = new THREE.BoxGeometry(0.2, 0.95, 1.2);
-  const blisterGeo = new THREE.BoxGeometry(0.26, 0.22, 1.26);
+  const blisterGeo = bevelBox(0.26, 0.22, 1.26, 0.08, 3);
   for (const [x, , z, steerable] of positions) {
     const s = Math.sign(x);
     const well = new THREE.Mesh(wellGeo, matteWell);

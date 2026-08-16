@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import {
   getCarEnvTexture, makeWheels, makeHeadlights, makeHeadlightPool,
-  makeUnderglow, makeTailBar, makePaint,
+  makeUnderglow, makeTailBar, makePaint, bevelBox,
 } from './common.js';
 
 export function build(def = {}) {
@@ -25,11 +25,11 @@ export function build(def = {}) {
   car.add(frame);
 
   // ---- 引擎蓋段:高聳方正機艙 + 水箱罩
-  const hood = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.52, 1.55), paint);
+  const hood = new THREE.Mesh(bevelBox(1.86, 0.52, 1.55, 0.09, 3), paint);
   hood.position.set(0, 1.1, 1.9);
   hood.castShadow = true;
   car.add(hood);
-  const hoodBulge = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 1.2), paint);
+  const hoodBulge = new THREE.Mesh(bevelBox(0.9, 0.1, 1.2, 0.04), paint);
   hoodBulge.position.set(0, 1.4, 1.85);
   car.add(hoodBulge);
   const grille = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.44, 0.08), matteWell);
@@ -49,7 +49,7 @@ export function build(def = {}) {
   }
 
   // ---- 雙門座艙:短艙室 (單排) + 玻璃艙 + 車頂板
-  const cabBase = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.5, 1.55), paint);
+  const cabBase = new THREE.Mesh(bevelBox(1.9, 0.5, 1.55, 0.08, 3), paint);
   cabBase.position.set(0, 1.08, 0.22);
   cabBase.castShadow = true;
   car.add(cabBase);
@@ -76,7 +76,7 @@ export function build(def = {}) {
   cabin.castShadow = true;
   car.add(cabin);
   cabin.position.z = 0.22;
-  const roofCap = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 0.95), paint);
+  const roofCap = new THREE.Mesh(bevelBox(1.5, 0.06, 0.95, 0.025), paint);
   roofCap.position.set(0, 1.99, 0.2);
   car.add(roofCap);
 
@@ -95,7 +95,7 @@ export function build(def = {}) {
   }
 
   // ---- 開放貨斗:側牆 + 前隔板 + 尾門 + 深色斗底
-  const bedWallGeo = new THREE.BoxGeometry(0.15, 0.5, 1.85);
+  const bedWallGeo = bevelBox(0.15, 0.5, 1.85, 0.05, 2);
   for (const sx of [1, -1]) {
     const wall = new THREE.Mesh(bedWallGeo, paint);
     wall.position.set(sx * 0.87, 1.08, -1.72);
@@ -105,10 +105,10 @@ export function build(def = {}) {
     railTop.position.set(sx * 0.87, 1.35, -1.72);
     car.add(railTop);
   }
-  const bulkhead = new THREE.Mesh(new THREE.BoxGeometry(1.74, 0.5, 0.1), paint);
+  const bulkhead = new THREE.Mesh(bevelBox(1.74, 0.5, 0.1, 0.04), paint);
   bulkhead.position.set(0, 1.08, -0.82);
   car.add(bulkhead);
-  const tailgate = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.48, 0.13), paint);
+  const tailgate = new THREE.Mesh(bevelBox(1.86, 0.48, 0.13, 0.05, 2), paint);
   tailgate.position.set(0, 1.06, -2.6);
   tailgate.castShadow = true;
   car.add(tailgate);
@@ -136,7 +136,7 @@ export function build(def = {}) {
     t.position.set(0, y, 2.84);
     car.add(t);
   }
-  const bumper = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.3, 0.28), darkTrim);
+  const bumper = new THREE.Mesh(bevelBox(1.94, 0.3, 0.28, 0.06, 2), darkTrim);
   bumper.position.set(0, 0.72, 2.62);
   car.add(bumper);
   const skid = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.34, 0.1), steel);
@@ -186,7 +186,7 @@ export function build(def = {}) {
     vt.position.set(sx, 1.06, -2.68);
     car.add(vt);
   }
-  const rearBumper = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.26, 0.24), darkTrim);
+  const rearBumper = new THREE.Mesh(bevelBox(1.94, 0.26, 0.24, 0.06, 2), darkTrim);
   rearBumper.position.set(0, 0.68, -2.62);
   car.add(rearBumper);
   const exhaustMat = new THREE.MeshStandardMaterial({ color: 0x6c737d, metalness: 1.0, roughness: 0.3 });
@@ -202,7 +202,7 @@ export function build(def = {}) {
     [0.98, 0.58, -1.62, false], [-0.98, 0.58, -1.62, false],
   ];
   const wellGeo = new THREE.BoxGeometry(0.24, 1.1, 1.5);
-  const flareGeo = new THREE.BoxGeometry(0.34, 0.3, 1.6);
+  const flareGeo = bevelBox(0.34, 0.3, 1.6, 0.09, 3);
   for (const [x, , z, steerable] of positions) {
     const sx = Math.sign(x);
     const well = new THREE.Mesh(wellGeo, matteWell);
@@ -231,6 +231,7 @@ export function build(def = {}) {
       bodyGroup: car, wheels, rimMatRear, wheelRadius,
       tailMat, tailMidMat, brakeLight,
       underglow, headlights, headlightPool,
+      exhaust: [[0.62, 0.58, -2.62]],
     },
   };
 }

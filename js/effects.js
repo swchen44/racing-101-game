@@ -96,6 +96,7 @@ export class Effects {
     this._initSkidMarks();
     this._initSmoke();
     this._initSparks();
+    this._initCarLightFx();
     // 依需求移除下雨 (天氣改為 白天/黃昏/夜晚 時段選擇);雨系統程式保留,
     // 未來加「雨天」選項時呼叫 this._initRain() 即可
     // this._initRain();
@@ -107,11 +108,123 @@ export class Effects {
 
   // 換賽道/重賽時清除暫存痕跡 (胎痕、煙、火花)
   resetTransient() {
+    if (this.brakePool) { this.brakePool.visible = false; this.brakePool.material.opacity = 0; }
+    for (const f of this._flames || []) f.group.visible = false;
     this.skidCursor = 0;
     this.skidInst.count = 0;
     this.skidInst.instanceMatrix.needsUpdate = true;
     for (const s of this.smokes) { s.life = 0; s.sprite.visible = false; }
     for (const s of this.sparks) s.life = 0;
+  }
+
+  // ---------- 車燈落地 / Boost 噴焰 ----------
+  _initCarLightFx() {
+    // 煞車紅色光池:車尾貼地小紅暈,夜晚踩煞車時亮起
+    const glowTex = (() => {   // 與 cars/common 同款橢圓漸層 (此處自建,避免交叉相依)
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const g = c.getContext('2d');
+      const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grad.addColorStop(0, 'rgba(255,255,255,1)');
+      grad.addColorStop(0.3, 'rgba(255,255,255,0.55)');
+      grad.addColorStop(0.65, 'rgba(255,255,255,0.16)');
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 128, 128);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    })();
+    this._glowTex = glowTex;
+    this.brakePool = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.0, 2.2),
+      new THREE.MeshBasicMaterial({
+        map: glowTex, color: 0xff2233, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+      }));
+    this.brakePool.rotation.x = -Math.PI / 2;
+    this.brakePool.visible = false;
+    this.scene.add(this.brakePool);
+    // Boost 噴焰 (lazy:首次看到 car 才依 exhaust 錨點建立)
+    this._flameFor = null;
+    this._flames = [];
+  }
+
+  // 噴焰錐:外層橘 + 內核藍白,additive 疊加;附掛在 bodyGroup 跟隨 roll/pitch
+  _buildBoostFlames(car) {
+    this._flameFor = car;
+    this._flames = [];
+    const anchors = car.exhaust || [[0.42, 0.52, -2.3], [-0.42, 0.52, -2.3]];
+    for (const [x, y, z] of anchors) {
+      const g = new THREE.Group();
+      g.position.set(x, y, z);
+      const mkCone = (r, len, color, opacity) => {
+        const geo = new THREE.ConeGeometry(r, len, 10, 1, true);
+        geo.translate(0, len / 2, 0);      // 底座在原點,尖端 +y
+        geo.rotateX(-Math.PI / 2);         // 尖端轉向 -z (車尾後方)
+        const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+          color, transparent: true, opacity,
+          blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+          side: THREE.DoubleSide,
+        }));
+        g.add(m);
+        return m;
+      };
+      const outer = mkCone(0.21, 2.3, 0xff8226, 0.8);     // 橘色外焰 (追逐視角也要讀得到)
+      const inner = mkCone(0.11, 1.15, 0x8fd4ff, 0.92);   // 藍白內核
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: this._glowTex, color: 0xffa040, transparent: true, opacity: 0.85,
+        blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+      }));
+      glow.scale.setScalar(1.0);
+      g.add(glow);
+      g.visible = false;
+      car.bodyGroup.add(g);
+      this._flames.push({ group: g, outer, inner, glow });
+    }
+  }
+
+  // 每幀車燈視覺:煞車光池 / 頭燈光池前伸 / Boost 噴焰
+  _updateCarFx(dt, car, input) {
+    // 夜晚判定:main 在白天會關 underglow → 以此為時段訊號 (F1 無頭燈池也適用)
+    const night = car.underglow ? car.underglow.visible : true;
+    const sinH = Math.sin(car.heading), cosH = Math.cos(car.heading);
+    // --- 煞車紅色光池 ---
+    {
+      const braking = !!(input && (input.backward || input.handbrake)) && Math.abs(car.speed) > 0.5;
+      const target = braking && night ? 0.4 : 0;
+      const m = this.brakePool.material;
+      m.opacity += (target - m.opacity) * Math.min(1, dt * 10);
+      this.brakePool.visible = m.opacity > 0.01;
+      if (this.brakePool.visible) {
+        this.brakePool.position.set(car.pos.x - sinH * 2.7, 0.04, car.pos.z - cosH * 2.7);
+        this.brakePool.rotation.z = car.heading; // plane 已繞 x 轉 -90°,繞法線旋轉用 z
+      }
+    }
+    // --- 頭燈光池依速度前伸增亮 ---
+    if (car.headlightPool && car.headlightPool.visible) {
+      const k = THREE.MathUtils.clamp(car.speedKmh / 160, 0, 1);
+      car.headlightPool.scale.z = 1 + k * 0.5;
+      const pool = car.headlightPool.userData.pool;
+      if (pool) pool.material.opacity = (car.headlightPool.userData.baseOpacity ?? 0.14) * (1 + k * 0.55);
+    }
+    // --- Boost 噴焰 ---
+    if (this._flameFor !== car) this._buildBoostFlames(car);
+    const boosting = !!car.boosting;
+    for (const f of this._flames) {
+      f.group.visible = boosting;
+      if (!boosting) continue;
+      const flick = 0.8 + Math.random() * 0.45;             // 每幀隨機抖動 → 噴焰躍動
+      f.outer.scale.set(0.9 + Math.random() * 0.25, 0.9 + Math.random() * 0.25, flick);
+      f.inner.scale.set(1, 1, 0.75 + Math.random() * 0.5);
+      f.outer.material.opacity = 0.55 + Math.random() * 0.3;
+      f.glow.material.opacity = 0.6 + Math.random() * 0.35;
+    }
+    // Boost 尾部火星:沿車尾往後噴 (借用火花系統)
+    if (boosting && Math.random() < dt * 26) {
+      const bx = car.pos.x - sinH * 2.5, bz = car.pos.z - cosH * 2.5;
+      this.burstSparks(bx, 0.5, bz, 2, car.vel.x * 0.3 - sinH * 9, car.vel.z * 0.3 - cosH * 9);
+    }
   }
 
   // ---------- 胎痕 ----------
@@ -403,6 +516,7 @@ export class Effects {
     }
     // 車輛驅動的粒子
     if (car) {
+      this._updateCarFx(dt, car, input);
       const sin = Math.sin(car.heading), cos = Math.cos(car.heading);
       const spd = Math.hypot(car.vel.x, car.vel.z);
       // 甩尾煙/胎痕:完整濃煙維持高速門檻;手煞 |speed|>3 就給小號煙+短胎痕,

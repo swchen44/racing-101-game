@@ -11,8 +11,8 @@ export const REFLECT_LAYER = 3;
 export const reflectionUniforms = {
   uReflectTex: { value: null },
   uReflectMatrix: { value: new THREE.Matrix4() },
-  uReflectStrength: { value: 1.35 },
-  uReflectTexel: { value: new THREE.Vector2(1 / 512, 1 / 256) },
+  uReflectStrength: { value: 1.15 },
+  uReflectTexel: { value: new THREE.Vector2(1 / 1024, 1 / 512) },
 };
 
 // 判斷一個 Mesh 是否屬於「發光體」(值得倒映在濕路面上)
@@ -32,7 +32,9 @@ function isGlowMesh(obj) {
 }
 
 export class Reflections {
-  constructor(renderer, scene, camera, { width = 512, height = 256 } = {}) {
+  // RT 1024×512:512×256 時起跑區高密度霓虹會糊成「彩色抹痕」,倍增解析度
+  // 後 4-tap 拉絲間距 (texel 單位) 同步變細,倒影銳利一級
+  constructor(renderer, scene, camera, { width = 1024, height = 512 } = {}) {
     this.renderer = renderer;
     this.scene = scene;
     this.camera = camera;

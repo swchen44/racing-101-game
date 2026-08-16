@@ -1,7 +1,7 @@
 // cars/f1.js — 方程式 TF-01:開放式座艙單體殼、外露大輪、前後翼、細長鼻錐、Halo、高聳進氣箱
 import * as THREE from 'three';
 import {
-  getCarEnvTexture, makeWheels, makeUnderglow, makePaint,
+  getCarEnvTexture, makeWheels, makeUnderglow, makePaint, bevelBox,
 } from './common.js';
 
 export function build(def = {}) {
@@ -87,7 +87,7 @@ export function build(def = {}) {
 
   // ---- 側箱 sidepods:座艙兩側、前緣深色進氣口、往後下削 (coke bottle)
   for (const s of [1, -1]) {
-    const podGeo = new THREE.BoxGeometry(0.52, 0.44, 1.55);
+    const podGeo = bevelBox(0.52, 0.44, 1.55, 0.09, 3);  // 倒角側箱:近攝稜線吃高光
     const p = podGeo.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const zn = (p.getZ(i) + 0.775) / 1.55;   // 0=尾 1=頭
@@ -105,12 +105,12 @@ export function build(def = {}) {
   }
 
   // ---- 地板 + 側裙前緣小翼
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.05, 3.1), carbon);
+  const floor = new THREE.Mesh(bevelBox(1.42, 0.05, 3.1, 0.02, 2), carbon);
   floor.position.set(0, 0.12, -0.35);
   car.add(floor);
 
   // ---- 前翼:雙層翼片 + 端板
-  const fwMain = new THREE.Mesh(new THREE.BoxGeometry(1.96, 0.045, 0.58), paint);
+  const fwMain = new THREE.Mesh(bevelBox(1.96, 0.045, 0.58, 0.018, 2), paint);
   fwMain.position.set(0, 0.15, 2.38);
   fwMain.castShadow = true;
   car.add(fwMain);
@@ -131,7 +131,7 @@ export function build(def = {}) {
   }
 
   // ---- 後翼:高置主翼 + 上翼片 + 大端板 + 中央支柱 + beam wing
-  const rwMain = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.05, 0.40), paint);
+  const rwMain = new THREE.Mesh(bevelBox(1.5, 0.05, 0.40, 0.02, 2), paint);
   rwMain.position.set(0, 1.02, -2.22);
   rwMain.rotation.x = -0.22;
   rwMain.castShadow = true;
@@ -204,6 +204,7 @@ export function build(def = {}) {
       bodyGroup: car, wheels, rimMatRear, wheelRadius,
       tailMat, tailMidMat, brakeLight: rainLight,
       underglow, headlights: [],
+      exhaust: [[0, 0.56, -2.0]],   // 單中置排氣:Boost 噴焰錨點 (effects.js)
     },
   };
 }

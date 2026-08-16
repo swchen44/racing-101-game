@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import {
   getCarEnvTexture, makeWheels, makeHeadlights, makeHeadlightPool,
-  makeUnderglow, makePaint, makeTailBar,
+  makeUnderglow, makePaint, makeTailBar, bevelBox,
 } from './common.js';
 
 const TAXI_YELLOW = 0xffc21e;
@@ -131,7 +131,7 @@ export function build(def = {}) {
   car.add(cabin);
 
   // ---- 車頂鈑件 (車色):蓋住玻璃罩頂,撐出房車頂線
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.16, 0.05, 1.08), paint);
+  const roof = new THREE.Mesh(bevelBox(1.16, 0.05, 1.08, 0.02), paint);
   roof.position.set(0, 1.415, -0.20);
   roof.castShadow = true;
   car.add(roof);

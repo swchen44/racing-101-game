@@ -340,7 +340,9 @@ export class Track {
             float fres = 0.22 + 0.78 * pow(1.0 - cosT, 2.2);
             // 濕度斑塊:低頻正弦讓路面乾濕不均,倒影帶狀分佈
             float wet = 0.72 + 0.28 * sin(vReflWorld.x * 0.21 + vReflWorld.z * 0.17);
-            totalEmissiveRadiance += refl * (uReflectStrength * fres * wet);
+            // 高光壓縮 (Reinhard):起跑門/招牌正下方倒影不再過飽和爆成色塊
+            vec3 rr = refl * (uReflectStrength * fres * wet);
+            totalEmissiveRadiance += rr / (1.0 + rr * 0.8);
           }`);
     };
     mat.customProgramCacheKey = () => 'road-wet-reflection';
@@ -630,21 +632,65 @@ export class Track {
   }
 
   _checkpointPylons() {
-    // 檢查點:路側成對的發光柱
+    // 檢查點光柱:實體發光底座 + 往上漸層淡出的光束 + 柱頂光暈
+    // (取代實心色棒 —「未完成的光劍」→ 有落點、有衰減、有頂點讀點的光學結構)
     const group = new THREE.Group();
-    const geo = new THREE.CylinderGeometry(0.12, 0.18, 5.2, 8);
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0x0d2233, emissive: 0x2ec4ff, emissiveIntensity: 2.2, roughness: 0.4,
+    // 光束漸層貼圖:底部亮 → 頂部全透明 (V 向)
+    const c = document.createElement('canvas');
+    c.width = 8; c.height = 128;
+    const g = c.getContext('2d');
+    const grad = g.createLinearGradient(0, 128, 0, 0);
+    grad.addColorStop(0.0, 'rgba(255,255,255,0.95)');
+    grad.addColorStop(0.3, 'rgba(255,255,255,0.5)');
+    grad.addColorStop(0.7, 'rgba(255,255,255,0.14)');
+    grad.addColorStop(1.0, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 8, 128);
+    const fadeTex = new THREE.CanvasTexture(c);
+    fadeTex.colorSpace = THREE.SRGBColorSpace;
+    // 頂端光暈 sprite 貼圖 (放射漸層)
+    const hc = document.createElement('canvas');
+    hc.width = hc.height = 64;
+    const hg = hc.getContext('2d');
+    const hgr = hg.createRadialGradient(32, 32, 0, 32, 32, 32);
+    hgr.addColorStop(0, 'rgba(255,255,255,1)');
+    hgr.addColorStop(0.4, 'rgba(255,255,255,0.35)');
+    hgr.addColorStop(1, 'rgba(255,255,255,0)');
+    hg.fillStyle = hgr;
+    hg.fillRect(0, 0, 64, 64);
+    const haloTex = new THREE.CanvasTexture(hc);
+    haloTex.colorSpace = THREE.SRGBColorSpace;
+
+    const baseGeo = new THREE.CylinderGeometry(0.16, 0.22, 1.1, 10);
+    const baseMat = new THREE.MeshStandardMaterial({
+      color: 0x0d2233, emissive: 0x2ec4ff, emissiveIntensity: 2.4, roughness: 0.4,
+    });
+    const beamGeo = new THREE.CylinderGeometry(0.10, 0.15, 4.4, 8, 1, true);
+    const beamMat = new THREE.MeshBasicMaterial({
+      map: fadeTex, color: 0x2ec4ff, transparent: true, opacity: 0.85,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+      side: THREE.DoubleSide,
+    });
+    const haloMat = new THREE.SpriteMaterial({
+      map: haloTex, color: 0x7fe4ff, transparent: true, opacity: 0.9,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
     });
     for (let k = 1; k < N_CHECKPOINTS; k++) {
       const i = Math.floor(k / N_CHECKPOINTS * N_SAMPLES);
       const sm = this.samples[i];
       for (const side of [1, -1]) {
-        const pylon = new THREE.Mesh(geo, mat);
-        pylon.position.set(
-          sm.pos.x + sm.normal.x * (ROAD_HALF_WIDTH + 0.4) * side,
-          2.6, sm.pos.z + sm.normal.z * (ROAD_HALF_WIDTH + 0.4) * side);
-        group.add(pylon);
+        const px = sm.pos.x + sm.normal.x * (ROAD_HALF_WIDTH + 0.4) * side;
+        const pz = sm.pos.z + sm.normal.z * (ROAD_HALF_WIDTH + 0.4) * side;
+        const base = new THREE.Mesh(baseGeo, baseMat);
+        base.position.set(px, 0.55, pz);
+        group.add(base);
+        const beam = new THREE.Mesh(beamGeo, beamMat);
+        beam.position.set(px, 1.1 + 2.2, pz);
+        group.add(beam);
+        const halo = new THREE.Sprite(haloMat);
+        halo.scale.setScalar(1.15);
+        halo.position.set(px, 1.15, pz);   // 光暈在底座頂 (光的來源處)
+        group.add(halo);
       }
     }
     return group;

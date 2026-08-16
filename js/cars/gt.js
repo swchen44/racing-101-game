@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import {
   getCarEnvTexture, makeWheels, makeHeadlights, makeHeadlightPool,
-  makeUnderglow, makePaint,
+  makeUnderglow, makePaint, bevelBox,
 } from './common.js';
 
 export function build(def = {}) {
@@ -52,7 +52,7 @@ export function build(def = {}) {
   car.add(body);
 
   // ---- 深色下段:側裙 + 車底封板
-  const rocker = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.24, 1.62), darkTrim);
+  const rocker = new THREE.Mesh(bevelBox(1.8, 0.24, 1.62, 0.06, 2), darkTrim);
   rocker.position.set(0, 0.46, 0);
   car.add(rocker);
   const floorPan = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.06, 3.9), matteWell);
@@ -84,7 +84,7 @@ export function build(def = {}) {
   car.add(cabin);
 
   // ---- 前下擾流 + 進氣口 + 後擾流翼
-  const splitter = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.1, 0.55), darkTrim);
+  const splitter = new THREE.Mesh(bevelBox(1.78, 0.1, 0.55, 0.04), darkTrim);
   splitter.position.set(0, 0.44, 2.28);
   car.add(splitter);
   const intake = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.14, 0.08), matteWell);
@@ -93,7 +93,7 @@ export function build(def = {}) {
   const wingPost = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, 0.14), darkTrim);
   wingPost.position.set(0.55, 1.02, -2.1); car.add(wingPost);
   const wingPost2 = wingPost.clone(); wingPost2.position.x = -0.55; car.add(wingPost2);
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.05, 0.36), paint);
+  const wing = new THREE.Mesh(bevelBox(1.86, 0.05, 0.36, 0.02, 2), paint);
   wing.position.set(0, 1.14, -2.14); wing.rotation.x = -0.1;
   wing.castShadow = true;
   car.add(wing);
@@ -115,7 +115,7 @@ export function build(def = {}) {
   }
 
   // ---- 車尾燈組:全寬紅色光條 + 深色尾面板
-  const tailPanel = new THREE.Mesh(new THREE.BoxGeometry(1.74, 0.44, 0.08), darkTrim);
+  const tailPanel = new THREE.Mesh(bevelBox(1.74, 0.44, 0.08, 0.035), darkTrim);
   tailPanel.position.set(0, 0.78, -2.38);
   car.add(tailPanel);
   const tailMat = new THREE.MeshStandardMaterial({ color: 0x330000, emissive: 0xff1a2e, emissiveIntensity: 1.6 });
@@ -156,7 +156,7 @@ export function build(def = {}) {
     [0.98, 0.48, -1.42, false], [-0.98, 0.48, -1.42, false],
   ];
   const wellGeo = new THREE.BoxGeometry(0.2, 1.0, 1.24);
-  const blisterGeo = new THREE.BoxGeometry(0.3, 0.24, 1.3);
+  const blisterGeo = bevelBox(0.3, 0.24, 1.3, 0.09, 3);   // 倒角葉子板:腰線高光讀點
   for (const [x, , z, steerable] of positions) {
     const sx = Math.sign(x);
     const well = new THREE.Mesh(wellGeo, matteWell);
@@ -183,6 +183,7 @@ export function build(def = {}) {
       bodyGroup: car, wheels, rimMatRear, wheelRadius,
       tailMat, tailMidMat, brakeLight: tailBar,
       underglow, headlights, headlightPool,
+      exhaust: [[0.42, 0.5, -2.42], [-0.42, 0.5, -2.42]],
     },
   };
 }

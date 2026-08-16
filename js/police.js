@@ -58,8 +58,30 @@ export class Police {
     glow.scale.setScalar(3.2);
     glow.position.set(0, 1.6, 0);
     mesh.add(glow);
+    // 警燈掃射:紅藍光斑貼地繞警車旋轉 (additive 拉長光斑,像燈組掃過路面/護欄)
+    const sweep = new THREE.Group();
+    sweep.position.y = 0.06;
+    const dayMode = (typeof window !== 'undefined' && window.__game?.setup?.weather === 'day');
+    const mkBeam = (colorHex, angle) => {
+      const beamMat = new THREE.MeshBasicMaterial({
+        map: radialGlowTexture(colorHex >= 0x800000 ? '#ff3355' : '#3366ff'),
+        color: colorHex, transparent: true, opacity: dayMode ? 0.12 : 0.34,
+        blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+      });
+      const arm = new THREE.Group();
+      arm.rotation.y = angle;
+      const beam = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 12), beamMat);
+      beam.rotation.x = -Math.PI / 2;
+      beam.position.z = 6.4;      // 光斑中心離車 6.4m → 掃到路面與護欄根部
+      arm.add(beam);
+      sweep.add(arm);
+      return beamMat;
+    };
+    const sweepRedMat = mkBeam(0xff3355, 0);
+    const sweepBlueMat = mkBeam(0x3366ff, Math.PI);
+    mesh.add(sweep);
     const u = {
-      mesh, parts, barRed, barBlue, glow,
+      mesh, parts, barRed, barBlue, glow, sweep, sweepRedMat, sweepBlueMat,
       s: (startS + 1) % 1, lane, speed: 0, wheelSpin: 0,
       state: 'chase',            // chase | roadblock
       pitT: 0,                   // PIT 動作剩餘時間
@@ -316,6 +338,13 @@ export class Police {
       u.barBlue.material.emissiveIntensity = flash ? 0.4 : 5;
       u.glow.material.color.setHex(flash ? 0xff3355 : 0x3366ff);
       u.glow.material.opacity = 0.35 + 0.25 * Math.sin(this.flashT * 12);
+      // 掃射光斑:持續旋轉 (2.2 圈/秒),與燈條同步強弱交替 → 紅藍輪流掃過路面
+      if (u.sweep) {
+        u.sweep.rotation.y = this.flashT * Math.PI * 4.4;
+        const base = u.sweepRedMat.userData.base ?? (u.sweepRedMat.userData.base = u.sweepRedMat.opacity);
+        u.sweepRedMat.opacity = base * (flash ? 1.0 : 0.45);
+        u.sweepBlueMat.opacity = base * (flash ? 0.45 : 1.0);
+      }
     }
 
     this._updateBarriers(dt, playerCar);

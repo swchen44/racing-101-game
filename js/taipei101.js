@@ -4,6 +4,11 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const TOWER_POS = new THREE.Vector3(0, 0, -40);
 
+// 時段 ('night'|'dusk'|'day'):由 city.js 的 createCity 在建塔前設定
+// (main.js 呼叫順序固定:createCity → createTaipei101)
+let TOWER_TIME = 'night';
+export function setTowerTime(id) { TOWER_TIME = id || 'night'; }
+
 function windowTexture(cols, rows, litRatio, tint, warmRows = []) {
   // 玻璃帷幕:整齊的水平樓層帶。亮段以 4~8 段連續 run 為單位點亮 (而非逐窗擲骰),
   // 恢復 101 玻璃帷幕最具辨識度的橫向連續節奏;窗色統一玉綠、明度集中在窄區間,
@@ -58,15 +63,20 @@ function windowTexture(cols, rows, litRatio, tint, warmRows = []) {
 
 export function createTaipei101() {
   const group = new THREE.Group();
+  // 時段分支:白天玻璃帷幕靠日光反射、所有夜間發光體關閉;黃昏半亮;夜晚維持原狀
+  const isDay = TOWER_TIME === 'day';
+  const isDusk = TOWER_TIME === 'dusk';
+  const EM = isDay ? 0.04 : isDusk ? 0.55 : 1; // 發光倍率
 
   // ---- 材質:翡翠綠玻璃帷幕 ----
   // 三色層次:綠玻璃幕牆 (中亮) + 暖白辦公窗 (最亮,貼圖內建) + 節冠金光 (bloom 簽名)
   // litRatio 0.55 + run 點亮 → 每層讀成大段連續亮帶;暖白只留 3 個指定樓層 (整體佔比 ~0.08)
   const emissiveTex = windowTexture(16, 40, 0.55, [120, 255, 200], [8, 21, 33]);
   const glassMat = new THREE.MeshPhysicalMaterial({
-    color: 0x11362a,
-    metalness: 0.85, roughness: 0.18,
-    emissive: 0xd9ffe9, emissiveMap: emissiveTex, emissiveIntensity: 1.7,
+    // 白天:亮玉綠玻璃、降金屬度讓半球光/日光染亮塔身 (無 envMap 時高 metalness 會發黑)
+    color: isDay ? 0x88b8a8 : 0x11362a,
+    metalness: isDay ? 0.3 : 0.85, roughness: isDay ? 0.24 : 0.18,
+    emissive: 0xd9ffe9, emissiveMap: emissiveTex, emissiveIntensity: 1.7 * EM,
     envMapIntensity: 1.8,
   });
   // 翡翠泛光殼:各節玻璃體外一層微膨脹的加法半透殼 (合併成 1 mesh / 1 draw call)。
@@ -74,31 +84,31 @@ export function createTaipei101() {
   // 亮度極低 (額定 ~0.14),遠低於 bloom threshold 0.85,不會炸 bloom
   const shellGeos = [];
   const shellMat = new THREE.MeshBasicMaterial({
-    color: 0x1e8a5f, transparent: true, opacity: 0.14,
+    color: 0x1e8a5f, transparent: true, opacity: 0.14 * EM,
     blending: THREE.AdditiveBlending, depthWrite: false,
   });
   // 節間橫向燈帶:高 emissive + toneMapped:false 讓 bloom 咬住,300m 外仍是亮環
   const trimMat = new THREE.MeshStandardMaterial({
-    color: 0x8fa8a0, metalness: 0.9, roughness: 0.3,
-    emissive: 0x33ffbb, emissiveIntensity: 2.6, toneMapped: false,
+    color: 0x8fa8a0, metalness: isDay ? 0.6 : 0.9, roughness: 0.3,
+    emissive: 0x33ffbb, emissiveIntensity: 2.6 * EM, toneMapped: isDay,
   });
   // 節冠金色亮邊 (每節頂端外緣一圈,吃 bloom 後成為 101 的招牌節冠泛光)
   const crownEdgeMat = new THREE.MeshStandardMaterial({
     color: 0xffd27f, metalness: 0.6, roughness: 0.4,
-    emissive: 0xffd27f, emissiveIntensity: 3.0,
+    emissive: 0xffd27f, emissiveIntensity: 3.0 * EM,
   });
   // 如意飾:收斂尺寸與亮度,貼齊節底收腰處,讀成鑲飾而非漂浮圓圈
   const ruyiMat = new THREE.MeshStandardMaterial({
     color: 0xd9b45b, metalness: 0.85, roughness: 0.35,
-    emissive: 0xffca55, emissiveIntensity: 0.6,
+    emissive: 0xffca55, emissiveIntensity: 0.6 * EM,
   });
 
   // ---- 裙樓基座 (倒角方塔, 3 層階梯) ----
   // 素面方盒 → 帶窗貼圖的商場裙樓:簡化窗貼圖 (8列x6行) + 每層簷口亮邊 + 底層入口暖光帶
   const podiumTex = windowTexture(8, 6, 0.5, [120, 255, 200], [4]);
   const podiumMat = new THREE.MeshStandardMaterial({
-    color: 0x28343a, metalness: 0.5, roughness: 0.4,
-    emissive: 0xd9ffe9, emissiveMap: podiumTex, emissiveIntensity: 0.85,
+    color: isDay ? 0x5a6a70 : 0x28343a, metalness: 0.5, roughness: 0.4,
+    emissive: 0xd9ffe9, emissiveMap: podiumTex, emissiveIntensity: 0.85 * EM,
   });
   let py = 0;
   const podiumTiers = [[62, 14], [54, 10], [46, 10]];
@@ -124,7 +134,7 @@ export function createTaipei101() {
     new THREE.BoxGeometry(62.6, 2.0, 62.6),
     new THREE.MeshStandardMaterial({
       color: 0x3a2a14, metalness: 0.2, roughness: 0.6,
-      emissive: 0xffc98a, emissiveIntensity: 1.6,
+      emissive: 0xffc98a, emissiveIntensity: 1.6 * EM,
     }));
   entryBand.position.y = 1.6;
   group.add(entryBand);
@@ -196,13 +206,15 @@ export function createTaipei101() {
   // 收腰輪廓光暈:64 點共用一張 radialGlowTexture、一個材質、一個 draw call
   const waistGeo = new THREE.BufferGeometry();
   waistGeo.setAttribute('position', new THREE.Float32BufferAttribute(waistPts, 3));
-  const waistHalo = new THREE.Points(waistGeo, new THREE.PointsMaterial({
-    map: radialGlowTexture('#5cffbe'), color: 0xbfffe4,
-    size: 10, sizeAttenuation: true,
-    transparent: true, opacity: 0.55,
-    blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
-  }));
-  group.add(waistHalo);
+  if (!isDay) {
+    const waistHalo = new THREE.Points(waistGeo, new THREE.PointsMaterial({
+      map: radialGlowTexture('#5cffbe'), color: 0xbfffe4,
+      size: 10, sizeAttenuation: true,
+      transparent: true, opacity: 0.55 * EM,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    }));
+    group.add(waistHalo);
+  }
 
   // ---- 頂部收束塔樓 ----
   const crown = new THREE.Mesh(makeTaperBox(17, 12, 20), glassMat);
@@ -220,25 +232,27 @@ export function createTaipei101() {
   shellGeos.push(makeTaperBox(12.2, 8.2, 12.4).translate(0, y + 6, 0));
   y += 12;
 
-  // 泛光殼合併 → 單一 mesh (1 draw call)
-  group.add(new THREE.Mesh(mergeGeometries(shellGeos), shellMat));
+  // 泛光殼合併 → 單一 mesh (1 draw call);白天不加殼 (無夜間泛光)
+  if (!isDay) group.add(new THREE.Mesh(mergeGeometries(shellGeos), shellMat));
 
   // ---- 塔尖 ----
   const spireMat = new THREE.MeshStandardMaterial({
-    color: 0xbcd8d0, metalness: 0.95, roughness: 0.25,
-    emissive: 0xaaffe0, emissiveIntensity: 2.4,
+    color: 0xbcd8d0, metalness: isDay ? 0.5 : 0.95, roughness: 0.25,
+    emissive: 0xaaffe0, emissiveIntensity: 2.4 * EM,
   });
   const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 2.6, 42, 8), spireMat);
   spire.position.y = y + 21;
   group.add(spire);
   // 塔尖泛光 sprite:縱向拉長的翡翠光柱,夜間遠景保證塔尖可見、剪影收頂
-  const spireGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: radialGlowTexture('#7dffd0'), transparent: true, opacity: 0.32,
-    blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
-  }));
-  spireGlow.scale.set(11, 52, 1);
-  spireGlow.position.y = y + 21;
-  group.add(spireGlow);
+  if (!isDay) {
+    const spireGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: radialGlowTexture('#7dffd0'), transparent: true, opacity: 0.32 * EM,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    }));
+    spireGlow.scale.set(11, 52, 1);
+    spireGlow.position.y = y + 21;
+    group.add(spireGlow);
+  }
   y += 42;
 
   // 航空警示燈 (紅色, sin 呼吸閃爍 emissiveIntensity 0~6, 吃 bloom 成為地標信標)
@@ -256,33 +270,35 @@ export function createTaipei101() {
   beaconGlow.position.y = y + 1;
   group.add(beaconGlow);
 
-  // ---- 塔身泛光 (夜間彩色打光,今晚:翡翠綠) ----
+  // ---- 塔身泛光 (夜間彩色打光,今晚:翡翠綠;白天全關) ----
   // 拆成上下兩張 sprite:下亮上暗,模擬底部打光沿塔身向上衰減
-  const floodMap = radialGlowTexture('#2edb96');
-  const floodGlowLow = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: floodMap, transparent: true, opacity: 0.34,
-    blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
-  }));
-  floodGlowLow.scale.set(200, 260, 1);
-  floodGlowLow.position.y = 140;
-  group.add(floodGlowLow);
-  const floodGlowHigh = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: floodMap, transparent: true, opacity: 0.15,
-    blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
-  }));
-  floodGlowHigh.scale.set(150, 260, 1);
-  floodGlowHigh.position.y = 315;
-  group.add(floodGlowHigh);
+  if (!isDay) {
+    const floodMap = radialGlowTexture('#2edb96');
+    const floodGlowLow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: floodMap, transparent: true, opacity: 0.34 * EM,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    }));
+    floodGlowLow.scale.set(200, 260, 1);
+    floodGlowLow.position.y = 140;
+    group.add(floodGlowLow);
+    const floodGlowHigh = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: floodMap, transparent: true, opacity: 0.15 * EM,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    }));
+    floodGlowHigh.scale.set(150, 260, 1);
+    floodGlowHigh.position.y = 315;
+    group.add(floodGlowHigh);
 
-  // 底部上射泛光燈 (2 盞對角,取代原 4 盞,守住光源預算並負責塑形斗身體塊)
-  for (const [sx, sz] of [[1, 1], [-1, -1]]) {
-    const up = new THREE.SpotLight(0x2edb96, 5200, 340, 0.36, 0.65, 1.15);
-    up.position.set(sx * 32, 34, sz * 32);
-    const tgt = new THREE.Object3D();
-    tgt.position.set(sx * 10, 260, sz * 10);
-    group.add(tgt);
-    up.target = tgt;
-    group.add(up);
+    // 底部上射泛光燈 (2 盞對角,取代原 4 盞,守住光源預算並負責塑形斗身體塊)
+    for (const [sx, sz] of [[1, 1], [-1, -1]]) {
+      const up = new THREE.SpotLight(0x2edb96, 5200 * EM, 340, 0.36, 0.65, 1.15);
+      up.position.set(sx * 32, 34, sz * 32);
+      const tgt = new THREE.Object3D();
+      tgt.position.set(sx * 10, 260, sz * 10);
+      group.add(tgt);
+      up.target = tgt;
+      group.add(up);
+    }
   }
 
   group.position.copy(TOWER_POS);
@@ -290,10 +306,11 @@ export function createTaipei101() {
   group.userData.beaconGlow = beaconGlow;
 
   // 每幀更新:警示燈 sin 呼吸閃爍 (emissiveIntensity 0~6)
+  const glowK = isDay ? 0.3 : 1; // 白天航空燈光暈壓低 (亮天空下不該有大光團)
   group.userData.update = (t) => {
     const pulse = Math.max(0, Math.sin(t * 2.4)); // 0~1 呼吸
     beacon.material.emissiveIntensity = pulse * 6;
-    beaconGlow.material.opacity = 0.15 + 0.75 * pulse;
+    beaconGlow.material.opacity = (0.15 + 0.75 * pulse) * glowK;
   };
   return group;
 }

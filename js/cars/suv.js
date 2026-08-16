@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import {
   getCarEnvTexture, makeWheels, makeHeadlights, makeHeadlightPool,
-  makeUnderglow, makeTailBar, makePaint,
+  makeUnderglow, makeTailBar, makePaint, bevelBox,
 } from './common.js';
 
 export function build(def = {}) {
@@ -52,7 +52,7 @@ export function build(def = {}) {
   car.add(body);
 
   // ---- 深色下段防刮膠條 + 車底封板 (SUV cladding)
-  const cladding = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.26, 3.7), darkTrim);
+  const cladding = new THREE.Mesh(bevelBox(1.86, 0.26, 3.7, 0.07, 2), darkTrim);
   cladding.position.set(0, 0.5, 0.05);
   car.add(cladding);
   const floorPan = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 4.2), matteWell);
@@ -136,7 +136,7 @@ export function build(def = {}) {
     car.add(bar);
   }
   // 尾門上小遮陽突簷
-  const spoiler = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 0.34), paint);
+  const spoiler = new THREE.Mesh(bevelBox(1.5, 0.06, 0.34, 0.025), paint);
   spoiler.position.set(0, 1.84, -2.1);
   spoiler.rotation.x = 0.12;
   spoiler.castShadow = true;
@@ -170,14 +170,14 @@ export function build(def = {}) {
   }
 
   // ---- 車尾:深色尾板 + 全寬尾燈 + 鍍鉻尾門飾條
-  const tailPanel = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.5, 0.07), darkTrim);
+  const tailPanel = new THREE.Mesh(bevelBox(1.66, 0.5, 0.07, 0.03), darkTrim);
   tailPanel.position.set(0, 1.16, -2.38);
   car.add(tailPanel);
   const { tailMat, tailMidMat, brakeLight } = makeTailBar(car, { width: 1.56, y: 1.28, z: -2.42 });
   const tailChrome = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.04, 0.04), chrome);
   tailChrome.position.set(0, 0.98, -2.42);
   car.add(tailChrome);
-  const rearValance = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.2, 0.12), darkTrim);
+  const rearValance = new THREE.Mesh(bevelBox(1.7, 0.2, 0.12, 0.05, 2), darkTrim);
   rearValance.position.set(0, 0.52, -2.34);
   car.add(rearValance);
 
@@ -187,7 +187,7 @@ export function build(def = {}) {
     [0.93, 0.47, -1.45, false], [-0.93, 0.47, -1.45, false],
   ];
   const wellGeo = new THREE.BoxGeometry(0.2, 1.0, 1.3);
-  const flareGeo = new THREE.BoxGeometry(0.26, 0.24, 1.36);
+  const flareGeo = bevelBox(0.26, 0.24, 1.36, 0.08, 3);
   for (const [x, , z] of positions) {
     const sx = Math.sign(x);
     const well = new THREE.Mesh(wellGeo, matteWell);
