@@ -218,15 +218,33 @@ function switchScreen(name) {
   ui.screen = name;
 }
 function showTitle() { switchScreen('title'); }
+
+// 帳號 = Email 格式 (不分大小寫,一律正規化為小寫)
+function readEmail() {
+  const el = $('player-name');
+  const v = (el.value || '').trim().toLowerCase();
+  el.value = v;   // 立即反映小寫
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  el.classList.toggle('invalid', !ok);
+  $('name-err').classList.toggle('on', !ok);
+  if (!ok) el.focus();
+  return ok ? v : null;
+}
+$('player-name').addEventListener('input', () => {
+  $('player-name').classList.remove('invalid');
+  $('name-err').classList.remove('on');
+});
+
 function showSetup() {
-  setup.name = ($('player-name').value || '').trim() || '匿名車手';
+  const email = readEmail();
+  if (!email) return;            // Email 無效:停在標題頁顯示錯誤
+  setup.name = email;
   persistSetup();
   renderSetupCards();
   switchScreen('setup');
 }
 function showBoard() {
-  setup.name = ($('player-name').value || '').trim() || setup.name;
-  renderBoard();
+  renderBoard();                  // 看排行榜不強制帳號
   switchScreen('board');
 }
 
@@ -453,7 +471,7 @@ const race = {
 
 function startRace() {
   audio.start();
-  setup.name = ($('player-name').value || '').trim() || setup.name || '匿名車手';
+  setup.name = (setup.name || '').toLowerCase();
   persistSetup();
   const trackDef = trackById(setup.trackId);
   const carDef = carById(setup.carId);

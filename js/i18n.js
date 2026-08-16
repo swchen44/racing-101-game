@@ -1,7 +1,8 @@
 // i18n.js — 中/英雙語:靜態 DOM 用 data-i18n 屬性,動態字串用 t(key)
 const STRINGS = {
   zh: {
-    driverName: '車手代號', namePlaceholder: '輸入你的名字',
+    driverName: 'Email 帳號', namePlaceholder: 'name@example.com',
+    emailInvalid: '請輸入有效的 Email 帳號 (不分大小寫)',
     start: '開始遊戲 START — ENTER', rankings: '排行榜 RANKINGS',
     hintDrive: '駕駛', hintDrift: '手煞車滑走', hintShift: '降檔 / 升檔 (手排)',
     hintCam: '視角', hintRestart: '重新開始', hintBoost: '加速 BOOST', hintMirror: '後視鏡',
@@ -34,7 +35,8 @@ const STRINGS = {
     topSpeed: (k) => `極速 ${k} KM/H`, lengthDiff: (km, st) => `${km} KM ・ 難度 ${st}`,
   },
   en: {
-    driverName: 'DRIVER NAME', namePlaceholder: 'Enter your name',
+    driverName: 'EMAIL ACCOUNT', namePlaceholder: 'name@example.com',
+    emailInvalid: 'Please enter a valid email (case-insensitive)',
     start: 'START — ENTER', rankings: 'RANKINGS',
     hintDrive: 'Drive', hintDrift: 'Handbrake / drift', hintShift: 'Shift down / up (manual)',
     hintCam: 'Camera', hintRestart: 'Restart', hintBoost: 'Boost', hintMirror: 'Mirror',

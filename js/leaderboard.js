@@ -100,7 +100,7 @@ export async function uploadScore(entry) {
       track_id: entry.trackId,
       car_id: entry.carId,
       difficulty: entry.difficulty || 'normal',
-      name: String(entry.name || '匿名').slice(0, 20),
+      name: String(entry.name || '匿名').slice(0, 60),
       time_ms: Math.round(entry.timeMs),
       best_lap_ms: Math.round(entry.bestLapMs || 0),
       masked_ip: maskedIp,

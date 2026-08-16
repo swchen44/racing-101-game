@@ -27,7 +27,9 @@
   --display-font: 'Zen Dots', 'Noto Sans TC', sans-serif;
   --tc-font: 'Noto Sans TC', sans-serif;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); font-family: var(--hud-font); -webkit-tap-highlight-color: transparent; }
 /* iOS Safari:100% 會受動態網址列影響,支援 dvh 時改用動態視口高度 */
 @supports (height: 100dvh) { html, body { height: 100dvh; } }
@@ -347,11 +349,11 @@ canvas#game { display: block; width: 100%; height: 100%; }
   #tc-gas   { right: 20px; bottom: 172px; width: 122px; height: 122px; }
   #tc-brake { right: 166px; bottom: 148px; width: 104px; height: 104px; }
   #tc-hand  { right: 46px; bottom: 316px; width: 88px; height: 88px; font-size: 20px; }
-  #tc-boost { right: 288px; bottom: 140px; width: 88px; height: 88px; }
+  #tc-boost { left: calc(84px + env(safe-area-inset-left, 0px)); bottom: calc(160px + env(safe-area-inset-bottom, 0px)); width: 92px; height: 92px; }
   #tc-up    { right: 166px; bottom: 274px; width: 78px; height: 78px; }
   #tc-down  { right: 262px; bottom: 244px; width: 78px; height: 78px; }
   #tc-cam   { right: 20px; top: 104px; width: 64px; height: 64px; font-size: 22px; }
-  #tc-mirror { right: 20px; top: 180px; width: 64px; height: 64px; font-size: 22px; }
+  #tc-mirror { left: 50%; margin-left: 44px; top: calc(12px + env(safe-area-inset-top, 0px)); width: 60px; height: 60px; }
   body.touch #speed-pod { transform: scale(0.72); left: 10px; bottom: 264px; }
 }
 .tc-btn {
@@ -540,6 +542,12 @@ body.touch #controls-hint { display: none; }
 #confirm-title { font-family: var(--tc-font); font-weight: 900; font-size: 24px; letter-spacing: 6px; color: #ffdfe6; }
 #confirm-desc { font-family: var(--tc-font); font-size: 13px; letter-spacing: 3px; color: #8fa8c0; margin-top: 12px; }
 #confirm-btns { display: flex; gap: 14px; margin-top: 28px; justify-content: center; flex-wrap: wrap; }
+#name-err {
+  display: none; font-family: var(--tc-font); font-size: 14px; letter-spacing: 2px;
+  color: var(--neon-red); text-shadow: 0 0 10px rgba(255,77,109,0.5); margin: -10px 0 14px;
+}
+#name-err.on { display: block; animation: wwBlink 1s steps(2) 2; }
+#player-name.invalid { border-color: var(--neon-red); box-shadow: 0 0 14px rgba(255,77,109,0.4); }
 #lang-row { display: flex; gap: 8px; margin-bottom: 16px; }
 .lang-btn {
   cursor: pointer; font-size: 16px; letter-spacing: 2px; color: #7fa0be; padding: 8px 22px;
@@ -547,8 +555,13 @@ body.touch #controls-hint { display: none; }
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 .lang-btn.sel { color: #eafff5; border-color: var(--neon-jade); background: linear-gradient(rgba(62,230,168,0.14), rgba(62,230,168,0.14)) var(--glass); }
-#tc-boost { right: 210px; bottom: 130px; width: 64px; height: 64px; background: rgba(20,44,60,0.5); border-color: rgba(77,216,255,0.5); }
-#tc-mirror { right: 22px; top: 170px; width: 50px; height: 50px; font-size: 17px; }
+#tc-boost { left: calc(70px + env(safe-area-inset-left, 0px)); bottom: calc(126px + env(safe-area-inset-bottom, 0px));
+  width: 72px; height: 72px; border-color: rgba(77,216,255,0.6); color: #bfeaff;
+  background: radial-gradient(circle at 50% 32%, rgba(77,216,255,0.18), rgba(8,16,24,0.62) 72%);
+  box-shadow: 0 0 18px rgba(77,216,255,0.25), inset 0 0 18px rgba(77,216,255,0.1); }
+#tc-boost.press { border-color: var(--neon-cyan); color: #fff;
+  box-shadow: 0 0 32px rgba(77,216,255,0.8), inset 0 0 26px rgba(77,216,255,0.4); }
+#tc-mirror { left: 50%; margin-left: 34px; top: calc(12px + env(safe-area-inset-top, 0px)); width: 50px; height: 50px; }
 @media (max-width: 900px) {
   #boost-pips { left: 170px; bottom: 30px; }
   #btn-abandon { transform: translateX(-140px); padding: 6px 10px; }
@@ -678,6 +691,12 @@ body.touch #controls-hint { display: none; }
     <div class="tc-btn" id="tc-cam">
       <svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 8 h4 l2 -2.5 h4 L16 8 h4 v11 H4 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
     </div>
+    <div class="tc-btn" id="tc-boost">
+      <svg width="30" height="30" viewBox="0 0 24 24"><path d="M13 2 L5 13 h5 l-1 9 8 -11 h-5 Z" fill="currentColor"/></svg>
+    </div>
+    <div class="tc-btn" id="tc-mirror">
+      <svg width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16 v4 M8 20 h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
   </div>
 
   <!-- 結算 -->
@@ -704,8 +723,9 @@ body.touch #controls-hint { display: none; }
     </div>
     <div id="name-row">
       <span id="name-label" data-i18n="driverName">車手代號</span>
-      <input id="player-name" type="text" maxlength="20" placeholder="輸入你的名字" data-i18n-ph="namePlaceholder" autocomplete="off">
+      <input id="player-name" type="email" maxlength="60" placeholder="name@example.com" data-i18n-ph="namePlaceholder" autocomplete="email" autocapitalize="none" spellcheck="false" inputmode="email">
     </div>
+    <div id="name-err" data-i18n="emailInvalid">請輸入有效的 Email 帳號</div>
     <div id="title-btns">
       <div class="menu-btn primary" id="btn-start" data-i18n="start">開始遊戲 START — ENTER</div>
       <div class="menu-btn" id="btn-board" data-i18n="rankings">排行榜 RANKINGS</div>
