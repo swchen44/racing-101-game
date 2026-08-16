@@ -22,6 +22,7 @@ A third-person 3D arcade racing game set in a rain-slicked neon Taipei at midnig
 - **[Player Guide 玩家手冊](docs/PLAYER-GUIDE.md)** — install (PWA/offline), controls, modes, tracks & cars
 - **[Admin Guide 管理者手冊](docs/ADMIN-GUIDE.md)** — deployment, Supabase, leaderboard & sponsor management
 - **[Game Design 遊戲設計手冊](docs/GAME-DESIGN.md)** — scenes, rules, physics/AI models, data flow
+- **[Ad Sales Kit 廣告刊登方案](docs/AD-SALES-KIT.md)** — billboard slots, asset specs, publishing SOP
 
 ---
 

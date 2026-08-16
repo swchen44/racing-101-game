@@ -96,7 +96,7 @@ select mode, track_id, difficulty, count(*) from scores group by 1,2,3 order by 
 
 ### 4.2 上架廣告主(不用改程式、不用重新部署)
 
-1. 準備廣告圖:**1024×512**(比例 2:1),建議傳到 Supabase Storage(建 public bucket)取得公開網址
+1. 準備廣告圖:**1024×512**(比例 2:1),傳到 Supabase Storage 的 **`ads` bucket**(已建立,public)取得公開網址;素材規格與報價架構見 [AD-SALES-KIT.md](AD-SALES-KIT.md)
 2. 後台 Table Editor → `sponsors` → Insert row:
 
 | 欄位 | 填法 |
