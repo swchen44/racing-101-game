@@ -17,7 +17,7 @@ import { Opponents } from './opponents.js';
 import { Police } from './police.js';
 import { initTouch, isTouchDevice } from './touch.js';
 import { disposeObject } from './cars/common.js';
-import { Reflections } from './reflections.js';
+import { Reflections, reflectionUniforms } from './reflections.js';
 import { t, pick, setLang, getLang, applyStatic } from './i18n.js';
 import { attachSpin, clearSpins } from './carpreview.js';
 
@@ -122,8 +122,6 @@ function buildWorld(trackDef, weather = weatherById('night')) {
   if (worldGroup) { scene.remove(worldGroup); disposeObject(worldGroup); }
   if (tower) { scene.remove(tower); disposeObject(tower); tower = null; }
   track = new Track(trackDef);
-  worldGroup = new THREE.Group();
-  worldGroup.add(track.buildMeshes());
   // 主題 + 時段合成:時段的天色/發光倍率覆蓋主題預設
   const theme = {
     ...(trackDef.theme || {}),
@@ -131,8 +129,13 @@ function buildWorld(trackDef, weather = weatherById('night')) {
     emissiveMul: weather.emissiveMul,
     weatherId: weather.id,
   };
+  track.theme = theme;   // 路面標線/檢查點柱/濕反射條依時段調整
+  worldGroup = new THREE.Group();
+  worldGroup.add(track.buildMeshes());
   worldGroup.add(createCity(track, theme));
   applyWeatherLighting(weather);
+  // 白天路面乾燥:即時反射強度壓到近零;黃昏減半
+  reflectionUniforms.uReflectStrength.value = weather.id === 'day' ? 0.06 : weather.id === 'dusk' ? 0.6 : 1.15;
   scene.add(worldGroup);
   if ((trackDef.theme?.landmark ?? 'tower101') === 'tower101') {
     tower = createTaipei101();

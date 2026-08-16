@@ -90,7 +90,7 @@ export class Track {
     group.add(this._startGate());
     group.add(this._checkpointPylons());
     group.add(this._laneCones());
-    group.add(this._wetStreaks());
+    if (this.theme.weatherId !== 'day') group.add(this._wetStreaks());
     return group;
   }
 
@@ -288,7 +288,7 @@ export class Track {
       map,
       emissive: 0xffffff,
       emissiveMap,
-      emissiveIntensity: 0.55,   // 標線自發光:夜間必定可讀,似逆反光漆
+      emissiveIntensity: (this.theme.weatherId === 'day' ? 0.06 : this.theme.weatherId === 'dusk' ? 0.3 : 0.55), // 標線自發光:夜亮/昏半/日近零
       roughness: 0.32,           // 濕潤感:低粗糙度拉出天空/霓虹光澤
       metalness: 0.22,
       envMap: this._envTexture(),
@@ -663,7 +663,8 @@ export class Track {
 
     const baseGeo = new THREE.CylinderGeometry(0.16, 0.22, 1.1, 10);
     const baseMat = new THREE.MeshStandardMaterial({
-      color: 0x0d2233, emissive: 0x2ec4ff, emissiveIntensity: 2.4, roughness: 0.4,
+      color: 0x0d2233, emissive: 0x2ec4ff,
+      emissiveIntensity: (this.theme.weatherId === 'day' ? 0.3 : 2.4), roughness: 0.4,
     });
     const beamGeo = new THREE.CylinderGeometry(0.10, 0.15, 4.4, 8, 1, true);
     const beamMat = new THREE.MeshBasicMaterial({
