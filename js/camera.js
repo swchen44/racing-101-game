@@ -4,7 +4,8 @@ import * as THREE from 'three';
 const MODES = [
   { name: 'chase',  dist: 8.2, height: 2.9, lookAhead: 9,  fovBase: 62 },
   { name: 'far',    dist: 13.5, height: 5.2, lookAhead: 12, fovBase: 58 },
-  { name: 'bumper', dist: 0.4, height: 1.15, lookAhead: 26, fovBase: 72 },
+  { name: 'cockpit', dist: -0.2, height: 1.14, lookAhead: 30, fovBase: 74, rigid: true },
+  { name: 'bumper', dist: 0.4, height: 1.15, lookAhead: 26, fovBase: 72, rigid: true },
 ];
 
 // 台北101塔基座位置 (taipei101.js TOWER_POS)
@@ -43,7 +44,7 @@ export class ChaseCamera {
 
   update(dt, car, t) {
     const m = this.mode;
-    const isBumper = m.name === 'bumper';
+    const isBumper = !!m.rigid; // 剛性視角 (車頭/駕駛艙):不做彈簧延遲與高度下限
     const speedRatio = Math.min(1, car.speedKmh / 230);
     const sin = Math.sin(car.heading), cos = Math.cos(car.heading);
 
@@ -131,8 +132,10 @@ export class ChaseCamera {
     // 微側傾
     this.camera.rotation.z += car.driftAmount * Math.sign(car.steer || 0.0001) * -0.03 + sx * 0.4;
 
-    // FOV 隨速度擴張 (高速廣角張力)
-    const targetFov = m.fovBase + speedRatio * 22 + car.driftAmount * 3;
+    // FOV 隨速度擴張 (高速廣角張力);Boost 時額外外推 + 微震
+    const boostKick = car.boosting ? 9 : 0;
+    if (car.boosting) this.shake = Math.max(this.shake, 0.12);
+    const targetFov = m.fovBase + speedRatio * 22 + car.driftAmount * 3 + boostKick;
     this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, dt * 4);
     this.camera.updateProjectionMatrix();
   }

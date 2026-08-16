@@ -96,7 +96,9 @@ export class Effects {
     this._initSkidMarks();
     this._initSmoke();
     this._initSparks();
-    this._initRain();
+    // 依需求移除下雨 (天氣改為 白天/黃昏/夜晚 時段選擇);雨系統程式保留,
+    // 未來加「雨天」選項時呼叫 this._initRain() 即可
+    // this._initRain();
     this._initSpeedStreaks();
   }
 
@@ -407,7 +409,9 @@ export class Effects {
       // 中低速甩尾反饋立刻開始堆疊,不再全押在高速觸發鏈上
       const fullFx = (car.drifting || (input && input.handbrake && Math.abs(car.speed) > 10))
         && Math.abs(car.speed) > 6;
-      const miniFx = !fullFx && input && input.handbrake && Math.abs(car.speed) > 3;
+      // 輕度打滑 (一般過彎側滑) 也留下淡痕與小冒煙,不必手煞
+      const miniFx = !fullFx && ((input && input.handbrake && Math.abs(car.speed) > 3)
+        || (Math.abs(car.lateralVel ?? 0) > 2.1 && Math.abs(car.speed) > 9));
       this.smokeTimer -= dt;
       if (fullFx || miniFx) {
         // 胎痕沿速度向量對齊 + 依每幀位移拉長 → 連續無縫弧線

@@ -114,6 +114,9 @@ export class HUD {
       this.tCurrent.textContent = formatTime(race.currentLapTime);
     }
     this.lapNum.textContent = Math.min(race.lap, race.totalLaps);
+    const totalTxt = `/ ${race.totalLaps}`;
+    const lapTotalEl = $('lap-total');
+    if (lapTotalEl.textContent !== totalTxt) lapTotalEl.textContent = totalTxt;
 
     this._drawMinimap(car, race);
   }
@@ -139,6 +142,18 @@ export class HUD {
     this.posPod.classList.remove('on');
     this.posNum.classList.remove('bump', 'up', 'down');
     this._lastPos = null;
+  }
+
+  // Boost 剩餘顯示 (3 顆點;燃燒中的下一顆閃橘光)
+  updateBoost(car) {
+    const pod = $('boost-pips');
+    if (!pod) return;
+    pod.classList.add('on');
+    const pips = pod.querySelectorAll('.pip');
+    for (let i = 0; i < pips.length; i++) {
+      pips[i].classList.toggle('full', i < car.boostsLeft);
+      pips[i].classList.toggle('burning', car.boosting && i === car.boostsLeft);
+    }
   }
 
   // 警車追逐通緝條 (heat 0..1);危險時畫面邊緣紅色 vignette 脈動

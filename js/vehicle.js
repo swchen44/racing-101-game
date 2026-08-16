@@ -29,6 +29,14 @@ export class Car {
     this.def = carDef;
     this.tune = { ...DEFAULT_TUNE, ...(carDef?.tune || {}) };
     this.transmission = opts.transmission || 'auto';
+    // 極速正規化:把空氣阻力係數解成「全油門恰好在 tune.maxSpeed 達到終端速度」,
+    // 讓實際極速與選單標示一致 (原固定 drag 讓所有車都停在 ~140 km/h)
+    {
+      const tfTop = this.tune.evTorque ? 0.78 : 0.95;
+      const thrustTop = this.tune.engineForce * 0.35 * tfTop;
+      this.dragEff = Math.max(0.0004,
+        (thrustTop - this.tune.rollingResist * 0.35) / (this.tune.maxSpeed * this.tune.maxSpeed));
+    }
     const builder = CAR_BUILDERS[carDef?.builder] || CAR_BUILDERS.gt;
     const { mesh, parts } = builder(carDef || {});
     this.mesh = mesh;
@@ -61,7 +69,18 @@ export class Car {
     this.gear = 1;
     this.rpm = 0;
     this.revLimiter = false;
+    this.boostsLeft = 3;   // 每場 3 次 Boost
+    this.boostT = 0;       // 剩餘秒數
+    this.boosting = false;
     this._syncMesh(0);
+  }
+
+  // Boost:瞬間加速 5 秒,極速上限翻倍。回傳是否成功啟動
+  tryBoost() {
+    if (this.boostsLeft <= 0 || this.boostT > 0) return false;
+    this.boostsLeft--;
+    this.boostT = 5;
+    return true;
   }
 
   // ---------- 變速箱 ----------
@@ -96,11 +115,12 @@ export class Car {
     const handbrake = input.handbrake;
     const steerTarget = (input.left ? 1 : 0) - (input.right ? 1 : 0);
 
-    // 手排換檔 (邊緣觸發旗標由 main 設置後清除)
+    // 手排換檔 / Boost (邊緣觸發旗標由 main 設置後清除)
     if (this.transmission === 'manual') {
       if (input.shiftUp) { this.shiftUp(); input.shiftUp = false; }
       if (input.shiftDown) { this.shiftDown(); input.shiftDown = false; }
     }
+    if (input.boost) { input.boost = false; this.tryBoost(); }
 
     this.throttleSmooth += (throttle - this.throttleSmooth) * Math.min(1, dt * 6);
 
@@ -116,28 +136,36 @@ export class Car {
     let vF = this.vel.dot(fwd);
     let vL = this.vel.dot(right);
 
+    // ---- Boost 狀態 ----
+    this.boosting = this.boostT > 0;
+    if (this.boosting) this.boostT = Math.max(0, this.boostT - dt);
+    const boostMul = this.boosting ? 2 : 1;      // 極速上限 ×2
+    const effMax = t.maxSpeed * boostMul;
+
     // ---- 變速箱狀態 ----
-    const gearTop = this.gearTopSpeed(this.gear);
+    const gearTop = this.gearTopSpeed(this.gear) * boostMul;
     this.rpm = THREE.MathUtils.clamp(Math.abs(vF) / gearTop, 0, 1.08);
     if (this.transmission === 'auto' && t.gears > 1) {
       if (this.rpm > 0.94 && this.gear < t.gears) this.gear++;
       else if (this.rpm < 0.42 && this.gear > 1) this.gear--;
     }
-    // 斷油限速器:紅線後推力歸零 (手排不升檔就是撞牆聲)
-    this.revLimiter = this.rpm >= 1.0;
+    // 斷油限速器:紅線後推力歸零 (手排不升檔就是撞牆聲);Boost 中不斷油
+    this.revLimiter = this.rpm >= 1.0 && !this.boosting;
 
     // ---- 縱向力 ----
-    const speedRatio = Math.max(0, 1 - Math.abs(vF) / t.maxSpeed);
+    const speedRatio = Math.max(0, 1 - Math.abs(vF) / effMax);
     let accel = 0;
     if (throttle && !this.revLimiter) {
       accel += t.engineForce * this._torqueFactor(Math.min(1, this.rpm)) * (0.35 + 0.65 * speedRatio);
     }
+    // Boost 推進:額外直推 (受極速上限保護)
+    if (this.boosting && vF < effMax) accel += 26;
     if (brake) {
       if (vF > 0.5) accel -= t.brakeForce;
       else accel -= t.engineForce * 0.5 * Math.max(0, 1 - Math.abs(vF) / t.maxReverse);
     }
-    // 阻力 (貼牆/路緣時 rollingResist 打折,避免刮牆掉速後起步不了)
-    accel -= vF * Math.abs(vF) * t.drag;
+    // 阻力 (正規化係數;貼牆/路緣時 rollingResist 打折,避免刮牆掉速後起步不了)
+    accel -= vF * Math.abs(vF) * this.dragEff;
     const nearEdge = Math.abs(this.lateral ?? 0) > ROAD_HALF_WIDTH - 0.6;
     accel -= Math.sign(vF) * t.rollingResist * (nearEdge ? 0.35 : 1) * Math.min(1, Math.abs(vF));
     if (handbrake && vF > 2) accel -= 14;

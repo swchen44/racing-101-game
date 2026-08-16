@@ -15,11 +15,20 @@ const AI_ROSTER = [
   { builder: 'suv', paint: 0xd8dde4, name: '白峰' },
 ];
 
+// 難度 → AI 技術帶與橡皮筋強度。skillJitter 讓每台車能力隨機拉開差距,
+// 避免整群 AI 擠成一坨 (每場隨機,同場內每台不同)
+const DIFFICULTY_TUNE = {
+  easy: { skillLo: 0.68, skillHi: 0.84, rubber: 0.5, catchUp: 0.08, holdBack: -0.1 },
+  normal: { skillLo: 0.84, skillHi: 0.99, rubber: 0.32, catchUp: 0.07, holdBack: -0.05 },
+  hard: { skillLo: 0.96, skillHi: 1.1, rubber: 0.12, catchUp: 0.04, holdBack: -0.02 },
+};
+
 export class Opponents {
-  constructor(scene, track, count = 5) {
+  constructor(scene, track, count = 5, difficulty = 'normal') {
     this.scene = scene;
     this.track = track;
     this.cars = [];
+    this.diff = DIFFICULTY_TUNE[difficulty] || DIFFICULTY_TUNE.normal;
     this.totalLaps = modeById('gp').laps;
     this.raceT = 0;               // 綠燈後經過秒數 (main 在倒數期間不呼叫 update → AI 靜止)
     this._lastUpdateAt = 0;
@@ -35,7 +44,10 @@ export class Opponents {
       // 起跑排位:玩家在最後,AI 排在前面兩列
       const startS = 1 - (0.006 + i * 0.004);
       const lane = (i % 2 === 0 ? 1 : -1) * 3.2;
-      const skill = 0.82 + (i / count) * 0.14 + Math.random() * 0.04; // 0.82~0.99
+      // 技術值:難度帶內均勻分布 + 每台獨立隨機抖動 → 名次自然拉開
+      const band = this.diff.skillHi - this.diff.skillLo;
+      const skill = this.diff.skillLo + (i / Math.max(1, count - 1)) * band
+        + (Math.random() - 0.5) * band * 0.35;
       this.cars.push({
         mesh, parts, spec,
         s: startS, lane, laneTarget: lane,
@@ -143,10 +155,10 @@ export class Opponents {
       // 起跑:綠燈後有個人反應延遲 (倒數期間 main 不會呼叫 update,本來就靜止)
       if (this.raceT < ai.reaction) { ai.speed = 0; this._place(ai); continue; }
 
-      // 橡皮筋:落後玩家太多加速,領先太多收油 (±6% 技術上限)
+      // 橡皮筋:強度依難度 (高難度幾乎不留情)
       const aiTotal = ai.laps + ai.s;
       const gap = playerTotalProgress - aiTotal;
-      const rubber = THREE.MathUtils.clamp(gap * 0.35, -0.06, 0.08);
+      const rubber = THREE.MathUtils.clamp(gap * this.diff.rubber, this.diff.holdBack, this.diff.catchUp);
       let target = this._cornerSpeed(ai) * (1 + rubber);
       if (ai.upset > 0) target *= 0.72; // 失控中丟速度
       const accelRate = ai.speed < target ? 14 : 30;
@@ -188,21 +200,37 @@ export class Opponents {
     for (const ai of this.cars) {
       if (!ai.finished) this._place(ai);
 
-      // 與玩家的簡易碰撞 (圓形推擠) → AI 被擠壓:閃避 + 短暫失控
+      // 與玩家的實體碰撞:位置分離 (雙方各半) + 法向速度反彈 → 不再互相穿越
       const dx = playerCar.pos.x - ai.mesh.position.x;
       const dz = playerCar.pos.z - ai.mesh.position.z;
       const d2 = dx * dx + dz * dz;
-      const minD = 2.4;
-      if (d2 < minD * minD && d2 > 0.01) {
+      const minD = 2.5;
+      if (d2 < minD * minD && d2 > 0.0001) {
         const d = Math.sqrt(d2);
-        const push = (minD - d) / minD;
-        playerCar.vel.x += (dx / d) * push * 26 * dt;
-        playerCar.vel.z += (dz / d) * push * 26 * dt;
-        playerCar.collisionImpulse = Math.max(playerCar.collisionImpulse, push * 0.4);
+        const nx = dx / d, nz = dz / d;
+        const overlap = minD - d;
+        // 位置分離:玩家推開一半
+        playerCar.pos.x += nx * overlap * 0.5;
+        playerCar.pos.z += nz * overlap * 0.5;
+        // AI 分離另一半:投影到賽道座標 (lane 沿法線、s 沿切線)
+        const tan = this.track.tangentAt(ai.s);
+        const tnx = -tan.z, tnz = tan.x;
+        ai.lane = THREE.MathUtils.clamp(ai.lane - (nx * tnx + nz * tnz) * overlap * 0.5, -5.8, 5.8);
+        ai.s = (ai.s - ((nx * tan.x + nz * tan.z) * overlap * 0.5) / this.track.length + 1) % 1;
+        // 法向速度反彈 (approaching 時才作用,restitution 0.35)
+        const aiVx = tan.x * ai.speed, aiVz = tan.z * ai.speed;
+        const relVn = (playerCar.vel.x - aiVx) * nx + (playerCar.vel.z - aiVz) * nz;
+        if (relVn < 0) {
+          const j = -relVn * (1 + 0.35) * 0.5; // 各承擔一半
+          playerCar.vel.x += nx * j;
+          playerCar.vel.z += nz * j;
+          ai.speed = Math.max(2, ai.speed - Math.abs(j * (nx * tan.x + nz * tan.z)) * 0.8);
+        }
+        playerCar.collisionImpulse = Math.max(playerCar.collisionImpulse, Math.min(1, overlap * 1.2));
         // AI 受擠壓:往另一側閃 + 進入失控狀態
         ai.laneTarget = THREE.MathUtils.clamp(ai.lane + (ai.lane >= playerCar.lateral ? 2.6 : -2.6), -5, 5);
-        if (ai.upset <= 0.2) ai.speed *= 0.93;
         ai.upset = Math.max(ai.upset, 0.8);
+        this._place(ai);
       }
 
       // 超車瞬間呼嘯 (雙向:AI 超玩家 / 玩家超 AI),近距離才觸發

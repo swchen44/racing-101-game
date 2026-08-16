@@ -8,7 +8,7 @@ import { Effects } from './effects.js';
 import { GameAudio } from './audio.js';
 import { HUD, formatTime } from './hud.js';
 import { ChaseCamera } from './camera.js';
-import { TRACKS, CARS, MODES, trackById, carById, modeById } from './config.js';
+import { TRACKS, CARS, MODES, DIFFICULTIES, WEATHERS, trackById, carById, modeById, weatherById } from './config.js';
 import {
   loadProfile, saveProfile, saveLocalScore, topLocal,
   uploadScore, topRemote, remoteEnabled,
@@ -18,6 +18,7 @@ import { Police } from './police.js';
 import { initTouch, isTouchDevice } from './touch.js';
 import { disposeObject } from './cars/common.js';
 import { Reflections } from './reflections.js';
+import { t, pick, setLang, getLang, applyStatic } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -59,7 +60,8 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 }
 
 // ---------- 光照 ----------
-scene.add(new THREE.HemisphereLight(0x35496e, 0x1a1622, 0.85));
+const hemi = new THREE.HemisphereLight(0x35496e, 0x1a1622, 0.85);
+scene.add(hemi);
 const carFill = new THREE.PointLight(0x9fb8e8, 3.5, 15, 1.7);
 carFill.position.set(0, 7, 0);
 scene.add(carFill);
@@ -85,9 +87,25 @@ const setup = {
   trackId: profile.trackId || 'xinyi',
   carId: profile.carId || 'gt',
   transmission: profile.transmission || 'auto',
+  difficulty: profile.difficulty || 'normal',
+  weather: profile.weather || 'night',
 };
 function persistSetup() {
   saveProfile({ ...profile, ...setup });
+}
+
+// ---------- 天氣 / 時段光照 ----------
+function applyWeatherLighting(w) {
+  const L = w.lighting;
+  hemi.color.setHex(L.hemiColor);
+  hemi.groundColor.setHex(L.hemiGround);
+  hemi.intensity = L.hemi;
+  moonLight.color.setHex(L.sunColor);
+  moonLight.intensity = L.sun;
+  moonLight.userData.basePos = L.sunPos;
+  renderer.toneMappingExposure = L.exposure;
+  scene.fog.color.setHex(L.fogColor);
+  scene.fog.density = L.fogDensity;
 }
 
 // ---------- 世界生命週期 ----------
@@ -99,13 +117,21 @@ let hud = null;
 let opponents = null;
 let police = null;
 
-function buildWorld(trackDef) {
+function buildWorld(trackDef, weather = weatherById('night')) {
   if (worldGroup) { scene.remove(worldGroup); disposeObject(worldGroup); }
   if (tower) { scene.remove(tower); disposeObject(tower); tower = null; }
   track = new Track(trackDef);
   worldGroup = new THREE.Group();
   worldGroup.add(track.buildMeshes());
-  worldGroup.add(createCity(track, trackDef.theme || {}));
+  // 主題 + 時段合成:時段的天色/發光倍率覆蓋主題預設
+  const theme = {
+    ...(trackDef.theme || {}),
+    ...(weather.sky || {}),
+    emissiveMul: weather.emissiveMul,
+    weatherId: weather.id,
+  };
+  worldGroup.add(createCity(track, theme));
+  applyWeatherLighting(weather);
   scene.add(worldGroup);
   if ((trackDef.theme?.landmark ?? 'tower101') === 'tower101') {
     tower = createTaipei101();
@@ -138,7 +164,7 @@ const reflections = new Reflections(renderer, scene, camera);
 reflections.markScene(scene);
 
 // ---------- 輸入 ----------
-const input = { forward: false, backward: false, left: false, right: false, handbrake: false, shiftUp: false, shiftDown: false };
+const input = { forward: false, backward: false, left: false, right: false, handbrake: false, shiftUp: false, shiftDown: false, boost: false };
 const keyMap = {
   KeyW: 'forward', ArrowUp: 'forward',
   KeyS: 'backward', ArrowDown: 'backward',
@@ -152,12 +178,15 @@ window.addEventListener('keydown', (e) => {
   if (keyMap[e.code] !== undefined && !typing) { input[keyMap[e.code]] = true; e.preventDefault(); }
   if (e.code === 'KeyE' && race.state === 'racing') input.shiftUp = true;
   if (e.code === 'KeyQ' && race.state === 'racing') input.shiftDown = true;
+  if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && race.state === 'racing' && !race.paused) input.boost = true;
+  if (e.code === 'KeyM' && ui.screen === null) toggleMirror();
   if (e.code === 'Enter') {
     if (ui.screen === 'title') showSetup();
     else if (ui.screen === 'setup') startRace();
   }
   if (e.code === 'Escape') {
     if (ui.screen === 'setup' || ui.screen === 'board') showTitle();
+    else if (ui.screen === null && race.state === 'racing') toggleAbandonModal();
   }
   if (e.code === 'KeyR' && ui.screen === null && (race.state === 'racing' || race.state === 'finished')) restartRace();
   if (e.code === 'KeyC') chaseCam.cycleMode();
@@ -167,7 +196,7 @@ window.addEventListener('keyup', (e) => {
 });
 
 // 觸控
-const touch = initTouch(input, { onCycleCam: () => chaseCam.cycleMode() });
+const touch = initTouch(input, { onCycleCam: () => chaseCam.cycleMode(), onMirror: () => toggleMirror() });
 if (isTouchDevice()) document.body.classList.add('touch');
 
 // ---------- UI 導航 ----------
@@ -192,6 +221,21 @@ function showBoard() {
 }
 
 $('player-name').value = setup.name;
+// 語言切換
+function refreshLangButtons() {
+  $('lang-zh').classList.toggle('sel', getLang() === 'zh');
+  $('lang-en').classList.toggle('sel', getLang() === 'en');
+}
+function onLangChange(l) {
+  setLang(l);
+  refreshLangButtons();
+  if (ui.screen === 'setup') renderSetupCards();
+  if (ui.screen === 'board') renderBoard();
+}
+$('lang-zh').addEventListener('click', () => onLangChange('zh'));
+$('lang-en').addEventListener('click', () => onLangChange('en'));
+applyStatic();
+refreshLangButtons();
 $('btn-start').addEventListener('click', showSetup);
 $('btn-board').addEventListener('click', showBoard);
 $('btn-setup-back').addEventListener('click', showTitle);
@@ -233,46 +277,64 @@ function renderSetupCards() {
   mc.innerHTML = '';
   for (const m of MODES) {
     mc.appendChild(card(
-      `<div class="c-name">${m.icon} ${m.name}</div><div class="c-en">${m.nameEn}</div><div class="c-desc">${m.desc}</div>`,
+      `<div class="c-name">${m.icon} ${pick(m)}</div><div class="c-en">${m.nameEn}</div><div class="c-desc">${pick(m, 'desc')}</div>`,
       setup.mode === m.id,
       () => { setup.mode = m.id; persistSetup(); renderSetupCards(); }));
+  }
+  const dc = $('diff-cards');
+  dc.innerHTML = '';
+  for (const d of DIFFICULTIES) {
+    dc.appendChild(card(
+      `<div class="c-name">${pick(d)}</div><div class="c-en">${d.nameEn}</div><div class="c-desc">${pick(d, 'desc')}</div>`,
+      setup.difficulty === d.id,
+      () => { setup.difficulty = d.id; persistSetup(); renderSetupCards(); }));
+  }
+  const wc = $('weather-cards');
+  wc.innerHTML = '';
+  for (const w of WEATHERS) {
+    wc.appendChild(card(
+      `<div class="c-name">${w.icon} ${pick(w)}</div><div class="c-en">${w.nameEn}</div>`,
+      setup.weather === w.id,
+      () => { setup.weather = w.id; persistSetup(); renderSetupCards(); }));
   }
   const tc = $('track-cards');
   tc.innerHTML = '';
   for (const t of TRACKS) {
     tc.appendChild(card(
-      `<div class="c-name">${t.name}</div><div class="c-en">${t.nameEn}</div>${trackMiniSvg(t)}` +
-      `<div class="c-desc">${t.desc}</div><div class="c-meta">${t.lengthKm} KM ・ 難度 ${'★'.repeat(t.difficulty)}${'☆'.repeat(3 - t.difficulty)}</div>`,
+      `<div class="c-name">${pick(t)}</div><div class="c-en">${t.nameEn}</div>${trackMiniSvg(t)}` +
+      `<div class="c-desc">${pick(t, 'desc')}</div><div class="c-meta">${window.__i18nLenDiff(t)}</div>`,
       setup.trackId === t.id,
       () => { setup.trackId = t.id; persistSetup(); renderSetupCards(); }));
   }
   const cc = $('car-cards');
   cc.innerHTML = '';
   for (const c of CARS) {
-    const bars = ['speed', 'accel', 'grip', 'drift'].map((k) => {
-      const labels = { speed: '極速', accel: '加速', grip: '抓地', drift: '甩尾' };
-      return `<span class="sk">${labels[k]}</span><span class="sb"><i style="width:${c.stats[k] * 20}%"></i></span>`;
-    }).join('');
+    const statKeys = { speed: 'statSpeed', accel: 'statAccel', grip: 'statGrip', drift: 'statDrift' };
+    const bars = ['speed', 'accel', 'grip', 'drift'].map((k) =>
+      `<span class="sk">${t(statKeys[k])}</span><span class="sb"><i style="width:${c.stats[k] * 20}%"></i></span>`
+    ).join('');
     cc.appendChild(card(
-      `<div class="c-name">${c.name}</div><div class="c-en">${c.nameEn} ・ ${c.class}</div>` +
+      `<div class="c-name">${pick(c)}</div><div class="c-en">${c.nameEn} ・ ${c.class}</div>` +
       `<div class="stat-bars">${bars}</div>` +
-      `<div class="c-meta">極速 ${Math.round(c.tune.maxSpeed * 3.6)} KM/H</div>` +
-      `<div class="c-desc">${c.desc}</div>`,
+      `<div class="c-meta">${t('topSpeed', Math.round(c.tune.maxSpeed * 3.6))}</div>` +
+      `<div class="c-desc">${pick(c, 'desc')}</div>`,
       setup.carId === c.id,
       () => { setup.carId = c.id; persistSetup(); renderSetupCards(); }));
   }
   const trc = $('trans-cards');
   trc.innerHTML = '';
-  for (const [id, name, en, desc] of [
-    ['auto', '自排', 'AUTOMATIC', '自動換檔,專心過彎'],
-    ['manual', '手排', 'MANUAL', 'Q 降檔 / E 升檔,貼著紅線換檔更快'],
+  for (const [id, nameK, enK, descK] of [
+    ['auto', 'auto', 'autoEn', 'autoDesc'],
+    ['manual', 'manual', 'manualEn', 'manualDesc'],
   ]) {
     trc.appendChild(card(
-      `<div class="c-name">${name}</div><div class="c-en">${en}</div><div class="c-desc">${desc}</div>`,
+      `<div class="c-name">${t(nameK)}</div><div class="c-en">${t(enK)}</div><div class="c-desc">${t(descK)}</div>`,
       setup.transmission === id,
       () => { setup.transmission = id; persistSetup(); renderSetupCards(); }));
   }
 }
+
+window.__i18nLenDiff = (tr) => t('lengthDiff', tr.lengthKm, '★'.repeat(tr.difficulty) + '☆'.repeat(3 - tr.difficulty));
 
 // ---------- 排行榜畫面 ----------
 const board = { mode: 'solo', trackId: 'xinyi' };
@@ -282,7 +344,7 @@ async function renderBoard() {
   for (const m of MODES) {
     const el = document.createElement('div');
     el.className = 'tab' + (board.mode === m.id ? ' sel' : '');
-    el.textContent = m.name;
+    el.textContent = pick(m);
     el.addEventListener('click', () => { board.mode = m.id; renderBoard(); });
     mt.appendChild(el);
   }
@@ -291,7 +353,7 @@ async function renderBoard() {
   for (const t of TRACKS) {
     const el = document.createElement('div');
     el.className = 'tab' + (board.trackId === t.id ? ' sel' : '');
-    el.textContent = t.name;
+    el.textContent = pick(t);
     el.addEventListener('click', () => { board.trackId = t.id; renderBoard(); });
     tt.appendChild(el);
   }
@@ -299,25 +361,26 @@ async function renderBoard() {
   const src = $('board-src');
   const localRows = topLocal(board.mode, board.trackId, 20);
   let rows = localRows.map((e) => ({ ...e, src: '本機' }));
-  src.textContent = remoteEnabled() ? '讀取全球排行榜中…' : '本機成績 (全球排行榜未設定 — 見 SETUP-LEADERBOARD.md)';
+  src.textContent = remoteEnabled() ? t('boardLoading') : t('boardLocalOnly');
   renderBoardRows(list, rows);
   if (remoteEnabled()) {
     try {
       const remote = await topRemote(board.mode, board.trackId, 20);
       if (remote) {
         rows = remote.map((e) => ({ ...e, src: '全球' }));
-        src.textContent = '🌏 全球排行榜';
+        src.textContent = t('boardGlobal');
         renderBoardRows(list, rows);
       }
     } catch {
-      src.textContent = '全球排行榜連線失敗,顯示本機成績';
+      src.textContent = t('boardFail');
     }
   }
 }
 function renderBoardRows(list, rows) {
-  let html = '<div class="board-row head"><span>#</span><span>車手</span><span>IP</span><span style="text-align:right">時間</span></div>';
+  const hd = t('boardHead');
+  let html = `<div class="board-row head"><span>${hd[0]}</span><span>${hd[1]}</span><span>${hd[2]}</span><span style="text-align:right">${hd[3]}</span></div>`;
   if (!rows.length) {
-    html += '<div id="board-empty">尚無紀錄 — 快去跑一場!</div>';
+    html += `<div id="board-empty">${t('boardEmpty')}</div>`;
   } else {
     rows.forEach((e, i) => {
       html += `<div class="board-row"><span class="rk">${i + 1}</span>` +
@@ -344,6 +407,7 @@ const race = {
   nextCheckpoint: 1,
   countdownT: 0,
   countdownStep: 4,
+  paused: false,
 };
 
 function startRace() {
@@ -353,12 +417,13 @@ function startRace() {
   const trackDef = trackById(setup.trackId);
   const carDef = carById(setup.carId);
   const mode = modeById(setup.mode);
+  const weather = weatherById(setup.weather);
 
-  // 重建世界 (換賽道) 與車輛
-  buildWorld(trackDef);
+  // 重建世界 (換賽道/時段) 與車輛
+  buildWorld(trackDef, weather);
   buildCar(carDef, setup.transmission);
   clearModeActors();
-  if (setup.mode === 'gp') opponents = new Opponents(scene, track, 5);
+  if (setup.mode === 'gp') opponents = new Opponents(scene, track, 5, setup.difficulty);
   if (setup.mode === 'police') police = new Police(scene, track, 2);
 
   reflections.markScene(scene); // 世界/車輛/AI 重建後重新標記發光體
@@ -377,8 +442,17 @@ function startRace() {
   if (setup.mode === 'police') hud.setWanted(0); else hud.hideWanted();
   touch.setVisible(isTouchDevice());
   touch.setManual(setup.transmission === 'manual');
+  $('btn-abandon').classList.add('on');
+  $('btn-mirror').classList.add('on');
+  $('confirm-modal').classList.remove('on');
+  // 白天關閉車燈/光池/underglow
+  const lightsOn = weather.headlights;
+  for (const h of car.headlights || []) h.intensity = lightsOn ? h.intensity : 0;
+  if (car.headlightPool) car.headlightPool.visible = lightsOn;
+  if (car.underglow) car.underglow.visible = lightsOn;
 
   race.mode = setup.mode;
+  race.paused = false;
   race.state = 'countdown';
   race.totalLaps = mode.laps;
   race.countdownT = 0;
@@ -405,7 +479,7 @@ function updateRace(dt) {
       if (step >= 1 && step <= 3) { hud.centerMessage(String(step)); audio.countdownBeep(); }
       else if (step === 0) {
         hud.centerMessage('GO');
-        hud.subMessage(race.mode === 'police' ? '甩 開 條 子' : '出 走 信 義 區');
+        hud.subMessage(race.mode === 'police' ? t('goSubPolice') : t('goSub'));
         audio.goBeep();
         race.state = 'racing';
       }
@@ -439,8 +513,8 @@ function updateRace(dt) {
         return;
       }
       race.lap++;
-      hud.centerMessage(`LAP ${race.lap}`, true);
-      if (race.lap === race.totalLaps) hud.subMessage('最 終 圈 FINAL LAP');
+      hud.centerMessage(t('lapMsg', race.lap), true);
+      if (race.lap === race.totalLaps) hud.subMessage(t('finalLap'));
       audio.lapBeep();
       race.nextCheckpoint = 1;
     } else {
@@ -470,7 +544,7 @@ function finishRace() {
 function bustedRace() {
   race.state = 'busted';
   hud.centerMessage('BUSTED', true);
-  hud.subMessage('你 被 攔 停 了');
+  hud.subMessage(t('bustedSub'));
   audio.collision(1);
   setTimeout(() => showResultsScreen(true), 1600);
 }
@@ -478,23 +552,23 @@ function bustedRace() {
 function showResultsScreen(busted) {
   const table = $('res-table');
   const bestLapS = race.lapTimes.length ? Math.min(...race.lapTimes) : NaN;
-  $('res-title').textContent = busted ? 'BUSTED' : 'FINISH';
-  $('res-zh').textContent = busted ? '攔 停 出 局' : '完 走 認 定';
+  $('res-title').textContent = busted ? t('busted') : t('finish');
+  $('res-zh').textContent = busted ? t('bustedZh') : t('finishZh');
   let html = '';
-  html += `<div class="res-row"><span class="k">車手</span><span class="v">${escapeHtml(setup.name)}</span></div>`;
-  html += `<div class="res-row"><span class="k">模式 / 賽道</span><span class="v">${modeById(race.mode).name} ・ ${trackById(setup.trackId).name}</span></div>`;
-  race.lapTimes.forEach((t, i) => {
-    const isBest = t === bestLapS;
-    html += `<div class="res-row${isBest ? ' hl' : ''}"><span class="k">第 ${i + 1} 圈</span><span class="v">${formatTime(t)}</span></div>`;
+  html += `<div class="res-row"><span class="k">${t('driver')}</span><span class="v">${escapeHtml(setup.name)}</span></div>`;
+  html += `<div class="res-row"><span class="k">${t('modeTrack')}</span><span class="v">${pick(modeById(race.mode))} ・ ${pick(trackById(setup.trackId))}</span></div>`;
+  race.lapTimes.forEach((lt, i) => {
+    const isBest = lt === bestLapS;
+    html += `<div class="res-row${isBest ? ' hl' : ''}"><span class="k">${t('lapN', i + 1)}</span><span class="v">${formatTime(lt)}</span></div>`;
   });
   if (!busted) {
-    html += `<div class="res-row"><span class="k">總時間</span><span class="v">${formatTime(race.totalTime)}</span></div>`;
+    html += `<div class="res-row"><span class="k">${t('total')}</span><span class="v">${formatTime(race.totalTime)}</span></div>`;
     if (race.mode === 'gp' && opponents) {
       const pos = opponents.playerPosition(race.totalLaps);
-      html += `<div class="res-row hl"><span class="k">最終名次</span><span class="v">P${pos} / ${opponents.cars.length + 1}</span></div>`;
+      html += `<div class="res-row hl"><span class="k">${t('finalPos')}</span><span class="v">P${pos} / ${opponents.cars.length + 1}</span></div>`;
     }
     if (!isNaN(bestLapS)) {
-      html += `<div class="res-row hl"><span class="k">最速單圈</span><span class="v">${formatTime(bestLapS)}</span></div>`;
+      html += `<div class="res-row hl"><span class="k">${t('bestLap')}</span><span class="v">${formatTime(bestLapS)}</span></div>`;
     }
   }
   table.innerHTML = html;
@@ -509,16 +583,67 @@ function showResultsScreen(busted) {
     };
     saveLocalScore(entry);
     if (remoteEnabled()) {
-      uploadEl.textContent = '上傳全球排行榜中…';
+      uploadEl.textContent = t('uploadUploading');
       uploadScore(entry)
-        .then(() => { uploadEl.textContent = '🌏 已上傳全球排行榜'; })
-        .catch(() => { uploadEl.textContent = '全球排行榜上傳失敗 (成績已存本機)'; });
+        .then(() => { uploadEl.textContent = t('uploadDone'); })
+        .catch(() => { uploadEl.textContent = t('uploadFail'); });
     } else {
-      uploadEl.textContent = '成績已存本機排行榜';
+      uploadEl.textContent = t('uploadLocal');
     }
   } else {
     uploadEl.textContent = '';
   }
+}
+
+// ---------- 放棄比賽 (二次確認) ----------
+function toggleAbandonModal() {
+  const on = $('confirm-modal').classList.toggle('on');
+  race.paused = on;
+}
+function endRaceToMenu() {
+  $('confirm-modal').classList.remove('on');
+  race.paused = false;
+  race.state = 'title';
+  clearModeActors();
+  $('btn-abandon').classList.remove('on');
+  $('btn-mirror').classList.remove('on');
+  $('mirror-frame').classList.remove('on');
+  $('cockpit-overlay')?.classList.remove('on');
+  mirrorOn = false;
+  if (car?.bodyGroup) car.bodyGroup.visible = true;
+  touch.setVisible(false);
+  showTitle();
+}
+$('btn-abandon').addEventListener('click', () => { if (race.state === 'racing') toggleAbandonModal(); });
+$('confirm-yes').addEventListener('click', endRaceToMenu);
+$('confirm-no').addEventListener('click', () => { $('confirm-modal').classList.remove('on'); race.paused = false; });
+
+// ---------- 後視鏡子母畫面 ----------
+let mirrorOn = false;
+const mirrorCam = new THREE.PerspectiveCamera(56, 3.2, 0.3, 1500);
+function toggleMirror() {
+  mirrorOn = !mirrorOn;
+  $('mirror-frame').classList.toggle('on', mirrorOn);
+}
+$('btn-mirror').addEventListener('click', toggleMirror);
+function renderMirror() {
+  const W = window.innerWidth, H = window.innerHeight;
+  const w = Math.min(W * 0.3, 380), h = w / 3.2;
+  const x = (W - w) / 2, y = H - 24 - h - 2; // 對齊 CSS #mirror-frame (top:24)
+  mirrorCam.aspect = w / h;
+  mirrorCam.updateProjectionMatrix();
+  const sin = Math.sin(car.heading), cos = Math.cos(car.heading);
+  mirrorCam.position.set(car.pos.x - sin * 0.4, 1.55, car.pos.z - cos * 0.4);
+  mirrorCam.lookAt(car.pos.x - sin * 40, 1.2, car.pos.z - cos * 40);
+  renderer.autoClear = false;
+  renderer.setScissorTest(true);
+  renderer.setViewport(x, y, w, h);
+  renderer.setScissor(x, y, w, h);
+  renderer.clearDepth();
+  renderer.render(scene, mirrorCam);
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, W, H);
+  renderer.autoClear = true;
 }
 
 // ---------- 主迴圈 ----------
@@ -536,11 +661,11 @@ function tick() {
   lastT = now;
 
   accumulator += frameDt;
-  const driving = race.state === 'racing';
+  const driving = race.state === 'racing' && !race.paused;
   while (accumulator >= FIXED_DT) {
     if (driving) {
       car.update(FIXED_DT, input);
-    } else if (race.state === 'countdown' || race.state === 'finished' || race.state === 'busted') {
+    } else if (!race.paused && (race.state === 'countdown' || race.state === 'finished' || race.state === 'busted')) {
       car.update(FIXED_DT, { forward: false, backward: race.state !== 'countdown', left: false, right: false, handbrake: true });
     }
     accumulator -= FIXED_DT;
@@ -552,7 +677,7 @@ function tick() {
     chaseCam.addShake(car.collisionImpulse * 0.8);
   }
 
-  if (ui.screen === null) updateRace(frameDt);
+  if (ui.screen === null && !race.paused) updateRace(frameDt);
 
   if (ui.screen === null) {
     chaseCam.update(frameDt, car, now);
@@ -571,8 +696,11 @@ function tick() {
     camera.lookAt(lookX + rightDir.x * shift * 0.35, 165, lookZ + rightDir.z * shift * 0.35);
   }
 
-  moonLight.position.set(car.pos.x - 120, 260, car.pos.z - 160);
-  moonLight.target.position.set(car.pos.x, 0, car.pos.z);
+  {
+    const bp = moonLight.userData.basePos || [-120, 260, -160];
+    moonLight.position.set(car.pos.x + bp[0], bp[1], car.pos.z + bp[2]);
+    moonLight.target.position.set(car.pos.x, 0, car.pos.z);
+  }
   carFill.position.set(car.pos.x, 7, car.pos.z);
 
   if (tower) tower.userData.update(now);
@@ -584,10 +712,21 @@ function tick() {
   }
   effects.update(frameDt, ui.screen === null ? car : null, camera.position, now, input);
   audio.update(car, frameDt, race.state === 'racing');
-  if (ui.screen === null && hud) hud.update(car, race);
+  if (ui.screen === null && hud) {
+    hud.update(car, race);
+    hud.updateBoost(car);
+  }
+  // 駕駛艙視角:顯示儀表框、隱藏自車車身 (免遮擋)
+  {
+    const cockpit = ui.screen === null && chaseCam.mode.name === 'cockpit';
+    $('cockpit-overlay').classList.toggle('on', cockpit);
+    const rigid = ui.screen === null && chaseCam.mode.rigid;
+    if (car.bodyGroup) car.bodyGroup.visible = !rigid;
+  }
 
   reflections.update();   // 主渲染前:鏡像相機渲染發光體到反射 RT
   effects.render(frameDt);
+  if (mirrorOn && ui.screen === null) renderMirror();
 
   // 效能自動調節
   fpsSamples.push(frameDt);

@@ -847,7 +847,8 @@ function createBuildings(track, streaks, theme = {}) {
   for (let i = 0; i < 7; i++) texPairs.push(buildingTexturePair(false));
   const darkStart = texPairs.length;
   texPairs.push(buildingTexturePair(true), buildingTexturePair(true));
-  const INTENSITY_LEVELS = [0.55, 0.85, 1.2]; // 近賽道高樓要「自己會發光」,強於遠景剪影
+  const eMul = theme.emissiveMul ?? 1; // 時段:白天窗燈近乎熄滅、黃昏減半
+  const INTENSITY_LEVELS = [0.55 * eMul, 0.85 * eMul, 1.2 * eMul]; // 近賽道高樓要「自己會發光」,強於遠景剪影
   const matCache = new Map();
   const getMaterial = (variant, rx, ry, level) => {
     const key = `${variant}_${rx}_${ry}_${level}`;

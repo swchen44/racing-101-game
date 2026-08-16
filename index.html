@@ -460,6 +460,75 @@ body.touch #controls-hint { display: none; }
   #setup-screen, #board-screen { padding-top: 16px; }
   .sec-label { margin: 16px 0 8px; }
 }
+
+/* ---------- v3:Boost / 放棄 / 後視鏡 / 駕駛艙 / 確認框 / 語言 ---------- */
+#boost-pips { position: absolute; left: 240px; bottom: 46px; display: none; align-items: center; gap: 8px; }
+#boost-pips.on { display: flex; }
+#boost-pips .pip { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(77,216,255,0.5); background: rgba(10,16,28,0.6); transition: all .2s; }
+#boost-pips .pip.full { background: radial-gradient(circle at 35% 35%, #bfefff, #37c8ff); border-color: #6fe0ff; box-shadow: 0 0 12px rgba(77,216,255,0.8); }
+#boost-pips .pip.burning { animation: boostBurn .4s infinite alternate; }
+@keyframes boostBurn { from { box-shadow: 0 0 10px rgba(255,181,77,.8); background: #ffcf6f; } to { box-shadow: 0 0 24px rgba(255,120,40,1); background: #ff9d3c; } }
+#boost-label { font-size: 11px; letter-spacing: 3px; color: #6fb3d9; font-weight: 600; }
+.hud-mini-btn {
+  position: absolute; pointer-events: auto; cursor: pointer; z-index: 6;
+  font-family: var(--tc-font); font-size: 12px; letter-spacing: 2px; color: #9fc0da; font-weight: 600;
+  background: var(--glass); border: 1px solid rgba(140,170,200,0.25); padding: 7px 14px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  display: none;
+}
+.hud-mini-btn:hover { color: #fff; border-color: rgba(77,216,255,0.6); }
+.hud-mini-btn.on { display: block; }
+#btn-abandon { top: 96px; left: 34px; }
+#btn-mirror { top: 138px; left: 34px; }
+#mirror-frame {
+  position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
+  width: min(30vw, 380px); aspect-ratio: 3.2; display: none;
+  border: 2px solid rgba(120,160,200,0.55); border-radius: 8px;
+  box-shadow: 0 0 24px rgba(0,0,0,0.65), inset 0 0 14px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+#mirror-frame.on { display: block; }
+#mirror-frame::after { content: 'REAR 後方'; position: absolute; right: 8px; bottom: 4px; font-size: 9px; letter-spacing: 2px; color: rgba(180,210,235,0.75); }
+#cockpit-overlay { position: absolute; inset: 0; display: none; pointer-events: none; }
+#cockpit-overlay.on { display: block; }
+#cockpit-dash {
+  position: absolute; left: -4%; right: -4%; bottom: -2%; height: 17%;
+  background: linear-gradient(180deg, rgba(10,12,16,0.2), rgba(6,8,11,0.96) 42%);
+  border-top: 3px solid rgba(40,46,56,0.9); border-radius: 50% 50% 0 0 / 26% 26% 0 0;
+}
+#cockpit-pillar-l, #cockpit-pillar-r {
+  position: absolute; top: -6%; width: 13%; height: 68%;
+  background: linear-gradient(180deg, rgba(8,10,14,0.98), rgba(8,10,14,0.6));
+}
+#cockpit-pillar-l { left: -7%; transform: rotate(16deg); border-right: 2px solid rgba(50,58,70,0.7); }
+#cockpit-pillar-r { right: -7%; transform: rotate(-16deg); border-left: 2px solid rgba(50,58,70,0.7); }
+#confirm-modal {
+  position: absolute; inset: 0; display: none; z-index: 20; pointer-events: auto;
+  align-items: center; justify-content: center; background: rgba(3,6,12,0.72); backdrop-filter: blur(4px);
+}
+#confirm-modal.on { display: flex; }
+#confirm-box {
+  background: var(--glass-solid); border: 1px solid rgba(255,77,109,0.4); border-top: 3px solid var(--neon-red);
+  padding: 34px 44px; text-align: center; max-width: 90vw;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+#confirm-title { font-family: var(--tc-font); font-weight: 900; font-size: 24px; letter-spacing: 6px; color: #ffdfe6; }
+#confirm-desc { font-family: var(--tc-font); font-size: 13px; letter-spacing: 3px; color: #8fa8c0; margin-top: 12px; }
+#confirm-btns { display: flex; gap: 14px; margin-top: 28px; justify-content: center; flex-wrap: wrap; }
+#lang-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.lang-btn {
+  cursor: pointer; font-size: 13px; letter-spacing: 2px; color: #7fa0be; padding: 6px 18px;
+  border: 1px solid rgba(120,150,180,0.3); background: var(--glass);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.lang-btn.sel { color: #eafff5; border-color: var(--neon-jade); background: linear-gradient(rgba(62,230,168,0.14), rgba(62,230,168,0.14)) var(--glass); }
+#tc-boost { right: 210px; bottom: 130px; width: 64px; height: 64px; background: rgba(20,44,60,0.5); border-color: rgba(77,216,255,0.5); }
+#tc-mirror { right: 22px; top: 170px; width: 50px; height: 50px; font-size: 17px; }
+@media (max-width: 900px) {
+  #boost-pips { left: 170px; bottom: 30px; }
+  #btn-abandon { transform: translateX(-140px); padding: 6px 10px; }
+}
+
 </style>
 </head>
 <body>
@@ -503,7 +572,26 @@ body.touch #controls-hint { display: none; }
     <span id="drift-tag">滑走 DRIFT</span>
   </div>
 
-  <div id="wrongway">⚠ 逆走 WRONG WAY ⚠</div>
+  <div id="boost-pips"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span id="boost-label">BOOST ⇧</span></div>
+  <div class="hud-mini-btn" id="btn-abandon" data-i18n="abandonBtn">✕ 放棄</div>
+  <div class="hud-mini-btn" id="btn-mirror">🪞 M</div>
+  <div id="mirror-frame"></div>
+  <div id="cockpit-overlay">
+    <div id="cockpit-dash"></div>
+    <div id="cockpit-pillar-l"></div>
+    <div id="cockpit-pillar-r"></div>
+  </div>
+  <div id="confirm-modal">
+    <div id="confirm-box">
+      <div id="confirm-title" data-i18n="abandonTitle">放棄本場比賽?</div>
+      <div id="confirm-desc" data-i18n="abandonDesc">本場成績將不會被記錄</div>
+      <div id="confirm-btns">
+        <div class="menu-btn ghost" id="confirm-yes" data-i18n="abandonYes">放棄並返回選單</div>
+        <div class="menu-btn primary" id="confirm-no" data-i18n="abandonNo">繼續比賽</div>
+      </div>
+    </div>
+  </div>
+  <div id="wrongway" data-i18n="wrongway">⚠ 逆走 WRONG WAY ⚠</div>
   <div id="center-msg"></div>
   <div id="sub-msg"></div>
   <div id="record-flash">★ 最速紀錄 NEW RECORD ★</div>
@@ -550,38 +638,48 @@ body.touch #controls-hint { display: none; }
     <div id="title-main">MIDNIGHT<br>CIRCUIT</div>
     <div id="title-zh">午 夜 疾 走</div>
     <div id="title-rule"></div>
+    <div id="lang-row">
+      <div class="lang-btn" id="lang-zh">中文</div>
+      <div class="lang-btn" id="lang-en">EN</div>
+    </div>
     <div id="name-row">
-      <span id="name-label">車手代號</span>
-      <input id="player-name" type="text" maxlength="20" placeholder="輸入你的名字" autocomplete="off">
+      <span id="name-label" data-i18n="driverName">車手代號</span>
+      <input id="player-name" type="text" maxlength="20" placeholder="輸入你的名字" data-i18n-ph="namePlaceholder" autocomplete="off">
     </div>
     <div id="title-btns">
-      <div class="menu-btn primary" id="btn-start">開始遊戲 START — ENTER</div>
-      <div class="menu-btn" id="btn-board">排行榜 RANKINGS</div>
+      <div class="menu-btn primary" id="btn-start" data-i18n="start">開始遊戲 START — ENTER</div>
+      <div class="menu-btn" id="btn-board" data-i18n="rankings">排行榜 RANKINGS</div>
     </div>
     <div id="controls-hint">
-      <span><b>W A S D / ↑←↓→</b>&nbsp; 駕駛</span>
-      <span><b>SPACE</b>&nbsp; 手煞車滑走</span>
-      <span><b>Q / E</b>&nbsp; 降檔 / 升檔 (手排)</span>
-      <span><b>C</b>&nbsp; 視角</span>
-      <span><b>R</b>&nbsp; 重新開始</span>
+      <span><b>W A S D / ↑←↓→</b>&nbsp; <i data-i18n="hintDrive">駕駛</i></span>
+      <span><b>SPACE</b>&nbsp; <i data-i18n="hintDrift">手煞車滑走</i></span>
+      <span><b>Q / E</b>&nbsp; <i data-i18n="hintShift">降檔 / 升檔 (手排)</i></span>
+      <span><b>⇧ SHIFT</b>&nbsp; <i data-i18n="hintBoost">加速 BOOST</i></span>
+      <span><b>C</b>&nbsp; <i data-i18n="hintCam">視角</i></span>
+      <span><b>M</b>&nbsp; <i data-i18n="hintMirror">後視鏡</i></span>
+      <span><b>R</b>&nbsp; <i data-i18n="hintRestart">重新開始</i></span>
     </div>
   </div>
 
   <!-- 賽事設定 -->
   <div class="screen" id="setup-screen">
-    <div class="setup-title">RACE SETUP</div>
-    <div class="setup-sub">選 擇 你 的 戰 場 與 座 駕</div>
-    <div class="sec-label">遊戲模式 MODE</div>
+    <div class="setup-title" data-i18n="setupTitle">RACE SETUP</div>
+    <div class="setup-sub" data-i18n="setupSub">選 擇 你 的 戰 場 與 座 駕</div>
+    <div class="sec-label" data-i18n="secMode">遊戲模式 MODE</div>
     <div class="card-row" id="mode-cards"></div>
-    <div class="sec-label">賽道 TRACK</div>
+    <div class="sec-label" data-i18n="secDifficulty">對手強度 AI LEVEL</div>
+    <div class="card-row" id="diff-cards"></div>
+    <div class="sec-label" data-i18n="secWeather">時段 TIME OF DAY</div>
+    <div class="card-row" id="weather-cards"></div>
+    <div class="sec-label" data-i18n="secTrack">賽道 TRACK</div>
     <div class="card-row" id="track-cards"></div>
-    <div class="sec-label">車型 CAR</div>
+    <div class="sec-label" data-i18n="secCar">車型 CAR</div>
     <div class="card-row" id="car-cards"></div>
-    <div class="sec-label">變速箱 TRANSMISSION</div>
+    <div class="sec-label" data-i18n="secTrans">變速箱 TRANSMISSION</div>
     <div class="card-row" id="trans-cards"></div>
     <div id="setup-actions">
-      <div class="menu-btn primary" id="btn-go">出發 RACE — ENTER</div>
-      <div class="menu-btn ghost" id="btn-setup-back">返回 BACK</div>
+      <div class="menu-btn primary" id="btn-go" data-i18n="go">出發 RACE — ENTER</div>
+      <div class="menu-btn ghost" id="btn-setup-back" data-i18n="back">返回 BACK</div>
     </div>
   </div>
 
@@ -594,7 +692,7 @@ body.touch #controls-hint { display: none; }
     <div id="board-list"></div>
     <div id="board-src"></div>
     <div id="setup-actions">
-      <div class="menu-btn ghost" id="btn-board-back">返回 BACK</div>
+      <div class="menu-btn ghost" id="btn-board-back" data-i18n="back">返回 BACK</div>
     </div>
   </div>
 </div>

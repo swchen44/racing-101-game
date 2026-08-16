@@ -8,7 +8,7 @@ export function isTouchDevice() {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 }
 
-export function initTouch(input, { onCycleCam } = {}) {
+export function initTouch(input, { onCycleCam, onMirror } = {}) {
   const root = document.getElementById('touch-ui');
   if (!root) return { setVisible() {}, setManual() {} };
 
@@ -63,6 +63,8 @@ export function initTouch(input, { onCycleCam } = {}) {
   bind('tc-up', () => { input.shiftUp = true; });
   bind('tc-down', () => { input.shiftDown = true; });
   bind('tc-cam', () => { onCycleCam && onCycleCam(); });
+  bind('tc-boost', () => { input.boost = true; });
+  bind('tc-mirror', () => { onMirror && onMirror(); });
 
   return {
     // body.touch (真觸控裝置或 QA 強制) 時一律顯示;選單開啟時由 CSS :has 規則隱藏

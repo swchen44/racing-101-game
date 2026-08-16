@@ -25,9 +25,12 @@ export class Police {
     this.barrierGroup = null;
     this.barriers = [];
     this._sirenStopped = false;
-    for (let i = 0; i < count; i++) {
-      this._spawnUnit(1 - 0.03 - i * 0.012, i % 2 ? 2.5 : -2.5);
-    }
+    // 兩台編制:rammer 從玩家後方追撞、blocker 在玩家前方堵路 (可被超越)
+    const rammer = this._spawnUnit(1 - 0.03, -2.5);
+    rammer.role = 'rammer';
+    const blocker = this._spawnUnit(0.012, 2.0); // 起跑線前方
+    blocker.role = 'blocker';
+    blocker.caughtUp = true;
     window.__police = this; // QA 掛鉤
   }
 
@@ -179,13 +182,9 @@ export class Police {
     const flash = Math.floor(this.flashT * 6) % 2 === 0;
     let closestD = Infinity;
 
-    // 自行追蹤玩家圈數 → 第 2 圈起增援 +1 台 (從玩家後方出現)
+    // 圈數追蹤 (供路障節奏用;依需求警力固定 2 台,不再增援)
     if (playerCar.progress < 0.1 && this.prevProgress > 0.9) this.playerLap++;
     this.prevProgress = playerCar.progress;
-    if (!this.reinforced && this.playerLap >= 2) {
-      this.reinforced = true;
-      this._spawnUnit(playerCar.progress - 0.025, 0);
-    }
 
     this.roadblockCooldown -= dt;
     const playerSpeed = Math.abs(playerCar.speed);
@@ -219,12 +218,39 @@ export class Police {
           u.pitCooldown = 3;
           this._place(u);
         }
+      } else if (u.role === 'blocker') {
+        // ---- 前方堵車:保持在玩家前方 ~22m,鏡像玩家車道但有延遲 → 假動作可騙過它超車 ----
+        let gap = playerCar.progress - u.s; // 玩家-警車 (負 = 警車在前)
+        if (gap > 0.5) gap -= 1;
+        if (gap < -0.5) gap += 1;
+        const gapM = gap * this.track.length;   // 正 = 玩家在前 (已超越)
+        const playerTop = (playerCar.tune?.maxSpeed ?? 55);
+        if (u.caughtUp) {
+          // 堵路中:維持前方 22m;極速上限 = 玩家車 96% → 技術好可硬拉直線超掉
+          const hold = -22 - gapM; // >0 需要加速拉開
+          const target = Math.min(playerTop * 0.96, playerSpeed + hold * 0.35);
+          u.speed += THREE.MathUtils.clamp(target - u.speed, -30 * dt, 13 * dt);
+          // 車道鏡像 (刻意慢半拍):玩家換道 ~0.8s 後才跟上
+          u.lane += (playerCar.lateral - u.lane) * Math.min(1, dt * 1.15);
+          if (gapM > 12) u.caughtUp = false; // 被超越 → 轉入追趕
+        } else {
+          // 追趕中:小幅超速回到前方;過程中在玩家側邊,留出賽車空間
+          const target = Math.min(playerTop * 1.1, playerSpeed + 8);
+          u.speed += THREE.MathUtils.clamp(target - u.speed, -30 * dt, 16 * dt);
+          u.lane += ((playerCar.lateral > 0 ? playerCar.lateral - 3.2 : playerCar.lateral + 3.2) - u.lane) * Math.min(1, dt * 1.4);
+          if (gapM < -18) { u.caughtUp = true; }
+        }
+        u.s = (u.s + (u.speed * dt) / this.track.length + 1) % 1;
+        this._place(u);
+        u.wheelSpin += (u.speed / 0.48) * dt;
+        if (u.parts.wheels) {
+          for (const w of u.parts.wheels) w.spinner.rotation.x = u.wheelSpin % (Math.PI * 2);
+        }
       } else {
-        // 沿賽道追玩家的進度 (走短的一邊)
+        // ---- 後方追撞 (rammer):追進度 + PIT 撞尾 ----
         let gap = playerCar.progress - u.s;
         if (gap > 0.5) gap -= 1;
         if (gap < -0.5) gap += 1;
-        // 目標速度:落後時比玩家上限快 8%,已在前方則減速等攔截;PIT 中貼緊
         const target = u.pitT > 0
           ? Math.min(58, playerSpeed + 4)
           : gap > 0.004
@@ -241,9 +267,7 @@ export class Police {
           if (d < 3.0 && playerSpeed > 8) this._pitHit(u, playerCar);
           if (u.pitT <= 0) u.pitCooldown = 6 + Math.random() * 5;
         } else if (d < 22) {
-          // 貼近時朝玩家的側向位置壓過去 (逼車)
           u.lane += ((playerCar.lateral) - u.lane) * Math.min(1, dt * 1.6);
-          // 冷卻結束且玩家高速 → 發動 PIT
           if (u.pitCooldown <= 0 && d < 14 && playerSpeed > 14) {
             u.pitT = 1.6;
             u.pitSide = Math.sign(u.lane - playerCar.lateral) || (Math.random() < 0.5 ? -1 : 1);
@@ -258,15 +282,33 @@ export class Police {
         }
       }
 
-      // 碰撞推擠 (撞警車會損失速度;橫停路障車推得更重)
+      // 實體碰撞:位置分離 + 法向反彈 (不再互穿);橫停路障車視為重物,玩家承擔較多分離
       const minD = 2.5;
-      if (d < minD && d > 0.05) {
-        const push = (minD - d) / minD;
-        const k = u.state === 'roadblock' ? 44 : 30;
-        playerCar.vel.x += (dx / d) * push * k * dt;
-        playerCar.vel.z += (dz / d) * push * k * dt;
-        playerCar.vel.multiplyScalar(1 - push * (u.state === 'roadblock' ? 0.8 : 0.5) * dt * 8);
-        playerCar.collisionImpulse = Math.max(playerCar.collisionImpulse, push * (u.state === 'roadblock' ? 0.7 : 0.5));
+      if (d < minD && d > 0.02) {
+        const nx = dx / d, nz = dz / d;
+        const overlap = minD - d;
+        const playerShare = u.state === 'roadblock' ? 0.85 : 0.5;
+        playerCar.pos.x += nx * overlap * playerShare;
+        playerCar.pos.z += nz * overlap * playerShare;
+        if (u.state !== 'roadblock') {
+          const tan = this.track.tangentAt(u.s);
+          const tnx = -tan.z, tnz = tan.x;
+          u.lane = THREE.MathUtils.clamp(u.lane - (nx * tnx + nz * tnz) * overlap * 0.5, -5.8, 5.8);
+          u.s = (u.s - ((nx * tan.x + nz * tan.z) * overlap * 0.5) / this.track.length + 1) % 1;
+          this._place(u);
+        }
+        const tanU = this.track.tangentAt(u.s);
+        const uVx = tanU.x * u.speed, uVz = tanU.z * u.speed;
+        const relVn = (playerCar.vel.x - uVx) * nx + (playerCar.vel.z - uVz) * nz;
+        if (relVn < 0) {
+          const j = -relVn * 1.3 * 0.5;
+          playerCar.vel.x += nx * j;
+          playerCar.vel.z += nz * j;
+          playerCar.vel.multiplyScalar(u.state === 'roadblock' ? 0.9 : 0.96);
+          u.speed = Math.max(2, u.speed - Math.abs(j) * 0.6);
+        }
+        playerCar.collisionImpulse = Math.max(playerCar.collisionImpulse,
+          Math.min(1, overlap * (u.state === 'roadblock' ? 1.4 : 1.0)));
       }
 
       // 警燈閃爍
