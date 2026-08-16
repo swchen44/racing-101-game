@@ -19,6 +19,7 @@ import { initTouch, isTouchDevice } from './touch.js';
 import { disposeObject } from './cars/common.js';
 import { Reflections } from './reflections.js';
 import { t, pick, setLang, getLang, applyStatic } from './i18n.js';
+import { attachSpin, clearSpins } from './carpreview.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -205,6 +206,7 @@ function switchScreen(name) {
   for (const id of ['title-screen', 'setup-screen', 'board-screen']) {
     $(id).classList.toggle('on', id === `${name}-screen`);
   }
+  if (name !== 'setup') clearSpins();
   ui.screen = name;
 }
 function showTitle() { switchScreen('title'); }
@@ -300,9 +302,13 @@ function renderSetupCards() {
   const tc = $('track-cards');
   tc.innerHTML = '';
   for (const t of TRACKS) {
+    const chips = (pick(t, 'tags') || []).map((tag) => `<span class="tag-chip">${tag}</span>`).join('');
     tc.appendChild(card(
-      `<div class="c-name">${pick(t)}</div><div class="c-en">${t.nameEn}</div>${trackMiniSvg(t)}` +
-      `<div class="c-desc">${pick(t, 'desc')}</div><div class="c-meta">${window.__i18nLenDiff(t)}</div>`,
+      `<div class="track-photo" style="background-image:url('assets/tracks/${t.id}.jpg')">${trackMiniSvg(t)}</div>` +
+      `<div class="c-name">${pick(t)}</div><div class="c-en">${t.nameEn}</div>` +
+      `<div class="tag-row">${chips}</div>` +
+      `<div class="c-intro">${pick(t, 'intro') || pick(t, 'desc')}</div>` +
+      `<div class="c-meta">${window.__i18nLenDiff(t)}</div>`,
       setup.trackId === t.id,
       () => { setup.trackId = t.id; persistSetup(); renderSetupCards(); }));
   }
@@ -313,13 +319,16 @@ function renderSetupCards() {
     const bars = ['speed', 'accel', 'grip', 'drift'].map((k) =>
       `<span class="sk">${t(statKeys[k])}</span><span class="sb"><i style="width:${c.stats[k] * 20}%"></i></span>`
     ).join('');
-    cc.appendChild(card(
+    const carCard = card(
+      `<canvas class="car-spin" width="220" height="132"></canvas>` +
       `<div class="c-name">${pick(c)}</div><div class="c-en">${c.nameEn} ・ ${c.class}</div>` +
       `<div class="stat-bars">${bars}</div>` +
       `<div class="c-meta">${t('topSpeed', Math.round(c.tune.maxSpeed * 3.6))}</div>` +
       `<div class="c-desc">${pick(c, 'desc')}</div>`,
       setup.carId === c.id,
-      () => { setup.carId = c.id; persistSetup(); renderSetupCards(); }));
+      () => { setup.carId = c.id; persistSetup(); renderSetupCards(); });
+    cc.appendChild(carCard);
+    attachSpin(carCard.querySelector('.car-spin'), c);
   }
   const trc = $('trans-cards');
   trc.innerHTML = '';

@@ -529,6 +529,41 @@ body.touch #controls-hint { display: none; }
   #btn-abandon { transform: translateX(-140px); padding: 6px 10px; }
 }
 
+
+/* ---------- 選單:賽道風景圖 / 標籤 / 車型轉盤 ---------- */
+.track-photo {
+  position: relative; width: 236px; height: 118px; margin: 4px 0 10px;
+  background-size: cover; background-position: center;
+  border: 1px solid rgba(120,150,180,0.25); border-radius: 4px;
+  box-shadow: inset 0 -34px 30px -12px rgba(4,7,14,0.85);
+}
+.track-photo .track-mini {
+  position: absolute; right: 3px; bottom: 2px; width: 72px; height: 44px; margin: 0;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.9));
+}
+.tag-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.tag-chip {
+  font-family: var(--tc-font); font-size: 10px; letter-spacing: 1px; color: #9fe8cd;
+  border: 1px solid rgba(62,230,168,0.35); background: rgba(62,230,168,0.08);
+  padding: 2px 8px; border-radius: 3px;
+}
+.c-intro {
+  font-family: var(--tc-font); font-size: 11px; color: #8fb4d4; margin-top: 8px;
+  line-height: 1.65; max-width: 236px;
+}
+.car-spin {
+  display: block; width: 220px; height: 132px; margin: 2px 0 6px;
+  background:
+    radial-gradient(ellipse 70% 46% at 50% 78%, rgba(62,230,168,0.10), transparent 70%),
+    radial-gradient(ellipse 100% 90% at 50% 30%, rgba(24,34,52,0.9), rgba(8,12,20,0.95));
+  border: 1px solid rgba(120,150,180,0.22); border-radius: 4px;
+}
+@media (max-width: 600px) {
+  .track-photo { width: 200px; height: 100px; }
+  .c-intro { max-width: 200px; }
+  .car-spin { width: 190px; height: 114px; }
+}
+
 </style>
 </head>
 <body>

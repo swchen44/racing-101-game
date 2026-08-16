@@ -62,6 +62,9 @@ export const TRACKS = [
   {
     id: 'xinyi', name: '信義午夜街道', nameEn: 'XINYI MIDNIGHT',
     desc: '環繞台北101的市街夜戰,雨後霓虹', descEn: 'Street war around Taipei 101', difficulty: 2, lengthKm: 1.6,
+    intro: '信義計畫區的心臟地帶。賽道緊貼台北101腳下,霓虹招牌與玻璃帷幕在濕潤路面上流光,中速彎與短直線交錯,是最能代表這座城市的一圈。',
+    introEn: 'The heart of Xinyi District. Racing under Taipei 101 with neon reflections on wet asphalt — mid-speed corners and short straights, the signature lap of the city.',
+    tags: ['台北101', '霓虹街景', '技術均衡'], tagsEn: ['Taipei 101', 'Neon streets', 'Balanced'],
     controlPoints: [
       [-40, -235], [70, -240], [165, -218], [224, -158], [242, -76],
       [232, 16], [252, 108], [214, 182], [124, 218], [28, 240],
@@ -79,6 +82,9 @@ export const TRACKS = [
   {
     id: 'wangan', name: '灣岸高速環道', nameEn: 'WANGAN SPEEDWAY',
     desc: '港灣旁的高速公路環道,長直線全開衝極速', descEn: 'Harbor highway ring, full-throttle straights', difficulty: 1, lengthKm: 2.9,
+    intro: '沿著港灣延伸的高速公路環道。起重機與貨櫃堆的剪影掠過車窗,跨海大橋的燈串在遠方畫出弧線——這裡只問一件事:你敢不敢把油門踩到底。',
+    introEn: 'A highway ring along the harbor. Crane silhouettes and container stacks fly past, bridge lights arc across the bay — one question only: dare you keep it pinned?',
+    tags: ['極速直線', '港灣夜色', '新手友善'], tagsEn: ['Top speed', 'Harbor views', 'Beginner friendly'],
     controlPoints: [
       [-500, -140], [-260, -195], [0, -205], [260, -195], [470, -150],
       [560, -60], [545, 45], [430, 115], [210, 150], [10, 142],
@@ -97,6 +103,9 @@ export const TRACKS = [
   {
     id: 'mountain', name: '陽明山夜峠', nameEn: 'MOUNTAIN PASS',
     desc: '髮夾彎連發的山道,甩尾者的聖地', descEn: 'Hairpin touge, drift heaven', difficulty: 3, lengthKm: 1.3,
+    intro: '層疊山稜間的窄路夜峠。滿山樹海、導標柱的反光點列與民宅燈籠是唯一的觀眾,髮夾彎一個接一個——抓地是普通人的跑法,甩尾才是這裡的語言。',
+    introEn: 'A narrow night pass between mountain ridges. Forest walls, reflector posts and lantern lights are your only audience. Hairpin after hairpin — grip is ordinary, drift is the language here.',
+    tags: ['髮夾彎', '甩尾聖地', '高難度'], tagsEn: ['Hairpins', 'Drift heaven', 'Expert'],
     controlPoints: [
       [0, -160], [90, -152], [142, -92], [112, -30], [162, 32],
       [122, 92], [42, 112], [-28, 82], [-58, 142], [-140, 162],
@@ -116,6 +125,9 @@ export const TRACKS = [
   {
     id: 'gp', name: '台北大獎賽環道', nameEn: 'TAIPEI GP CIRCUIT',
     desc: 'F1 級賽道:DRS 大直線 + 高速彎 + 技術彎組合', descEn: 'F1-grade: DRS straight + technical sectors', difficulty: 3, lengthKm: 2.4,
+    intro: '為大獎賽而生的正規賽道。滿座看台夾著 DRS 大直線,維修站燈火通明,輪胎牆與探照燈塔就位——高速彎接技術彎的組合考驗每一腳煞車的膽識。',
+    introEn: 'A purpose-built grand prix circuit. Packed grandstands flank the DRS straight, the pit building glows, tyre walls and floodlights stand ready — fast corners into technical sectors test every braking point.',
+    tags: ['DRS 直線', '滿座看台', '正規賽道'], tagsEn: ['DRS straight', 'Grandstands', 'GP circuit'],
     controlPoints: [
       [-350, -120], [-100, -142], [150, -142], [350, -132], [432, -60],
       [402, 22], [302, 42], [242, 102], [302, 162], [242, 222],
