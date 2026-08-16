@@ -16,6 +16,13 @@
 |---|---|---|
 | ![F1](docs/screenshots/straight.png) | ![小黃](docs/screenshots/drift.png) | ![手機](docs/screenshots/mobile.png) |
 
+
+## 📚 文件
+
+- **[玩家手冊](docs/PLAYER-GUIDE.md)** — 安裝(PWA/離線)、操作、模式規則、賽道與車型圖鑑
+- **[管理者手冊](docs/ADMIN-GUIDE.md)** — 部署、Supabase 資料庫、排行榜與廣告管理
+- **[遊戲設計手冊](docs/GAME-DESIGN.md)** — 場景、規則、物理/AI 模型、資料流
+
 ---
 
 ## 🎮 使用者指南
