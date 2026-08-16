@@ -42,16 +42,16 @@ Requires a WebGL2 browser. On phones/tablets play in **landscape** — neon touc
 
 ### Game flow
 
-1. **Enter your driver name** (remembered in your browser)
-2. Pick a **mode** → **track** → **car** → **transmission**, then race
+1. **Enter your email account** (case-insensitive, remembered in your browser)
+2. Pick **mode → AI level → time of day → track → car → transmission**, then race
 3. Results are saved to the local leaderboard (and to the global one if configured — see below)
 
 ### Modes
 
 | Mode | Rule |
 |---|---|
-| ⏱ **Time Attack** | 3 laps against the clock; best laps saved per track |
-| 🚨 **Police Chase** | Finish 3 laps while cop cars PIT you, call reinforcements and set up roadblocks. Get boxed in at low speed → BUSTED |
+| ⏱ **Time Attack** | 2 laps against the clock; best laps saved per track × mode |
+| 🚨 **Police Chase** | Two units — one blocks ahead, one rams behind (PIT); escape triggers roadblocks. Boxed in at low speed → BUSTED |
 | 🏆 **Grand Prix** | Race 5 AI drivers with racing lines, avoidance and rubber-banding. Take P1 |
 
 ### Tracks
@@ -74,7 +74,8 @@ Formula TF-01 (250 km/h, 8-speed) ・ GT Blaze ・ Thunder EV-S (single-speed EV
 | `W A S D` / arrows | Drive |
 | `Space` | Handbrake / drift |
 | `Q` / `E` | Shift down / up (manual transmission) |
-| `C` | Camera (chase / far / bumper) |
+| `⇧Shift` | BOOST (3 per race) |
+| `C` | Camera (chase / far / cockpit / bumper); `M` rear-view mirror |
 | `R` | Restart, `Enter` menus, `Esc` back |
 
 Touch: on-screen steering, throttle, brake, drift and shift buttons (landscape only).
@@ -89,7 +90,7 @@ Local scores always work. To enable the **worldwide leaderboard** (name + masked
 
 ### Aesthetic — "Rainy Night in Taipei"
 
-Jade-green glass of the 101, sodium streetlights, Chinese neon signage, teal-and-amber grade under ACES tone mapping with bloom — and the signature feature: **real-time planar reflections on wet asphalt**. A mirrored camera renders emissive objects (neon, gates, tail-lights) into a low-res target that is blended into the road shader with fresnel and roughness ripple, so every sign stretches into a wobbling streak of light on the road.
+Jade-green glass of the 101, sodium streetlights, Chinese neon signage, teal-and-amber grade under ACES tone mapping with bloom; a three-slot time-of-day system (night / dusk / day); **dry asphalt** with procedural normal + roughness maps for aggregate grain (the wet-reflection pipeline is kept in code for a future rain mode).
 
 ### World building
 
