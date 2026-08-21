@@ -85,7 +85,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
 /* ---------- HUD top-left: lap + times ---------- */
 #race-pod {
   position: absolute; left: 34px; top: 30px;
-  background: var(--glass); border: 1px solid rgba(77,216,255,0.18);
+  background: rgba(8, 13, 24, 0.85); border: 1px solid rgba(77,216,255,0.18);
   border-left: 3px solid var(--neon-jade);
   padding: 12px 20px 12px 16px; min-width: 200px;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
@@ -220,7 +220,10 @@ canvas#game { display: block; width: 100%; height: 100%; }
   animation: startBlink 1.8s ease-in-out infinite;
 }
 .menu-btn.primary:hover { background: linear-gradient(rgba(62,230,168,0.3), rgba(62,230,168,0.3)) var(--glass-solid); }
-@keyframes startBlink { 50% { opacity: .55; } }
+/* CTA 脈動:改為光暈呼吸,文字全程維持可讀 (不再整顆降透明度) */
+@keyframes startBlink {
+  50% { box-shadow: 0 0 20px rgba(62,230,168,0.55), 0 0 46px rgba(62,230,168,0.28); filter: brightness(1.16); }
+}
 .menu-btn.ghost { border-color: rgba(140,170,200,0.25); color: #93a9c0; animation: none; }
 
 /* ---------- title screen ---------- */
@@ -233,6 +236,8 @@ canvas#game { display: block; width: 100%; height: 100%; }
     linear-gradient(105deg, rgba(4,7,14,0.78) 0%, rgba(4,7,14,0.55) 40%, rgba(4,7,14,0.18) 70%, rgba(4,7,14,0.1) 100%);
 }
 #ui:has(.screen.on) :is(#race-pod, #speed-pod, #minimap-wrap, #wrongway, #center-msg, #sub-msg, #record-flash, #pos-pod, #wanted-pod, #touch-ui, #danger-vignette) { visibility: hidden; }
+/* 結算畫面開啟時,一併隱藏遊戲中 HUD/觸控鈕,避免與 FINISH 面板重疊干擾 */
+#ui:has(#results.on) :is(#race-pod, #speed-pod, #minimap-wrap, #pos-pod, #wanted-pod, #boost-pips, #touch-ui, #danger-vignette, .hud-mini-btn, #mirror-frame, #cockpit-overlay) { visibility: hidden; }
 #title-tower { font-family: var(--tc-font); font-weight: 300; font-size: 18px; letter-spacing: 18px; color: #8fb4d4; margin-bottom: 14px; }
 #title-main {
   font-family: var(--display-font); font-size: clamp(38px, 6.4vw, 82px); line-height: 1.02;
@@ -253,7 +258,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
 #player-name {
   font-family: var(--hud-font); font-size: 20px; letter-spacing: 2px; color: #fff;
   background: var(--glass-solid); border: 1px solid rgba(62,230,168,0.35); outline: none;
-  padding: 10px 16px; width: 220px;
+  padding: 10px 16px; width: 300px;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 #player-name:focus { border-color: var(--neon-jade); box-shadow: 0 0 14px rgba(62,230,168,0.3); }
@@ -293,10 +298,22 @@ canvas#game { display: block; width: 100%; height: 100%; }
 .stat-bars .sb { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
 .stat-bars .sb i { display: block; height: 100%; background: linear-gradient(90deg, #2b9d78, var(--neon-jade)); border-radius: 2px; }
 .track-mini { width: 120px; height: 74px; margin-top: 6px; }
-#setup-actions { display: flex; gap: 16px; margin-top: 34px; flex-wrap: wrap; }
+/* 黏底行動列:長頁滾動時「出發」永遠可見,使用者不會迷路 */
+#setup-actions {
+  display: flex; gap: 16px; margin-top: 44px; flex-wrap: wrap;
+  position: sticky; bottom: 0; z-index: 3;
+  padding: 18px 0 14px; margin-bottom: -5vh;
+  background: linear-gradient(180deg, rgba(4,7,14,0) 0%, rgba(4,7,14,0.92) 46%, rgba(4,7,14,0.98) 100%);
+}
+/* sticky 出發列不會蓋住任何區塊標題:內容區底部預留一個 CTA 列的高度 */
+#setup-screen > .card-row:last-of-type { margin-bottom: 96px; }
 
 /* ---------- leaderboard screen ---------- */
-.tab-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.tab-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+.tab-lab {
+  font-family: var(--tc-font); font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  color: var(--neon-amber); min-width: 76px; opacity: 0.9;
+}
 .tab {
   cursor: pointer; font-family: var(--tc-font); font-size: 13px; letter-spacing: 3px; color: #8fb4d4;
   padding: 8px 18px; border: 1px solid rgba(120,150,180,0.2); background: var(--glass);
@@ -316,7 +333,7 @@ canvas#game { display: block; width: 100%; height: 100%; }
 .board-row .ip { color: #56789a; font-size: 12px; }
 .board-row .dt { color: #6d8fae; font-size: 12px; font-variant-numeric: tabular-nums; }
 .board-row .tm { color: var(--neon-jade); font-weight: 600; text-align: right; }
-#board-empty { padding: 30px 10px; color: #56789a; font-family: var(--tc-font); letter-spacing: 3px; font-size: 13px; }
+#board-empty { padding: 44px 10px; color: #9fc0da; font-family: var(--tc-font); letter-spacing: 3px; font-size: 15px; }
 #board-src { font-size: 11px; letter-spacing: 3px; color: #56789a; margin-top: 10px; font-family: var(--tc-font); }
 
 /* ---------- results ---------- */
@@ -410,8 +427,11 @@ body.touch #speed-pod { left: 14px; bottom: calc(118px + env(safe-area-inset-bot
   body.touch #tc-boost { left: calc(78px + env(safe-area-inset-left, 0px)); bottom: calc(136px + env(safe-area-inset-bottom, 0px)); width: 82px; height: 82px; }
   body.touch #tc-up    { right: calc(40px + env(safe-area-inset-right, 0px)); bottom: calc(166px + env(safe-area-inset-bottom, 0px)); width: 70px; height: 70px; }
   body.touch #tc-down  { right: calc(258px + env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 70px; height: 70px; }
-  /* 時速表縮小上移,讓出按鈕空間 */
-  body.touch #speed-pod { left: 8px; bottom: calc(238px + env(safe-area-inset-bottom, 0px)); transform: scale(0.62); transform-origin: bottom left; }
+  /* 手機:時速表移到底部中央 (道路上方空檔),不再與左上圈速板重疊 */
+  body.touch #speed-pod {
+    left: 50%; bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%) scale(0.62); transform-origin: bottom center;
+  }
 }
 
 
@@ -531,8 +551,9 @@ body.touch #controls-hint { display: none; }
 }
 .hud-mini-btn:hover { color: #fff; border-color: rgba(77,216,255,0.6); }
 .hud-mini-btn.on { display: block; }
-#btn-abandon { top: 96px; left: 34px; }
-#btn-mirror { top: 138px; left: 34px; }
+/* 位於 race-pod (bottom≈132px) 正下方,不再壓到 LAST/BEST 列 */
+#btn-abandon { top: 150px; left: 34px; }
+#btn-mirror { top: 192px; left: 34px; }
 #mirror-frame {
   position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
   width: min(38vw, 560px); aspect-ratio: 3.2; display: none;
@@ -569,10 +590,11 @@ body.touch #controls-hint { display: none; }
 #confirm-desc { font-family: var(--tc-font); font-size: 13px; letter-spacing: 3px; color: #8fa8c0; margin-top: 12px; }
 #confirm-btns { display: flex; gap: 14px; margin-top: 28px; justify-content: center; flex-wrap: wrap; }
 #name-err {
-  display: none; font-family: var(--tc-font); font-size: 14px; letter-spacing: 2px;
-  color: var(--neon-red); text-shadow: 0 0 10px rgba(255,77,109,0.5); margin: -10px 0 14px;
+  display: none; font-family: var(--tc-font); font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  color: #ff8ba0; text-shadow: 0 0 10px rgba(255,77,109,0.55); margin: -10px 0 14px;
 }
-#name-err.on { display: block; animation: wwBlink 1s steps(2) 2; }
+#name-err.on { display: block; animation: errShake .35s ease; }
+@keyframes errShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 65% { transform: translateX(5px); } }
 #player-name.invalid { border-color: var(--neon-red); box-shadow: 0 0 14px rgba(255,77,109,0.4); }
 #lang-row { display: flex; gap: 8px; margin-bottom: 16px; }
 .lang-btn {
@@ -590,7 +612,31 @@ body.touch #controls-hint { display: none; }
 #tc-mirror { left: 50%; margin-left: 34px; top: calc(12px + env(safe-area-inset-top, 0px)); width: 50px; height: 50px; }
 @media (max-width: 900px) {
   #boost-pips { left: 170px; bottom: 30px; }
-  #btn-abandon { transform: translateX(-140px); padding: 6px 10px; }
+  /* 窄屏:race-pod 縮至 0.88 (bottom≈104px),按鈕貼齊其下方 */
+  #btn-abandon { top: 112px; left: 16px; padding: 6px 10px; }
+  #btn-mirror { top: 158px; left: 16px; padding: 6px 10px; }
+}
+
+/* ---------- 觸控佈局補強 ---------- */
+/* Boost 剩餘點:移到底部中央 (左右按鈕群之間的空檔),不再被轉向鈕蓋住 */
+body.touch #boost-pips { left: 50%; transform: translateX(-50%); bottom: 16px; }
+/* 視角/後視鏡切換鈕移出後視鏡畫面範圍 (置中後視鏡的左右兩側) */
+body.touch #tc-cam { left: 50%; margin-left: -292px; }
+body.touch #tc-mirror { left: 50%; margin-left: 232px; }
+/* 觸控目標 ≥44px:排行榜分頁與 HUD 小按鈕加大 */
+body.touch .tab { padding: 13px 20px; }
+body.touch .hud-mini-btn { padding: 13px 16px; font-size: 13px; }
+body.touch #btn-mirror { top: 204px; }
+/* 手機 (高度 <600px) 的觸控覆寫 — 置於基礎規則之後,層疊必定生效 */
+@media (max-height: 599px) {
+  /* Boost 點移到置中時速表正上方 */
+  body.touch #boost-pips { bottom: calc(130px + env(safe-area-inset-bottom, 0px)); }
+  /* 手機後視鏡較窄 (≤300px):切換鈕靠攏 */
+  body.touch #tc-cam { margin-left: -188px; }
+  body.touch #tc-mirror { left: 50%; margin-left: 138px; }
+  /* 手機 HUD 小按鈕:貼齊縮小後的圈速板下緣 */
+  body.touch #btn-abandon { top: 104px; }
+  body.touch #btn-mirror { top: 152px; }
 }
 
 
@@ -651,11 +697,11 @@ body.touch #controls-hint { display: none; }
   </div>
 
   <div id="pos-pod">
-    <div id="pos-label">名次 POSITION</div>
+    <div id="pos-label" data-i18n="posLabel">名次 POSITION</div>
     <span id="pos-num">6</span><span id="pos-total">/ 6</span>
   </div>
   <div id="wanted-pod">
-    <div id="wanted-label">⚠ 攔截中 BUSTED</div>
+    <div id="wanted-label" data-i18n="wanted">⚠ 攔截中 BUSTED</div>
     <div id="wanted-bar"><div id="wanted-fill"></div></div>
   </div>
 
@@ -668,7 +714,7 @@ body.touch #controls-hint { display: none; }
       <span id="speed-unit">KM/H</span>
       <span id="gear-num">D1</span>
     </div>
-    <span id="drift-tag">滑走 DRIFT</span>
+    <span id="drift-tag" data-i18n="drift">滑走 DRIFT</span>
   </div>
 
   <div id="boost-pips"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span id="boost-label">BOOST ⇧</span></div>
@@ -693,7 +739,7 @@ body.touch #controls-hint { display: none; }
   <div id="wrongway" data-i18n="wrongway">⚠ 逆走 WRONG WAY ⚠</div>
   <div id="center-msg"></div>
   <div id="sub-msg"></div>
-  <div id="record-flash">★ 最速紀錄 NEW RECORD ★</div>
+  <div id="record-flash" data-i18n="record">★ 最速紀錄 NEW RECORD ★</div>
 
   <!-- 觸控操作 -->
   <div id="touch-ui">
@@ -732,8 +778,8 @@ body.touch #controls-hint { display: none; }
     <div id="res-table"></div>
     <div id="res-upload"></div>
     <div id="res-btns">
-      <div class="menu-btn primary" id="res-again">再挑戰 RETRY — R</div>
-      <div class="menu-btn ghost" id="res-menu">回主選單 MENU</div>
+      <div class="menu-btn primary" id="res-again" data-i18n="retry">再挑戰 RETRY — R</div>
+      <div class="menu-btn ghost" id="res-menu" data-i18n="menu">回主選單 MENU</div>
     </div>
   </div>
 
@@ -814,8 +860,8 @@ body.touch #controls-hint { display: none; }
       <path d="M40.5 11.5 L40 18 L33.8 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </div>
-  <div id="rotate-title">請將裝置轉為橫向</div>
-  <div id="rotate-sub">ROTATE TO LANDSCAPE</div>
+  <div id="rotate-title" data-i18n="rotate">請將裝置轉為橫向</div>
+  <div id="rotate-sub" data-i18n="rotateEn">ROTATE TO LANDSCAPE</div>
 </div>
 
 <script type="importmap">

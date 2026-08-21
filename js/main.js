@@ -300,12 +300,15 @@ function trackMiniSvg(def) {
   return `<svg class="track-mini" viewBox="0 0 120 74"><polygon points="${path}" fill="none" stroke="#3ee6a8" stroke-width="3" stroke-linejoin="round" opacity="0.9"/></svg>`;
 }
 
+// 副標顯示「另一種語言」的名稱:zh 介面附英文名、EN 介面附中文名 (避免 EN 下主副標重複)
+const altName = (obj) => (getLang() === 'en' ? obj.name : obj.nameEn);
+
 function renderSetupCards() {
   const mc = $('mode-cards');
   mc.innerHTML = '';
   for (const m of MODES) {
     mc.appendChild(card(
-      `<div class="c-name">${m.icon} ${pick(m)}</div><div class="c-en">${m.nameEn}</div><div class="c-desc">${pick(m, 'desc')}</div>`,
+      `<div class="c-name">${m.icon} ${pick(m)}</div><div class="c-en">${altName(m)}</div><div class="c-desc">${pick(m, 'desc')}</div>`,
       setup.mode === m.id,
       () => { setup.mode = m.id; persistSetup(); renderSetupCards(); }));
   }
@@ -313,7 +316,7 @@ function renderSetupCards() {
   dc.innerHTML = '';
   for (const d of DIFFICULTIES) {
     dc.appendChild(card(
-      `<div class="c-name">${pick(d)}</div><div class="c-en">${d.nameEn}</div><div class="c-desc">${pick(d, 'desc')}</div>`,
+      `<div class="c-name">${pick(d)}</div><div class="c-en">${altName(d)}</div><div class="c-desc">${pick(d, 'desc')}</div>`,
       setup.difficulty === d.id,
       () => { setup.difficulty = d.id; persistSetup(); renderSetupCards(); }));
   }
@@ -321,7 +324,7 @@ function renderSetupCards() {
   wc.innerHTML = '';
   for (const w of WEATHERS) {
     wc.appendChild(card(
-      `<div class="c-name">${w.icon} ${pick(w)}</div><div class="c-en">${w.nameEn}</div>`,
+      `<div class="c-name">${w.icon} ${pick(w)}</div><div class="c-en">${altName(w)}</div>`,
       setup.weather === w.id,
       () => { setup.weather = w.id; persistSetup(); renderSetupCards(); }));
   }
@@ -331,7 +334,7 @@ function renderSetupCards() {
     const chips = (pick(t, 'tags') || []).map((tag) => `<span class="tag-chip">${tag}</span>`).join('');
     tc.appendChild(card(
       `<div class="track-photo" style="background-image:url('assets/tracks/${t.id}.jpg')">${trackMiniSvg(t)}</div>` +
-      `<div class="c-name">${pick(t)}</div><div class="c-en">${t.nameEn}</div>` +
+      `<div class="c-name">${pick(t)}</div><div class="c-en">${altName(t)}</div>` +
       `<div class="tag-row">${chips}</div>` +
       `<div class="c-intro">${pick(t, 'intro') || pick(t, 'desc')}</div>` +
       `<div class="c-meta">${window.__i18nLenDiff(t)}</div>`,
@@ -347,7 +350,7 @@ function renderSetupCards() {
     ).join('');
     const carCard = card(
       `<canvas class="car-spin" width="220" height="132"></canvas>` +
-      `<div class="c-name">${pick(c)}</div><div class="c-en">${c.nameEn} ・ ${c.class}</div>` +
+      `<div class="c-name">${pick(c)}</div><div class="c-en">${altName(c)} ・ ${t('carClass', c.class)}</div>` +
       `<div class="stat-bars">${bars}</div>` +
       `<div class="c-meta">${t('topSpeed', Math.round(c.tune.maxSpeed * 3.6))}</div>` +
       `<div class="c-desc">${pick(c, 'desc')}</div>`,
@@ -359,8 +362,8 @@ function renderSetupCards() {
   const trc = $('trans-cards');
   trc.innerHTML = '';
   for (const [id, nameK, enK, descK] of [
-    ['auto', 'auto', 'autoEn', 'autoDesc'],
-    ['manual', 'manual', 'manualEn', 'manualDesc'],
+    ['auto', 'auto', 'transAutoSub', 'autoDesc'],
+    ['manual', 'manual', 'transManualSub', 'manualDesc'],
   ]) {
     trc.appendChild(card(
       `<div class="c-name">${t(nameK)}</div><div class="c-en">${t(enK)}</div><div class="c-desc">${t(descK)}</div>`,
@@ -373,9 +376,17 @@ window.__i18nLenDiff = (tr) => t('lengthDiff', tr.lengthKm, '★'.repeat(tr.diff
 
 // ---------- 排行榜畫面 ----------
 const board = { mode: 'solo', trackId: 'xinyi', difficulty: 'normal' };
+// 分頁列前置群組標籤 (模式/賽道/難度),使用者一眼理解三排 tab 的意義
+function tabLabel(row, key) {
+  const lab = document.createElement('span');
+  lab.className = 'tab-lab';
+  lab.textContent = t(key);
+  row.appendChild(lab);
+}
 async function renderBoard() {
   const mt = $('board-mode-tabs');
   mt.innerHTML = '';
+  tabLabel(mt, 'labMode');
   for (const m of MODES) {
     const el = document.createElement('div');
     el.className = 'tab' + (board.mode === m.id ? ' sel' : '');
@@ -385,6 +396,7 @@ async function renderBoard() {
   }
   const tt = $('board-track-tabs');
   tt.innerHTML = '';
+  tabLabel(tt, 'labTrack');
   for (const t of TRACKS) {
     const el = document.createElement('div');
     el.className = 'tab' + (board.trackId === t.id ? ' sel' : '');
@@ -395,6 +407,7 @@ async function renderBoard() {
   // 難度分榜 (低/中/高分開排名)
   const dt = $('board-diff-tabs');
   dt.innerHTML = '';
+  tabLabel(dt, 'labDiff');
   for (const d of DIFFICULTIES) {
     const el = document.createElement('div');
     el.className = 'tab' + (board.difficulty === d.id ? ' sel' : '');
@@ -617,6 +630,11 @@ function bustedRace() {
 }
 
 function showResultsScreen(busted) {
+  // 收乾淨 HUD 疊層:後視鏡與比賽中的小按鈕不該出現在結算畫面上
+  mirrorOn = false;
+  $('mirror-frame').classList.remove('on');
+  $('btn-abandon').classList.remove('on');
+  $('btn-mirror').classList.remove('on');
   const table = $('res-table');
   const bestLapS = race.lapTimes.length ? Math.min(...race.lapTimes) : NaN;
   $('res-title').textContent = busted ? t('busted') : t('finish');
