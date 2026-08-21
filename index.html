@@ -341,21 +341,6 @@ canvas#game { display: block; width: 100%; height: 100%; }
 
 /* ---------- 觸控操作 UI ---------- */
 #touch-ui { display: none; position: absolute; inset: 0; pointer-events: none; z-index: 5; font-family: var(--hud-font); }
-/* 手機/平板 (粗指標):按鈕全面加大 + 間距拉開,避免誤觸 */
-@media (pointer: coarse) {
-  .tc-btn { width: 104px; height: 104px; font-size: 34px; }
-  #tc-left  { left: 20px; bottom: 150px; }
-  #tc-right { left: 148px; bottom: 150px; }
-  #tc-gas   { right: 20px; bottom: 172px; width: 122px; height: 122px; }
-  #tc-brake { right: 166px; bottom: 148px; width: 104px; height: 104px; }
-  #tc-hand  { right: 46px; bottom: 316px; width: 88px; height: 88px; font-size: 20px; }
-  #tc-boost { left: calc(84px + env(safe-area-inset-left, 0px)); bottom: calc(160px + env(safe-area-inset-bottom, 0px)); width: 92px; height: 92px; }
-  #tc-up    { right: 166px; bottom: 274px; width: 78px; height: 78px; }
-  #tc-down  { right: 262px; bottom: 244px; width: 78px; height: 78px; }
-  #tc-cam   { right: 20px; top: 104px; width: 64px; height: 64px; font-size: 22px; }
-  #tc-mirror { left: 50%; margin-left: 44px; top: calc(12px + env(safe-area-inset-top, 0px)); width: 60px; height: 60px; }
-  body.touch #speed-pod { transform: scale(0.72); left: 10px; bottom: 264px; }
-}
 .tc-btn {
   position: absolute; pointer-events: auto; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
@@ -412,6 +397,47 @@ canvas#game { display: block; width: 100%; height: 100%; }
 #tc-cam   { left: 50%; margin-left: -25px; top: calc(12px + env(safe-area-inset-top, 0px)); width: 50px; height: 50px; font-size: 17px; }
 body.touch #minimap-wrap { right: 16px; top: 92px; bottom: auto; width: 120px; height: 120px; }
 body.touch #speed-pod { left: 14px; bottom: calc(118px + env(safe-area-inset-bottom, 0px)); transform: scale(0.74); transform-origin: bottom left; }
+
+/* 手機 (粗指標,高度 <600px):按鈕加大 — 置於基礎定位之後,層疊必定生效 */
+@media (max-height: 599px) {
+  body.touch .tc-btn { width: 96px; height: 96px; }
+  body.touch .tc-btn svg { width: 44%; height: 44%; }
+  body.touch #tc-left  { left: calc(18px + env(safe-area-inset-left, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); }
+  body.touch #tc-right { left: calc(130px + env(safe-area-inset-left, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); }
+  body.touch #tc-gas   { right: calc(20px + env(safe-area-inset-right, 0px)); bottom: calc(36px + env(safe-area-inset-bottom, 0px)); width: 112px; height: 112px; }
+  body.touch #tc-brake { right: calc(148px + env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 96px; height: 96px; }
+  body.touch #tc-hand  { right: calc(158px + env(safe-area-inset-right, 0px)); bottom: calc(140px + env(safe-area-inset-bottom, 0px)); width: 78px; height: 78px; }
+  body.touch #tc-boost { left: calc(78px + env(safe-area-inset-left, 0px)); bottom: calc(136px + env(safe-area-inset-bottom, 0px)); width: 82px; height: 82px; }
+  body.touch #tc-up    { right: calc(40px + env(safe-area-inset-right, 0px)); bottom: calc(166px + env(safe-area-inset-bottom, 0px)); width: 70px; height: 70px; }
+  body.touch #tc-down  { right: calc(258px + env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 70px; height: 70px; }
+  /* 時速表縮小上移,讓出按鈕空間 */
+  body.touch #speed-pod { left: 8px; bottom: calc(238px + env(safe-area-inset-bottom, 0px)); transform: scale(0.62); transform-origin: bottom left; }
+}
+
+
+/* 平板 (iPad 等高度 >=600px 的觸控裝置):方向鈕再放大,時速表上移到按鈕群上方不重疊 */
+@media (min-height: 600px) {
+  body.touch .tc-btn { width: 128px; height: 128px; font-size: 40px; }
+  body.touch .tc-btn svg { width: 44%; height: 44%; }
+  body.touch .tc-btn .tc-cap { font-size: 17px; }
+  body.touch #tc-left  { left: calc(26px + env(safe-area-inset-left, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); }
+  body.touch #tc-right { left: calc(176px + env(safe-area-inset-left, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); }
+  body.touch #tc-gas   { right: calc(26px + env(safe-area-inset-right, 0px)); bottom: calc(48px + env(safe-area-inset-bottom, 0px)); width: 152px; height: 152px; }
+  body.touch #tc-brake { right: calc(200px + env(safe-area-inset-right, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); width: 128px; height: 128px; }
+  body.touch #tc-hand  { right: calc(222px + env(safe-area-inset-right, 0px)); bottom: calc(198px + env(safe-area-inset-bottom, 0px)); width: 104px; height: 104px; }
+  body.touch #tc-boost { left: calc(98px + env(safe-area-inset-left, 0px)); bottom: calc(198px + env(safe-area-inset-bottom, 0px)); width: 108px; height: 108px; }
+  body.touch #tc-up    { right: calc(52px + env(safe-area-inset-right, 0px)); bottom: calc(236px + env(safe-area-inset-bottom, 0px)); width: 92px; height: 92px; }
+  body.touch #tc-down  { right: calc(364px + env(safe-area-inset-right, 0px)); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); width: 92px; height: 92px; }
+  body.touch #tc-cam   { width: 60px; height: 60px; }
+  body.touch #tc-mirror { width: 60px; height: 60px; }
+  /* 時速表:整組移到左側按鈕群正上方,任何按鈕都壓不到 */
+  body.touch #speed-pod {
+    left: 12px; bottom: calc(334px + env(safe-area-inset-bottom, 0px));
+    transform: scale(0.85); transform-origin: bottom left;
+  }
+  body.touch #minimap-wrap { width: 150px; height: 150px; }
+}
+
 body.touch #controls-hint { display: none; }
 
 /* ---------- 手機直屏警告 ---------- */
