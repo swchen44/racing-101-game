@@ -23,6 +23,7 @@ import { disposeObject } from './cars/common.js';
 import { Reflections, reflectionUniforms } from './reflections.js';
 import { t, pick, setLang, getLang, applyStatic } from './i18n.js';
 import { attachSpin, clearSpins } from './carpreview.js';
+import { GhostCar, hasGhost, loadGhost, saveGhost } from './ghost.js';
 import { createSponsorBillboards, loadSponsors, ImpressionTracker } from './sponsors.js';
 
 const $ = (id) => document.getElementById(id);
@@ -101,6 +102,7 @@ const setup = {
   difficulty: profile.difficulty || 'normal',
   weather: profile.weather || 'night',
   role: profile.role || 'cop',    // 緝凶追捕:cop=玩家當警察 / thief=玩家當小偷
+  ghost: !!profile.ghost,         // 幽靈車對戰:與自己最佳單圈的半透明幽靈同場
 };
 function persistSetup() {
   saveProfile({ ...profile, ...setup });
@@ -129,6 +131,9 @@ let hud = null;
 let opponents = null;
 let police = null;
 let chase = null;
+let ghost = null;             // 幽靈車對戰:半透明自車幽靈 (僅單人計時賽)
+let ghostBuf = [];            // 本圈軌跡取樣緩衝 (每圈重置)
+let ghostAccum = 0;           // 取樣節流累積
 let playerCopLights = null;   // 玩家警車車頂燈 (緝凶追捕 cop 角色)
 let chaseTimeLeft = 0;        // 緝凶追捕倒數剩餘秒數
 let chaseResult = null;       // 'win' | 'lose' — 供結算判定
@@ -170,6 +175,8 @@ function clearModeActors() {
   if (opponents) { opponents.dispose(); opponents = null; }
   if (police) { police.dispose(); police = null; }
   if (chase) { chase.dispose(); chase = null; }
+  if (ghost) { ghost.dispose(); ghost = null; }
+  $('ghost-delta').classList.remove('on');
 }
 
 loadSponsors(); // 預載廣告主檔期 (Supabase;無資料時全部顯示佔位看板)
@@ -353,6 +360,29 @@ function renderSetupCards() {
       setup.difficulty === d.id,
       () => { setup.difficulty = d.id; persistSetup(); renderSetupCards(); }));
   }
+  // 幽靈車對戰開關 (僅單人計時賽;需該賽道已有最佳單圈紀錄才可開)
+  const isSolo = setup.mode === 'solo';
+  $('ghost-sec').style.display = isSolo ? '' : 'none';
+  $('ghost-cards').style.display = isSolo ? '' : 'none';
+  if (isSolo) {
+    const gc = $('ghost-cards');
+    gc.innerHTML = '';
+    const rec = hasGhost(setup.trackId, 'solo');
+    if (!rec) setup.ghost = false;   // 沒紀錄不能開
+    gc.appendChild(card(
+      `<div class="c-name">✕ ${t('ghostOff')}</div><div class="c-desc">${t('ghostOffDesc')}</div>`,
+      !setup.ghost,
+      () => { setup.ghost = false; persistSetup(); renderSetupCards(); }));
+    const onCard = card(
+      `<div class="c-name">👻 ${t('ghostOn')}</div><div class="c-desc">${rec ? t('ghostVsBest') : t('ghostNoRecord')}</div>`,
+      setup.ghost,
+      () => { if (rec) { setup.ghost = true; persistSetup(); renderSetupCards(); } });
+    if (!rec) onCard.classList.add('disabled');
+    gc.appendChild(onCard);
+  } else {
+    setup.ghost = false;
+  }
+
   const wc = $('weather-cards');
   wc.innerHTML = '';
   for (const w of WEATHERS) {
@@ -541,6 +571,13 @@ function startRace() {
     chase = new Chase(scene, track, { role: setup.role, difficulty: setup.difficulty });
     if (setup.role === 'cop') playerCopLights = addPoliceLights(car.mesh); // 玩家警車車頂燈
   }
+  // 幽靈車對戰 (僅單人計時賽):恆錄本場軌跡以更新紀錄;若開關開啟且已有紀錄則生成幽靈
+  ghostBuf = [];
+  ghostAccum = 0;
+  if (setup.mode === 'solo' && setup.ghost) {
+    const rec = loadGhost(setup.trackId, 'solo');
+    if (rec) { ghost = new GhostCar(scene, carDef); ghost.setRecording(rec); ghost.update(0); }
+  }
 
   reflections.markScene(scene); // 世界/車輛/AI 重建後重新標記發光體
 
@@ -593,6 +630,17 @@ function restartRace() {
   startRace();
 }
 
+// 幽靈車秒差 HUD:d<0 領先 (綠) / d>0 落後 (紅);d=null 隱藏
+function updateGhostDelta(d) {
+  const el = $('ghost-delta');
+  if (d == null || !isFinite(d)) { el.classList.remove('on'); return; }
+  const ahead = d <= 0.02;
+  el.textContent = (ahead ? '−' : '+') + Math.abs(d).toFixed(1) + 's';
+  el.classList.toggle('ahead', ahead);
+  el.classList.toggle('behind', !ahead);
+  el.classList.add('on');
+}
+
 function updateRace(dt) {
   if (race.state === 'countdown') {
     race.countdownT += dt;
@@ -620,6 +668,20 @@ function updateRace(dt) {
   race.currentLapTime += dt;
   race.totalTime += dt;
 
+  // ---- 幽靈車對戰:錄本圈軌跡 (節流) + 重播幽靈 + 即時秒差 ----
+  if (race.mode === 'solo') {
+    ghostAccum += dt;
+    if (ghostBuf.length === 0 || ghostAccum >= 0.07) {
+      ghostAccum = 0;
+      ghostBuf.push({ t: race.currentLapTime, x: car.pos.x, z: car.pos.z, h: car.heading, s: car.progress });
+    }
+    if (ghost) {
+      ghost.update(race.currentLapTime);
+      const gt = ghost.timeAtProgress(car.progress);
+      updateGhostDelta(gt == null ? null : race.currentLapTime - gt);
+    }
+  }
+
   const s = car.progress;
   const target = race.nextCheckpoint / N_CHECKPOINTS;
   const diff = (s - target + 1) % 1;
@@ -635,6 +697,14 @@ function updateRace(dt) {
         hud.setBest(lapT);
         hud.flashRecord();
         audio.recordBeep();
+      }
+      // 幽靈車對戰:新最佳單圈 → 存軌跡供下次對戰;每圈重置緩衝
+      if (race.mode === 'solo') {
+        if (isRecord && ghostBuf.length > 4) {
+          saveGhost(setup.trackId, 'solo', { samples: ghostBuf.slice(), lapTime: lapT });
+        }
+        ghostBuf = [];
+        ghostAccum = 0;
       }
       hud.setLastLap(lapT);
       if (race.lap >= race.totalLaps) {
@@ -737,6 +807,7 @@ function finishChase(result) {
 
 function finishRace() {
   race.state = 'finished';
+  $('ghost-delta').classList.remove('on');
   audio.finishFanfare();
   showResultsScreen(false);
 }

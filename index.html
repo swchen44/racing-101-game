@@ -594,6 +594,16 @@ body.touch #controls-hint { display: none; }
 #mirror-frame::after { content: 'REAR 後方'; position: absolute; right: 8px; bottom: 4px; font-size: 9px; letter-spacing: 2px; color: rgba(180,210,235,0.75); }
 #cockpit-overlay { position: absolute; inset: 0; display: none; pointer-events: none; }
 #cockpit-overlay.on { display: block; }
+.sel-card.disabled { opacity: 0.4; pointer-events: none; filter: grayscale(0.6); }
+#ghost-delta {
+  position: absolute; top: 92px; left: 50%; transform: translateX(-50%);
+  font-family: var(--tc-font); font-weight: 900; font-size: 26px; letter-spacing: 2px;
+  padding: 2px 14px; border-radius: 8px; display: none; pointer-events: none;
+  text-shadow: 0 0 12px currentColor; background: rgba(4,8,14,0.5); z-index: 6;
+}
+#ghost-delta.on { display: block; }
+#ghost-delta.ahead { color: #4dff8a; }
+#ghost-delta.behind { color: #ff6a7d; }
 #cockpit-dash {
   position: absolute; left: -4%; right: -4%; bottom: -2%; height: 17%;
   background: linear-gradient(180deg, rgba(10,12,16,0.2), rgba(6,8,11,0.96) 42%);
@@ -773,6 +783,7 @@ body.touch #btn-mirror { top: 204px; }
       </div>
     </div>
   </div>
+  <div id="ghost-delta"></div>
   <div id="wrongway" data-i18n="wrongway">⚠ 逆走 WRONG WAY ⚠</div>
   <div id="center-msg"></div>
   <div id="sub-msg"></div>
@@ -860,6 +871,8 @@ body.touch #btn-mirror { top: 204px; }
     <div class="card-row" id="role-cards"></div>
     <div class="sec-label" data-i18n="secDifficulty">對手強度 AI LEVEL</div>
     <div class="card-row" id="diff-cards"></div>
+    <div class="sec-label" id="ghost-sec" data-i18n="secGhost">幽靈車對戰 GHOST</div>
+    <div class="card-row" id="ghost-cards"></div>
     <div class="sec-label" data-i18n="secWeather">時段 TIME OF DAY</div>
     <div class="card-row" id="weather-cards"></div>
     <div class="sec-label" data-i18n="secTrack">賽道 TRACK</div>
