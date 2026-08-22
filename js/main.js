@@ -1054,9 +1054,9 @@ function tick() {
   effects.update(frameDt, ui.screen === null ? car : null, camera.position, now, input);
   audio.update(car, frameDt, race.state === 'racing');
   if (ui.screen === null && hud) {
-    // 小地圖上的其他車輛 (GP 對手各自車色 / 警車紅藍閃 / 緝凶追捕:警車閃、小偷橙點)
+    // 小地圖上的其他車輛 (GP 對手各自車色 / 警車紅藍閃 / 緝凶追捕:警車閃、小偷橙點 / 幽靈車:青點)
     let mapOthers = null;
-    if (opponents || police || chase) {
+    if (opponents || police || chase || ghost) {
       mapOthers = [];
       if (opponents) {
         for (const ai of opponents.cars) {
@@ -1077,6 +1077,10 @@ function tick() {
           if (a.kind === 'cop') mapOthers.push({ x: a.mesh.position.x, z: a.mesh.position.z, police: true });
           else mapOthers.push({ x: a.mesh.position.x, z: a.mesh.position.z, color: '#ff7a2c' });
         }
+      }
+      // 幽靈車對戰:幽靈以青色點顯示 (與半透明青藍車身一致),看得出領先/落後位置
+      if (ghost && ghost.mesh && ghost.mesh.visible) {
+        mapOthers.push({ x: ghost.mesh.position.x, z: ghost.mesh.position.z, color: '#38d2ff' });
       }
     }
     hud.update(car, race, mapOthers);
