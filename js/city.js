@@ -2380,6 +2380,37 @@ function crowdBillboardTexture(variant, wid) {
   return tex;
 }
 
+// 行人號誌小綠人:深底 + 發光綠色行走人形 (單張共用)
+let _pedTex = null;
+function pedSignalTexture() {
+  if (_pedTex) return _pedTex;
+  const c = document.createElement('canvas');
+  c.width = 80; c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = '#070b07';
+  g.fillRect(0, 0, 80, 128);
+  g.fillStyle = '#2b7d3a';           // 燈箱內框微光
+  g.fillRect(6, 6, 68, 116);
+  g.fillStyle = '#0a120a';
+  g.fillRect(10, 10, 60, 108);
+  // 小綠人:走路姿態
+  const gr = '#4dff6a';
+  g.fillStyle = gr; g.strokeStyle = gr; g.lineCap = 'round'; g.lineJoin = 'round';
+  const cx = 40;
+  g.beginPath(); g.arc(cx + 2, 34, 8, 0, Math.PI * 2); g.fill();   // 頭
+  g.lineWidth = 8;
+  g.beginPath(); g.moveTo(cx + 1, 44); g.lineTo(cx - 1, 78); g.stroke();  // 軀幹
+  g.lineWidth = 6;
+  g.beginPath(); g.moveTo(cx, 52); g.lineTo(cx - 12, 66); g.stroke();     // 後臂
+  g.beginPath(); g.moveTo(cx, 52); g.lineTo(cx + 13, 62); g.stroke();     // 前臂
+  g.beginPath(); g.moveTo(cx - 1, 78); g.lineTo(cx - 14, 104); g.stroke(); // 後腿
+  g.beginPath(); g.moveTo(cx - 1, 78); g.lineTo(cx + 13, 100); g.stroke(); // 前腿(跨步)
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  _pedTex = tex;
+  return tex;
+}
+
 function createTrackFurniture(track, streaks, landmark, wid) {
   const group = new THREE.Group();
   const isDay = wid === 'day', isDusk = wid === 'dusk';
@@ -2392,6 +2423,7 @@ function createTrackFurniture(track, streaks, landmark, wid) {
   const grayGeos = [];   // 天橋/隧道/紅綒燈桿結構 → merge 1 dc
   const lightGeos = [];  // 隧道內壁燈帶 → merge 1 dc
   const adGeos = [];     // 天橋廣告板 → merge 1 dc
+  const pedGeos = [];    // 行人號誌 (小綠人) 發光面 → merge 1 dc
   // 局部幾何 → 以 (yaw, 世界座標) 放置
   const place = (geo, yaw, x, y, z, bucket) => {
     _envQ.setFromAxisAngle(_envUp, yaw);
@@ -2496,8 +2528,19 @@ function createTrackFurniture(track, streaks, landmark, wid) {
         const local = new THREE.Vector3(fx, 5.55, 5.4 - 0.5 + li * 0.5);
         local.applyQuaternion(_envQ);
         lampInfos.push({ x: px + local.x, y: local.y, z: pz + local.z, role: li });
+        // 燈罩遮陽簷:每顆燈上緣向外斜伸的小遮罩 (台式紅綠燈標誌特徵)
+        const visor = new THREE.BoxGeometry(0.14, 0.04, 0.44)
+          .translate(fx + Math.sign(fx) * 0.14, 5.73, 5.4 - 0.5 + li * 0.5);
+        place(visor, yawR, px, 0, pz, grayGeos);
       }
     }
+    // 行人號誌 (小綠人):桿上 2.55m 燈箱 + 發光人形,面朝行車方向
+    const pedBox = new THREE.BoxGeometry(0.14, 0.52, 0.36).translate(0.16, 2.55, 0.5);
+    place(pedBox, yawR, px, 0, pz, grayGeos);
+    const pedFace = new THREE.PlaneGeometry(0.26, 0.42);
+    pedFace.rotateY(Math.PI / 2);          // 面朝 +x (行車方向)
+    pedFace.translate(0.232, 2.55, 0.5);
+    place(pedFace, yawR, px, 0, pz, pedGeos);
   }
 
   // ---- 斑馬線:起跑線附近 + 各紅綠燈處 (instanced 白條 decal, 1 dc) ----
@@ -2554,6 +2597,12 @@ function createTrackFurniture(track, streaks, landmark, wid) {
     group.add(new THREE.Mesh(mergeGeometries(adGeos), new THREE.MeshBasicMaterial({
       map: adBoardTexture(isMountain ? 'MOUNTAIN PASS' : 'TAIPEI 101 GP', '#ffd23e', '#131018'),
       toneMapped: isDay, color: isDusk ? 0xc0c0c0 : 0xffffff,
+    })));
+  }
+  if (pedGeos.length) {
+    group.add(new THREE.Mesh(mergeGeometries(pedGeos), new THREE.MeshBasicMaterial({
+      map: pedSignalTexture(), transparent: true, alphaTest: 0.35,
+      toneMapped: false, side: THREE.DoubleSide,
     })));
   }
   if (zebraBars.length) {
