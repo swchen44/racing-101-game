@@ -49,6 +49,10 @@ export class Chase {
     this.caught = false;          // 獵物翻車被捕
     this.rolloverT = 0;           // 翻車動畫進度 (0 未觸發)
     this.flashT = 0;
+    this.shaken = false;          // thief role:已甩開警車 (警車跟丟放棄緊咬)
+    this.shakenT = 0;
+    this.justShaken = false;      // 剛甩開的邊緣旗標 (main 讀取後清除)
+    this.nearestLead = 0;         // 玩家領先最近警車的公尺數
     this.actors = [];             // AI 車輛
     this._v = new THREE.Vector3();
 
@@ -58,10 +62,11 @@ export class Chase {
       const thief = this._spawnActor(builderId, this._randomPaint(), 0.06, 0, 'thief');
       this.prey = thief;          // 獵物 = AI 小偷
     } else {
-      // 玩家=小偷;生成 2 台 AI 警車追撞玩家
-      const c1 = this._spawnActor('taxi', 0x14181f, 1 - 0.03, -2.5, 'cop'); c1.copRole = 'rammer';
-      const c2 = this._spawnActor('taxi', 0x14181f, 1 - 0.05, 2.5, 'cop'); c2.copRole = 'rammer2';
+      // 玩家=小偷;生成 2 台 AI 警車追撞玩家 (從玩家後方 ~40/55m 起追,給起步空間)
+      const c1 = this._spawnActor('taxi', 0x14181f, 1 - 0.026, -2.5, 'cop'); c1.copRole = 'rammer';
+      const c2 = this._spawnActor('taxi', 0x14181f, 1 - 0.037, 2.5, 'cop'); c2.copRole = 'rammer2';
       this.prey = null;           // 獵物 = 玩家 (血量在 this.health,由 main 傳 playerCar)
+      this.invulnT = 3;           // 開場 3 秒無敵緩衝:讓玩家先起步再開始追撞
     }
     window.__chase = this;        // QA 掛鉤
   }
@@ -150,6 +155,25 @@ export class Chase {
     const playerKmh = Math.abs(playerCar.speed) * 3.6;
     const len = this.track.length;
 
+    // ---- 甩開判定 (thief role):玩家對最近警車的領先 > escapeDist 並維持 → 警車跟丟 ----
+    if (this.role === 'thief') {
+      let nearestLead = Infinity;   // 玩家領先「最近那台警車」的公尺數
+      for (const a of this.actors) {
+        if (a.kind !== 'cop') continue;
+        let gap = a.s - pS;
+        if (gap > 0.5) gap -= 1;
+        if (gap < -0.5) gap += 1;
+        nearestLead = Math.min(nearestLead, -gap * len); // -gap>0 = 玩家在前
+      }
+      this.nearestLead = isFinite(nearestLead) ? nearestLead : 0;
+      // 領先足夠 → 累積跟丟計時;被追近則快速重置
+      if (this.nearestLead > this.tune.escapeDist) this.shakenT = Math.min(2, this.shakenT + dt);
+      else this.shakenT = Math.max(0, this.shakenT - dt * 2.5);
+      const wasShaken = this.shaken;
+      this.shaken = this.shakenT >= 0.8;          // 維持 ~0.8s 才算真的甩開
+      if (this.shaken && !wasShaken) this.justShaken = true;   // 供 main 顯示「甩開了」
+    }
+
     for (const a of this.actors) {
       // 沿賽道的帶符號間距 (公尺):正 = actor 在玩家前方
       let gap = a.s - pS;
@@ -217,20 +241,40 @@ export class Chase {
   }
 
   // AI 警車:追玩家 + PIT 撞尾 (thief role);兩台輪流逼車
+  // 速度採「絕對極速上限 copTop」(不再綁玩家速度) → 快車/好走線可甩開;
+  // 只有落後很遠時給小幅追趕加成 (仍受 copTop 封頂),避免瞬間跟丟;
+  // 被甩開 (this.shaken) 時降速放棄緊咬,給小偷喘息。
   _driveCop(a, dt, gapM, playerCar, playerKmh) {
-    const target = a.pitT > 0 ? Math.min(60, playerKmh / 3.6 + 4)
-      : gapM > 2 ? Math.max(10, Math.abs(playerCar.speed) - 3)   // 已在前方:減速回貼
-        : Math.min(60, Math.abs(playerCar.speed) + (this.tune.aggressive ? 12 : 8));
-    const accel = a.speed < target ? 16 : 28;
+    const cap = this.tune.copTop;
+    const corner = Math.min(cap, this._cornerSpeed(a));  // 彎道自然減速
+    const ahead = gapM > 3;                              // 警車跑到玩家前方 (不該擋路)
+    let target;
+    if (this.shaken) {
+      target = corner * 0.72;                            // 跟丟:巡航放慢
+    } else if (ahead) {
+      // 超前 → 大幅減速掉回玩家後方,絕不當前方路障
+      target = Math.max(8, Math.abs(playerCar.speed) * 0.5);
+    } else if (a.pitT > 0) {
+      target = Math.min(cap, Math.abs(playerCar.speed) + 3);
+    } else {
+      // 落後:朝 copTop 前進;落後越多小幅提速 (最多 +18%),但絕不超過 copTop
+      const behind = Math.max(0, -gapM);
+      const boost = 1 + Math.min(0.18, behind / 600) * (this.tune.aggressive ? 1.2 : 1);
+      target = Math.min(cap, corner * boost);
+    }
+    const accel = a.speed < target ? 16 : 34;            // 掉回時煞得更快
     a.speed += THREE.MathUtils.clamp(target - a.speed, -accel * dt, accel * dt);
     this._shiftS(a, (a.speed * dt) / this.track.length);
 
     const d = playerCar.pos.distanceTo(a.mesh.position);
     a.pitCooldown -= dt;
-    if (a.pitT > 0) {
+    if (ahead) {
+      // 超前時:退到最近的外側車道,把賽車線讓給玩家 (不擋路)
+      a.lane += ((a.lane >= 0 ? 5.2 : -5.2) - a.lane) * Math.min(1, dt * 2.4);
+    } else if (a.pitT > 0) {
       a.pitT -= dt;
       a.lane += ((playerCar.lateral + a.pitSide * 1.1) - a.lane) * Math.min(1, dt * 3.2);
-    } else if (d < 22) {
+    } else if (d < 22 && !this.shaken) {
       a.lane += (playerCar.lateral - a.lane) * Math.min(1, dt * 1.6);
       if (a.pitCooldown <= 0 && d < 13 && playerKmh > 40 && this.tune.aggressive) {
         a.pitT = 1.4;
@@ -288,7 +332,9 @@ export class Chase {
     if (!valid) return;
 
     this.health -= 1;
-    this.invulnT = this.tune.invuln;
+    // 冷卻:cop role 用 tune.invuln (維持制伏節奏);thief role(玩家被撞)給固定 1.4s 冷卻,
+    // 避免兩台警車貼身「每幀扣血」把玩家瞬間三殺 — 這是先前開場秒被逮的根因
+    this.invulnT = this.role === 'thief' ? Math.max(1.4, this.tune.invuln) : this.tune.invuln;
     activeAudio()?.collision(0.9);
     // 受傷慌亂:獵物 panic 上升
     if (this.prey) this.prey.panic = Math.min(1, this.prey.panic + 0.5);
@@ -341,6 +387,9 @@ export class Chase {
       dist: isFinite(dist) ? dist : 0,
       rollover: this.rolloverT > 0,
       caught: this.caught,
+      shaken: this.shaken,          // thief:已甩開警車
+      nearestLead: this.nearestLead,
+      justShaken: this.justShaken,  // 剛甩開 (供 main 顯示提示)
       // 供 main 判斷勝負:cop 抓到=勝;thief 被抓=敗
     };
   }

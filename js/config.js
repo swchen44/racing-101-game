@@ -34,10 +34,12 @@ export const MODES = [
 // ---------- 緝凶追捕:難度參數 ----------
 // impactMode:'any' 任何接觸扣血 / 'force' 需相對速度門檻 + 扣血後無敵
 // aggressive:AI 是否積極逃竄(小偷)或積極追撞(警察)
+// copTop:警車「絕對極速」上限 (m/s) — 不再綁定玩家速度,快車/好走線可甩開
+// escapeDist:小偷拉開這麼多公尺並維持 → 警車跟丟放棄緊咬 (脫身喘息);越難越需拉更大
 export const CHASE_TUNE = {
-  easy:   { impactMode: 'any',   minImpactKmh: 0,  invuln: 0,   aggressive: false, aiSkill: 0.78, timeLimit: 100 },
-  normal: { impactMode: 'any',   minImpactKmh: 0,  invuln: 0,   aggressive: false, aiSkill: 0.9,  timeLimit: 90 },
-  hard:   { impactMode: 'force', minImpactKmh: 42, invuln: 1.5, aggressive: true,  aiSkill: 1.02, timeLimit: 80 },
+  easy:   { impactMode: 'any',   minImpactKmh: 0,  invuln: 0,   aggressive: false, aiSkill: 0.78, timeLimit: 100, copTop: 44, escapeDist: 90 },
+  normal: { impactMode: 'any',   minImpactKmh: 0,  invuln: 0,   aggressive: false, aiSkill: 0.9,  timeLimit: 90,  copTop: 50, escapeDist: 115 },
+  hard:   { impactMode: 'force', minImpactKmh: 42, invuln: 1.5, aggressive: true,  aiSkill: 1.02, timeLimit: 80,  copTop: 56, escapeDist: 145 },
 };
 export function chaseTune(diffId) { return CHASE_TUNE[diffId] || CHASE_TUNE.normal; }
 

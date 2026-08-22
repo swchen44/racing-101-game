@@ -672,15 +672,24 @@ function updateChase(dt) {
   if (playerCopLights) playerCopLights.update(Math.floor(performance.now() / 1000 * 6) % 2 === 0);
 
   const st = chase.update(dt, car);
-  // HUD:倒數 + 血量 + 距離
+  // HUD:倒數 + 血量 + 距離;小偷甩開警車時標籤改「已甩開」
+  const chaseLabel = setup.role === 'cop' ? t('chaseCopLabel')
+    : (st.shaken ? t('chaseShaken') : t('chaseThiefLabel'));
   hud.setChase({
     timeLeft: chaseTimeLeft,
     health: st.health,
     maxHealth: st.maxHealth,
     dist: st.dist,
     role: setup.role,
-    label: setup.role === 'cop' ? t('chaseCopLabel') : t('chaseThiefLabel'),
+    label: chaseLabel,
+    shaken: st.shaken,
   });
+  // 剛甩開:中央提示 + 音效
+  if (st.justShaken) {
+    chase.justShaken = false;
+    hud.subMessage(t('chaseShakenMsg'));
+    audio.recordBeep?.();
+  }
 
   // 廣告曝光 (追捕也算場景曝光)
   if (adTracker) adTracker.update(car.progress, false);

@@ -188,8 +188,9 @@ export class HUD {
     // 角色標籤 + 距離
     $('chase-label').textContent = opts.label || '';
     $('chase-dist').textContent = `${Math.round(opts.dist)} m`;
-    // 玩家當小偷、血量剩 1 → 危險紅暈
-    const danger = opts.role === 'thief' && opts.health <= 1;
+    // 甩開狀態:面板轉綠 (安全);血量剩 1 → 危險紅暈
+    pod.classList.toggle('shaken', !!opts.shaken);
+    const danger = opts.role === 'thief' && opts.health <= 1 && !opts.shaken;
     if (this.dangerVignette) this.dangerVignette.classList.toggle('on', danger);
   }
   hideChase() {
