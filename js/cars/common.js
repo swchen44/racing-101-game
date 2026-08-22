@@ -324,6 +324,173 @@ export function makeTailBar(car, { width = 1.64, y = 0.86, z = -2.41 } = {}) {
   return { tailMat, tailMidMat, brakeLight: tailBar };
 }
 
+// ---- 數位儀表叢集貼圖 (雙弧速度/轉速 + 中央數位讀點),駕駛艙內裝專用 ----
+let _clusterTex = null;
+export function getClusterTexture() {
+  if (_clusterTex) return _clusterTex;
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = '#04070b';
+  g.fillRect(0, 0, 256, 128);
+  // 左弧:速度 (青)
+  const drawArc = (cx, cy, r, a0, a1, col, lw) => {
+    g.strokeStyle = col; g.lineWidth = lw; g.lineCap = 'round';
+    g.beginPath(); g.arc(cx, cy, r, a0, a1); g.stroke();
+  };
+  // 底環 (暗)
+  drawArc(72, 74, 44, Math.PI * 0.78, Math.PI * 2.22, '#0f2730', 7);
+  drawArc(184, 74, 44, Math.PI * 0.78, Math.PI * 2.22, '#2a1c07', 7);
+  // 活動段
+  drawArc(72, 74, 44, Math.PI * 0.78, Math.PI * 1.7, '#2ae0ff', 7);
+  drawArc(184, 74, 44, Math.PI * 0.78, Math.PI * 1.35, '#ffb028', 7);
+  // 刻度
+  g.strokeStyle = '#4a6570'; g.lineWidth = 2;
+  for (let i = 0; i <= 8; i++) {
+    const a = Math.PI * 0.78 + (Math.PI * 1.44) * (i / 8);
+    const c1 = Math.cos(a), s1 = Math.sin(a);
+    g.beginPath(); g.moveTo(72 + c1 * 48, 74 + s1 * 48); g.lineTo(72 + c1 * 54, 74 + s1 * 54); g.stroke();
+  }
+  // 中央數位讀點
+  g.fillStyle = '#eafcff';
+  g.font = 'bold 40px monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText('128', 128, 60);
+  g.font = '13px monospace'; g.fillStyle = '#4f93a3';
+  g.fillText('KM/H', 128, 88);
+  // 左右小標
+  g.fillStyle = '#2ae0ff'; g.font = '11px monospace';
+  g.fillText('SPD', 72, 74);
+  g.fillStyle = '#ffb028'; g.fillText('RPM', 184, 74);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  _clusterTex = markShared(tex);
+  return tex;
+}
+
+// ---- 駕駛艙內裝 (只在玩家車生成:builder 於 def._cockpit 為真時呼叫) ----
+// 前向構圖為主 (座艙攝影機朝前):儀表台、防眩罩、數位儀表、中控螢幕、A柱、
+// 車頂橫樑+氛圍燈、門飾氛圍燈條、內後視鏡、可轉方向盤。
+// 回傳 { steeringWheel } 供 vehicle.js 依 steer 旋轉。
+// glassMats:傳入座艙玻璃材質,內裝存在時改為半透明,座艙視角才看得到路面。
+export function makeCockpit(car, opts = {}) {
+  const {
+    width = 1.42, dashZ = 1.0, dashY = 0.9,
+    wheelZ = 0.66, wheelY = 0.86, wheelR = 0.17, driverX = 0,
+    roofY = 1.2, pillarFrontZ = 1.15, accent = 0x2ae0ff,
+    seatColor = 0x15181e, glassMats = null, glassOpacity = 0.4,
+    open = false,   // 開放式座艙 (F1):略過車頂/A柱/後視鏡/座椅/中控
+  } = opts;
+
+  // 註:座艙玻璃維持不透明。座艙視角時 main.js 會把含玻璃的外殼整批隱藏
+  // (只留 cockpitGroup),因此自然看得出去,毋須改玻璃透明度 (否則第三人稱
+  //  會透視到內裝與座艙燈外溢,車頂像破洞)。glassMats 參數保留但不再使用。
+  void glassMats; void glassOpacity;
+
+  const grp = new THREE.Group();
+  const matte = new THREE.MeshStandardMaterial({ color: 0x0c0e12, roughness: 0.85, metalness: 0.1 });
+  const leather = new THREE.MeshStandardMaterial({ color: seatColor, roughness: 0.72, metalness: 0.05 });
+  const accentMat = registerEmissive(new THREE.MeshStandardMaterial({
+    color: 0x05080a, emissive: accent, emissiveIntensity: 0.9,
+  }), 0.9);
+
+  // 儀表台主體 + 防眩罩
+  const dash = new THREE.Mesh(bevelBox(width, 0.2, 0.44, 0.05, 2), matte);
+  dash.position.set(driverX, dashY, dashZ); dash.rotation.x = -0.16;
+  grp.add(dash);
+  const cowl = new THREE.Mesh(bevelBox(width * 0.52, 0.05, 0.22, 0.03, 2), matte);
+  cowl.position.set(driverX, dashY + 0.15, dashZ - 0.14); cowl.rotation.x = -0.5;
+  grp.add(cowl);
+
+  // 數位儀表叢集 (自發光螢幕:參與 tonemapping 免被 bloom 吃成白霧,深底+青弧+數字讀得出來)
+  const clusterMat = new THREE.MeshBasicMaterial({
+    map: getClusterTexture(), side: THREE.DoubleSide,
+  });
+  const cluster = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.2), clusterMat);
+  cluster.position.set(driverX, dashY + 0.15, dashZ - 0.04); cluster.rotation.x = -0.4;
+  grp.add(cluster);
+
+  if (!open) {
+    // 中控直立資訊螢幕 (發光)
+    const infoMat = registerEmissive(new THREE.MeshStandardMaterial({
+      color: 0x02070a, emissive: accent, emissiveIntensity: 0.85,
+    }), 0.85);
+    const info = new THREE.Mesh(bevelBox(0.24, 0.3, 0.02, 0.02, 1), infoMat);
+    info.position.set(0, dashY - 0.05, dashZ - 0.03); info.rotation.x = -0.1;
+    grp.add(info);
+    // 中控台 (排檔/扶手區)
+    const centerConsole = new THREE.Mesh(bevelBox(0.3, 0.13, 0.86, 0.04, 2), matte);
+    centerConsole.position.set(0, 0.66, dashZ - 0.66);
+    grp.add(centerConsole);
+
+    // A柱 ×2
+    for (const s of [1, -1]) {
+      const pillar = new THREE.Mesh(bevelBox(0.075, 0.92, 0.075, 0.03, 1), matte);
+      pillar.position.set(s * width * 0.5, dashY + 0.4, pillarFrontZ - 0.06); pillar.rotation.x = 0.3;
+      grp.add(pillar);
+    }
+    // 車頂前橫樑 + 氛圍燈
+    const header = new THREE.Mesh(bevelBox(width * 0.96, 0.07, 0.12, 0.03, 1), matte);
+    header.position.set(0, roofY, pillarFrontZ - 0.03);
+    grp.add(header);
+    const ambMat = registerEmissive(new THREE.MeshStandardMaterial({
+      color: 0x05080a, emissive: accent, emissiveIntensity: 0.7,
+    }), 0.7);
+    const ambStrip = new THREE.Mesh(new THREE.BoxGeometry(width * 0.8, 0.014, 0.02), ambMat);
+    ambStrip.position.set(0, roofY - 0.05, pillarFrontZ - 0.06);
+    grp.add(ambStrip);
+  }
+
+  // 座艙補光:一盞低強度短射程點光,讓儀表台/方向盤在夜間有立體明暗
+  // (只在玩家車生成一盞,成本可忽略)
+  const cabinLight = new THREE.PointLight(0x9fd6ff, 4.2, 2.6, 2.2);
+  cabinLight.position.set(driverX, dashY + 0.34, dashZ - 0.34);
+  grp.add(cabinLight);
+  if (!open) {
+    // 內後視鏡
+    const mirrorMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0c10, metalness: 0.9, roughness: 0.14,
+      envMap: getCarEnvTexture(), envMapIntensity: 1.5,
+    });
+    const mirror = new THREE.Mesh(bevelBox(0.26, 0.06, 0.03, 0.02, 1), mirrorMat);
+    mirror.position.set(0, roofY - 0.07, pillarFrontZ - 0.14);
+    grp.add(mirror);
+
+    // 座椅背 ×2 (座艙視角看不到,但外部/近攝可見;桶型椅背 + 頭枕)
+    for (const s of [1, -1]) {
+      const seatBack = new THREE.Mesh(bevelBox(0.44, 0.62, 0.16, 0.08, 2), leather);
+      seatBack.position.set(s * 0.34, 0.98, -0.35); seatBack.rotation.x = 0.12;
+      grp.add(seatBack);
+      const headRest = new THREE.Mesh(bevelBox(0.24, 0.18, 0.14, 0.06, 2), leather);
+      headRest.position.set(s * 0.34, 1.34, -0.4);
+      grp.add(headRest);
+    }
+  }
+
+  // 方向盤 (column 後傾;spin 節點被 steer 旋轉)
+  const column = new THREE.Group();
+  column.position.set(driverX, wheelY, wheelZ); column.rotation.x = -0.42;
+  const spin = new THREE.Group();
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0a0b0e, roughness: 0.74, metalness: 0.1 });
+  spin.add(new THREE.Mesh(new THREE.TorusGeometry(wheelR, 0.023, 10, 32), wheelMat));
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.035, 14), wheelMat);
+  hub.rotation.x = Math.PI / 2; spin.add(hub);
+  const badge = new THREE.Mesh(new THREE.CircleGeometry(0.028, 16), accentMat);
+  badge.position.z = 0.02; spin.add(badge);
+  for (const deg of [270, 30, 150]) {
+    const th = deg * Math.PI / 180;
+    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.024, wheelR, 0.018), wheelMat);
+    spoke.position.set(Math.cos(th) * wheelR * 0.5, Math.sin(th) * wheelR * 0.5, 0);
+    spoke.rotation.z = th - Math.PI / 2;
+    spin.add(spoke);
+  }
+  column.add(spin);
+  grp.add(column);
+
+  car.add(grp);
+  // cockpitGroup 供 main.js 在剛性視角時「只藏外殼、留內裝」單獨控制可見性
+  return { steeringWheel: spin, cockpitGroup: grp };
+}
+
 // 車漆材質工廠:同色相 emissive 鎖色 + 高反射清漆層
 // clearcoat 拉滿 + 低 clearcoatRoughness → 近攝腰線有銳利的環境反射讀點;
 // 白天 (weatherPaintMul<1) emissive 幾乎歸零、envMap 減半,漆面靠真實光照

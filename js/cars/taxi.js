@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {
   getCarEnvTexture, makeWheels, makeHeadlights, makeHeadlightPool,
   makeUnderglow, makePaint, makeTailBar, bevelBox,
+  makeCockpit,
 } from './common.js';
 
 const TAXI_YELLOW = 0xffc21e;
@@ -265,13 +266,22 @@ export function build(def = {}) {
   const headlights = makeHeadlights(car, { sx: 0.56, y: 0.66, z: 2.24 });
   const headlightPool = makeHeadlightPool();
 
+  // ---- 駕駛艙內裝 (僅玩家車) ----
+  let steeringWheel = null, cockpitGroup = null;
+  if (def._cockpit) {
+    ({ steeringWheel, cockpitGroup } = makeCockpit(car, {
+      width: 1.44, dashZ: 1.02, dashY: 0.96, wheelZ: 0.64, wheelY: 1.0,
+      roofY: 1.32, pillarFrontZ: 1.16, accent: 0x2ae0ff,
+    }));
+  }
+
   const rig = new THREE.Group();
   rig.add(car);
   rig.add(headlightPool);
   return {
     mesh: rig,
     parts: {
-      bodyGroup: car, wheels, rimMatRear, wheelRadius,
+      bodyGroup: car, wheels, rimMatRear, wheelRadius, steeringWheel, cockpitGroup,
       tailMat, tailMidMat, brakeLight,
       underglow, headlights, headlightPool,
     },

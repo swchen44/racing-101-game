@@ -4,8 +4,8 @@ import * as THREE from 'three';
 const MODES = [
   { name: 'chase',  dist: 8.2, height: 2.9, lookAhead: 9,  fovBase: 62 },
   { name: 'far',    dist: 13.5, height: 5.2, lookAhead: 12, fovBase: 58 },
-  { name: 'cockpit', dist: -0.2, height: 1.14, lookAhead: 30, fovBase: 74, rigid: true },
-  { name: 'bumper', dist: 0.4, height: 1.15, lookAhead: 26, fovBase: 72, rigid: true },
+  { name: 'cockpit', dist: 0.34, height: 1.17, lookAhead: 22, fovBase: 74, rigid: true, lookDrop: 0.16 },
+  { name: 'bumper', dist: -1.85, height: 0.72, lookAhead: 26, fovBase: 72, rigid: true, lookDrop: 0.0 },
 ];
 
 // 台北101塔基座位置 (taipei101.js TOWER_POS)
@@ -94,16 +94,26 @@ export class ChaseCamera {
     }
     this._curveShift += (curveTarget - this._curveShift) * Math.min(1, dt * 3.5);
 
-    // ---- 期望位置:車後方 (甩尾時稍微甩向外側增加動感) ----
-    const driftOffset = car.driftAmount * Math.sign(car.steer || 0.0001) * 2.2;
-    // 面向101時同步拉遠鏡頭,塔與車同框
-    const dist = m.dist + speedRatio * 2.2 + lift * 2.2;
-    // 高速貼地:speedRatio>0.6 時鏡頭微降,強化速度感;面向101時反向抬升 1.2m
-    const speedDip = Math.max(0, (speedRatio - 0.6) / 0.4) * 0.4;
-    this._desired.set(
-      car.pos.x - sin * dist + cos * driftOffset + towerShiftX,
-      m.height + speedRatio * 0.5 - speedDip + lift * 1.2,
-      car.pos.z - cos * dist - sin * driftOffset + towerShiftZ);
+    // ---- 期望位置 ----
+    if (isBumper) {
+      // 剛性視角 (駕駛艙/車頭):鎖死在車體固定點,不吃速度後退/甩尾/讓位偏移,
+      // 否則相機會在高速時滑出車外。
+      this._desired.set(
+        car.pos.x - sin * m.dist,
+        m.height,
+        car.pos.z - cos * m.dist);
+    } else {
+      // 車後方 (甩尾時稍微甩向外側增加動感)
+      const driftOffset = car.driftAmount * Math.sign(car.steer || 0.0001) * 2.2;
+      // 面向101時同步拉遠鏡頭,塔與車同框
+      const dist = m.dist + speedRatio * 2.2 + lift * 2.2;
+      // 高速貼地:speedRatio>0.6 時鏡頭微降,強化速度感;面向101時反向抬升 1.2m
+      const speedDip = Math.max(0, (speedRatio - 0.6) / 0.4) * 0.4;
+      this._desired.set(
+        car.pos.x - sin * dist + cos * driftOffset + towerShiftX,
+        m.height + speedRatio * 0.5 - speedDip + lift * 1.2,
+        car.pos.z - cos * dist - sin * driftOffset + towerShiftZ);
+    }
 
     // 彈簧平滑 (指數趨近)
     const stiffness = isBumper ? 40 : 5.5 + speedRatio * 3;
@@ -116,9 +126,13 @@ export class ChaseCamera {
     // lookTarget.y 隨速度 1.1→2.2:高速時地平線下移、車落到畫面下 1/3、路面透視拉長
     // 面向 101 時依距離動態抬 8~12m (等效 pitch +10° 以上),塔身確實進畫面上 1/3
     const rightX = cos, rightZ = -sin; // 車右側方向
+    // 剛性視角注視點壓低 (lookDrop):讓儀表台/引擎蓋落在畫面下 1/3
+    const lookY = isBumper
+      ? m.height - (m.lookDrop || 0)
+      : 1.1 + speedRatio * 1.1 + towerLookY;
     this.lookTarget.set(
       car.pos.x + sin * m.lookAhead + rightX * this._curveShift,
-      1.1 + speedRatio * 1.1 + towerLookY,
+      lookY,
       car.pos.z + cos * m.lookAhead + rightZ * this._curveShift);
 
     // 震動:高速 + 碰撞

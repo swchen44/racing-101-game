@@ -38,7 +38,8 @@ export class Car {
         (thrustTop - this.tune.rollingResist * 0.35) / (this.tune.maxSpeed * this.tune.maxSpeed));
     }
     const builder = CAR_BUILDERS[carDef?.builder] || CAR_BUILDERS.gt;
-    const { mesh, parts } = builder(carDef || {});
+    // 玩家車生成駕駛艙內裝 (opts.cockpit === false 可關閉,如幽靈車)
+    const { mesh, parts } = builder({ ...(carDef || {}), _cockpit: opts.cockpit !== false });
     this.mesh = mesh;
     Object.assign(this, parts);   // bodyGroup, wheels, tailMat?, underglow?, headlights, headlightPool?, rimMatRear?, wheelRadius
     this.wheelRadius = this.wheelRadius || 0.48;
@@ -273,6 +274,8 @@ export class Car {
       w.spinner.rotation.x = this.wheelSpin % (Math.PI * 2);
       if (w.steerable) w.group.rotation.y = this.steer * 0.85;
     }
+    // 駕駛艙方向盤:放大轉角讓內視角看得出打方向 (約 ±100°)
+    if (this.steeringWheel) this.steeringWheel.rotation.z = -this.steer * 2.8;
   }
 
   get speedKmh() { return Math.abs(this.speed) * 3.6; }

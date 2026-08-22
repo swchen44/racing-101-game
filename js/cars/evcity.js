@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {
   getCarEnvTexture, makeWheels, makeHeadlights, makeHeadlightPool,
   makeUnderglow, makePaint,
+  makeCockpit,
 } from './common.js';
 
 export function build(def = {}) {
@@ -161,13 +162,22 @@ export function build(def = {}) {
   const headlights = makeHeadlights(car, { sx: 0.45, y: 0.78, z: 1.55, intensity: 60 });
   const headlightPool = makeHeadlightPool();
 
+  // ---- 駕駛艙內裝 (僅玩家車) ----
+  let steeringWheel = null, cockpitGroup = null;
+  if (def._cockpit) {
+    ({ steeringWheel, cockpitGroup } = makeCockpit(car, {
+      width: 1.3, dashZ: 0.92, dashY: 0.9, wheelZ: 0.56, wheelY: 0.96,
+      roofY: 1.24, pillarFrontZ: 1.02, accent: 0x7de07a,
+    }));
+  }
+
   const rig = new THREE.Group();
   rig.add(car);
   rig.add(headlightPool);
   return {
     mesh: rig,
     parts: {
-      bodyGroup: car, wheels, rimMatRear, wheelRadius,
+      bodyGroup: car, wheels, rimMatRear, wheelRadius, steeringWheel, cockpitGroup,
       tailMat, tailMidMat, brakeLight,
       underglow, headlights, headlightPool,
     },

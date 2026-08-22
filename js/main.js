@@ -859,7 +859,10 @@ function endRaceToMenu() {
   $('mirror-frame').classList.remove('on');
   $('cockpit-overlay')?.classList.remove('on');
   mirrorOn = false;
-  if (car?.bodyGroup) car.bodyGroup.visible = true;
+  if (car?.bodyGroup) {
+    car.bodyGroup.visible = true;
+    for (const ch of car.bodyGroup.children) ch.visible = true;
+  }
   touch.setVisible(false);
   showTitle();
 }
@@ -987,12 +990,23 @@ function tick() {
     hud.update(car, race, mapOthers);
     hud.updateBoost(car);
   }
-  // 駕駛艙視角:顯示儀表框、隱藏自車車身 (免遮擋)
+  // 駕駛艙視角:剛性視角隱藏自車外殼免遮擋。
+  // 有 3D 駕駛艙內裝 (car.cockpitGroup) 時:只藏外殼、保留內裝 (取代舊 2D overlay);
+  // 無內裝的車型才回退用 2D cockpit-overlay。
   {
     const cockpit = ui.screen === null && chaseCam.mode.name === 'cockpit';
-    $('cockpit-overlay').classList.toggle('on', cockpit);
     const rigid = ui.screen === null && chaseCam.mode.rigid;
-    if (car.bodyGroup) car.bodyGroup.visible = !rigid;
+    if (car.bodyGroup && car.cockpitGroup) {
+      car.bodyGroup.visible = true;
+      // 剛性視角:藏外殼、只留 3D 內裝;非剛性 (第三人稱):藏內裝、露外殼
+      for (const ch of car.bodyGroup.children) {
+        ch.visible = (ch === car.cockpitGroup) ? rigid : !rigid;
+      }
+      $('cockpit-overlay').classList.toggle('on', false);
+    } else {
+      if (car.bodyGroup) car.bodyGroup.visible = !rigid;
+      $('cockpit-overlay').classList.toggle('on', cockpit);
+    }
   }
 
   // 反射停用 (乾燥柏油):不再執行反射 pass — reflections.update()
