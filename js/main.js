@@ -1029,6 +1029,16 @@ window.__game = {
     car.trackHint = track.nearest(car.pos, -1);
     chaseCam.snapTo(car);
   },
+  // QA:直接觸發逮捕過場動畫 (需在緝凶追捕 racing 狀態)。role='cop' 演小偷被捕、'thief' 演玩家被捕
+  debugArrest(forceRole) {
+    if (race.mode !== 'chase' || !chase) return 'not in chase';
+    if (forceRole) setup.role = forceRole;
+    const prey = chase.prey || chase.actors[0];
+    if (chase.role === 'cop' && prey) { prey.speed = 0; }
+    chase.health = 1;
+    chase._startRollover(car);          // 觸發翻車 → 下一幀 updateChase 判定 caught → 逮捕過場
+    return 'arrest triggered';
+  },
 };
 
 touch.setVisible(false);
