@@ -107,7 +107,9 @@ export class Chase {
     const nx = -tan.z, nz = tan.x;
     a.mesh.position.set(p.x + nx * a.lane, 0, p.z + nz * a.lane);
     if (a.rolloverT > 0) return; // 翻車中不覆蓋姿態
-    a.mesh.rotation.set(0, Math.atan2(tan.x, tan.z) + a.wobbleYaw, 0);
+    // 倒車去撞:掉頭面向小偷(反切線方向),讀成迎面衝撞而非笨拙倒車
+    const face = a.reversing ? Math.PI : 0;
+    a.mesh.rotation.set(0, Math.atan2(tan.x, tan.z) + face + a.wobbleYaw, 0);
   }
 
   _shiftS(a, ds) {
@@ -247,31 +249,56 @@ export class Chase {
   _driveCop(a, dt, gapM, playerCar, playerKmh) {
     const cap = this.tune.copTop;
     const corner = Math.min(cap, this._cornerSpeed(a));  // 彎道自然減速
-    const ahead = gapM > 3;                              // 警車跑到玩家前方 (不該擋路)
+    const ahead = gapM > 3;                              // 警車跑到玩家前方
+    const WAIT_TIME = 2.5;                               // 超前後先等小偷這麼久
+    const d = playerCar.pos.distanceTo(a.mesh.position);
+
+    // 超前計時:記錄警車在玩家前方多久 (用來決定「等」還是「倒車去撞」)
+    if (ahead) a.aheadT = (a.aheadT || 0) + dt;
+    else a.aheadT = 0;
+
+    // ---- 警車在玩家前方:先等小偷,等太久就倒車回去撞 ----
+    if (ahead && !this.shaken) {
+      a.pitCooldown -= dt;
+      if (a.aheadT < WAIT_TIME) {
+        // 【等待】明顯慢行 (~25km/h)、守在玩家賽車線上等牠追上來 (像攔截)
+        const target = Math.min(corner, 7);   // 絕對低速,清楚讀成「在等」
+        a.speed += THREE.MathUtils.clamp(target - a.speed, -40 * dt, 16 * dt);
+        this._shiftS(a, (a.speed * dt) / this.track.length);
+        a.lane += (playerCar.lateral - a.lane) * Math.min(1, dt * 1.4); // 對齊玩家橫向,準備攔
+        a.reversing = false;
+      } else {
+        // 【倒車去撞】等不到 → 沿賽道往後退向小偷,車頭朝後 (倒車追撞)
+        const backKmh = Math.min(this.tune.aggressive ? 60 : 46, playerKmh + 20);
+        a.speed = backKmh / 3.6;
+        this._shiftS(a, -(a.speed * dt) / this.track.length);          // s 往回 = 朝玩家(後方)移動
+        a.lane += (playerCar.lateral - a.lane) * Math.min(1, dt * 2.2); // 對準玩家橫向撞上去
+        a.reversing = true;
+      }
+      a.lane = THREE.MathUtils.clamp(a.lane, -5.4, 5.4);
+      this._advanceVisual(a, dt);
+      this._place(a);
+      return;
+    }
+    a.reversing = false;
+
+    // ---- 一般追撃 (警車在玩家後方或並行) ----
     let target;
     if (this.shaken) {
       target = corner * 0.72;                            // 跟丟:巡航放慢
-    } else if (ahead) {
-      // 超前 → 大幅減速掉回玩家後方,絕不當前方路障
-      target = Math.max(8, Math.abs(playerCar.speed) * 0.5);
     } else if (a.pitT > 0) {
       target = Math.min(cap, Math.abs(playerCar.speed) + 3);
     } else {
-      // 落後:朝 copTop 前進;落後越多小幅提速 (最多 +18%),但絕不超過 copTop
       const behind = Math.max(0, -gapM);
       const boost = 1 + Math.min(0.18, behind / 600) * (this.tune.aggressive ? 1.2 : 1);
       target = Math.min(cap, corner * boost);
     }
-    const accel = a.speed < target ? 16 : 34;            // 掉回時煞得更快
+    const accel = a.speed < target ? 16 : 30;
     a.speed += THREE.MathUtils.clamp(target - a.speed, -accel * dt, accel * dt);
     this._shiftS(a, (a.speed * dt) / this.track.length);
 
-    const d = playerCar.pos.distanceTo(a.mesh.position);
     a.pitCooldown -= dt;
-    if (ahead) {
-      // 超前時:退到最近的外側車道,把賽車線讓給玩家 (不擋路)
-      a.lane += ((a.lane >= 0 ? 5.2 : -5.2) - a.lane) * Math.min(1, dt * 2.4);
-    } else if (a.pitT > 0) {
+    if (a.pitT > 0) {
       a.pitT -= dt;
       a.lane += ((playerCar.lateral + a.pitSide * 1.1) - a.lane) * Math.min(1, dt * 3.2);
     } else if (d < 22 && !this.shaken) {
