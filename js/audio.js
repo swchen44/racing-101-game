@@ -205,7 +205,8 @@ export class GameAudio {
   }
 
   // 每幀呼叫:dist = 最近警車距離 (m),音量隨距離衰減;wail 在兩個音高間滑移
-  sirenUpdate(dist) {
+  // volMul:整體音量倍率 (緝凶追捕要求「小聲」→ 傳 ~0.4)
+  sirenUpdate(dist, volMul = 1) {
     if (!this.sirenOsc) return;
     const t = this.ctx.currentTime;
     const hi = Math.floor((t - this.sirenT0) / 0.55) % 2 === 0;
@@ -213,7 +214,7 @@ export class GameAudio {
     this.sirenOsc.frequency.setTargetAtTime(f, t, 0.13);   // 時間常數造成上滑/下滑 wail
     this.sirenOsc2.frequency.setTargetAtTime(f * 0.5, t, 0.13);
     const near = Math.max(0, 1 - dist / 170);
-    this.sirenGain.gain.setTargetAtTime(0.015 + near * near * 0.17, t, 0.12);
+    this.sirenGain.gain.setTargetAtTime((0.015 + near * near * 0.17) * volMul, t, 0.12);
   }
 
   sirenStop() {

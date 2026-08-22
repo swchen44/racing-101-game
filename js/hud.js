@@ -170,6 +170,34 @@ export class HUD {
     if (this.dangerVignette) this.dangerVignette.classList.remove('on');
   }
 
+  // 緝凶追捕:倒數計時 + 對方血量 3 格 + 距離
+  // opts: { timeLeft(秒), health, maxHealth, dist(m), role:'cop'|'thief', label }
+  setChase(opts) {
+    const pod = $('chase-pod');
+    if (!pod) return;
+    pod.classList.add('on');
+    // 倒數 (最後 10 秒轉紅閃爍)
+    const tl = Math.max(0, opts.timeLeft);
+    const tEl = $('chase-time');
+    const mm = Math.floor(tl / 60), ss = Math.floor(tl % 60);
+    tEl.textContent = `${mm}:${String(ss).padStart(2, '0')}`;
+    tEl.classList.toggle('urgent', tl <= 10);
+    // 血量格
+    const hearts = pod.querySelectorAll('.chase-hp');
+    for (let i = 0; i < hearts.length; i++) hearts[i].classList.toggle('lost', i >= opts.health);
+    // 角色標籤 + 距離
+    $('chase-label').textContent = opts.label || '';
+    $('chase-dist').textContent = `${Math.round(opts.dist)} m`;
+    // 玩家當小偷、血量剩 1 → 危險紅暈
+    const danger = opts.role === 'thief' && opts.health <= 1;
+    if (this.dangerVignette) this.dangerVignette.classList.toggle('on', danger);
+  }
+  hideChase() {
+    const pod = $('chase-pod');
+    if (pod) pod.classList.remove('on');
+    if (this.dangerVignette) this.dangerVignette.classList.remove('on');
+  }
+
   _drawGauge(ratio, drift) {
     // 一體式速度模組:數字讀數 (DOM) 疊在圓心,canvas 只畫弧/刻度/浮動指針
     // canvas 380px 顯示 190px → 2x 密度,刻度字 26px 於螢幕上約 13px 可讀

@@ -137,6 +137,32 @@ canvas#game { display: block; width: 100%; height: 100%; }
   box-shadow: 0 0 12px rgba(255,60,90,0.8); transition: width .1s linear; }
 #wanted-pod.danger #wanted-label { animation: wwBlink .4s steps(2) infinite; color: #ff4d6d; }
 
+/* ---------- 緝凶追捕 HUD (頂部中央:倒數 + 血量 + 距離) ---------- */
+#chase-pod {
+  position: absolute; top: 24px; left: 50%; transform: translateX(-50%); display: none;
+  min-width: 220px; text-align: center;
+  background: var(--glass); border: 1px solid rgba(77,216,255,0.28); border-top: 3px solid var(--neon-cyan);
+  padding: 8px 22px 10px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px));
+}
+#chase-pod.on { display: block; }
+#chase-top { display: flex; align-items: baseline; justify-content: center; gap: 12px; }
+#chase-time {
+  font-family: var(--display-font); font-size: 34px; line-height: 1; color: #eafff5;
+  text-shadow: 0 0 16px rgba(77,216,255,0.7); font-variant-numeric: tabular-nums; letter-spacing: 1px;
+}
+#chase-time.urgent { color: var(--neon-red); text-shadow: 0 0 18px rgba(255,77,109,0.9); animation: wwBlink .5s steps(2) infinite; }
+#chase-label { font-family: var(--tc-font); font-size: 12px; letter-spacing: 4px; color: #9fc0da; font-weight: 700; }
+#chase-mid { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 6px; }
+#chase-hearts { display: flex; gap: 6px; }
+.chase-hp {
+  width: 26px; height: 9px; border-radius: 2px;
+  background: linear-gradient(90deg, #ff5a3c, #ff2233);
+  box-shadow: 0 0 8px rgba(255,60,50,0.7); transition: all .25s;
+}
+.chase-hp.lost { background: rgba(255,255,255,0.1); box-shadow: none; }
+#chase-dist { font-family: var(--hud-font); font-size: 13px; color: #7fa8c9; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+
 /* ---------- minimap ---------- */
 #minimap-wrap {
   position: absolute; right: 30px; bottom: 30px; width: 172px; height: 172px;
@@ -235,9 +261,10 @@ canvas#game { display: block; width: 100%; height: 100%; }
     radial-gradient(ellipse 80% 70% at 22% 30%, rgba(4,7,14,0.55), transparent 70%),
     linear-gradient(105deg, rgba(4,7,14,0.78) 0%, rgba(4,7,14,0.55) 40%, rgba(4,7,14,0.18) 70%, rgba(4,7,14,0.1) 100%);
 }
-#ui:has(.screen.on) :is(#race-pod, #speed-pod, #minimap-wrap, #wrongway, #center-msg, #sub-msg, #record-flash, #pos-pod, #wanted-pod, #touch-ui, #danger-vignette) { visibility: hidden; }
+#ui:has(.screen.on) :is(#race-pod, #speed-pod, #minimap-wrap, #wrongway, #center-msg, #sub-msg, #record-flash, #pos-pod, #wanted-pod, #chase-pod, #touch-ui, #danger-vignette) { visibility: hidden; }
 /* 結算畫面開啟時,一併隱藏遊戲中 HUD/觸控鈕,避免與 FINISH 面板重疊干擾 */
-#ui:has(#results.on) :is(#race-pod, #speed-pod, #minimap-wrap, #pos-pod, #wanted-pod, #boost-pips, #touch-ui, #danger-vignette, .hud-mini-btn, #mirror-frame, #cockpit-overlay) { visibility: hidden; }
+#ui:has(#results.on) :is(#race-pod, #speed-pod, #minimap-wrap, #pos-pod, #wanted-pod, #chase-pod, #boost-pips, #touch-ui, #danger-vignette, .hud-mini-btn, #mirror-frame, #cockpit-overlay) { visibility: hidden; }
+body.cutscene #ui :is(#race-pod, #speed-pod, #minimap-wrap, #pos-pod, #wanted-pod, #chase-pod, #boost-pips, #touch-ui, .hud-mini-btn, #mirror-frame) { visibility: hidden; }
 #title-tower { font-family: var(--tc-font); font-weight: 300; font-size: 18px; letter-spacing: 18px; color: #8fb4d4; margin-bottom: 14px; }
 #title-main {
   font-family: var(--display-font); font-size: clamp(38px, 6.4vw, 82px); line-height: 1.02;
@@ -705,6 +732,14 @@ body.touch #btn-mirror { top: 204px; }
     <div id="wanted-bar"><div id="wanted-fill"></div></div>
   </div>
 
+  <div id="chase-pod">
+    <div id="chase-top"><span id="chase-time">1:30</span><span id="chase-label"></span></div>
+    <div id="chase-mid">
+      <div id="chase-hearts"><span class="chase-hp"></span><span class="chase-hp"></span><span class="chase-hp"></span></div>
+      <span id="chase-dist">0 m</span>
+    </div>
+  </div>
+
   <div id="minimap-wrap"><canvas id="minimap" width="344" height="344"></canvas></div>
 
   <div id="speed-pod">
@@ -819,6 +854,8 @@ body.touch #btn-mirror { top: 204px; }
     <div class="setup-sub" data-i18n="setupSub">選 擇 你 的 戰 場 與 座 駕</div>
     <div class="sec-label" data-i18n="secMode">遊戲模式 MODE</div>
     <div class="card-row" id="mode-cards"></div>
+    <div class="sec-label" id="role-sec" data-i18n="secRole">扮演角色 ROLE</div>
+    <div class="card-row" id="role-cards"></div>
     <div class="sec-label" data-i18n="secDifficulty">對手強度 AI LEVEL</div>
     <div class="card-row" id="diff-cards"></div>
     <div class="sec-label" data-i18n="secWeather">時段 TIME OF DAY</div>

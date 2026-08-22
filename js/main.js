@@ -15,6 +15,9 @@ import {
 } from './leaderboard.js';
 import { Opponents } from './opponents.js';
 import { Police } from './police.js';
+import { Chase, addPoliceLights, randomStolenCarId } from './chase.js';
+import { chaseTune } from './config.js';
+import { runArrestCutscene } from './arrest.js';
 import { initTouch, isTouchDevice } from './touch.js';
 import { disposeObject } from './cars/common.js';
 import { Reflections, reflectionUniforms } from './reflections.js';
@@ -91,6 +94,7 @@ const setup = {
   transmission: profile.transmission || 'auto',
   difficulty: profile.difficulty || 'normal',
   weather: profile.weather || 'night',
+  role: profile.role || 'cop',    // 緝凶追捕:cop=玩家當警察 / thief=玩家當小偷
 };
 function persistSetup() {
   saveProfile({ ...profile, ...setup });
@@ -118,6 +122,10 @@ let car = null;
 let hud = null;
 let opponents = null;
 let police = null;
+let chase = null;
+let playerCopLights = null;   // 玩家警車車頂燈 (緝凶追捕 cop 角色)
+let chaseTimeLeft = 0;        // 緝凶追捕倒數剩餘秒數
+let chaseResult = null;       // 'win' | 'lose' — 供結算判定
 
 function buildWorld(trackDef, weather = weatherById('night')) {
   if (worldGroup) { scene.remove(worldGroup); disposeObject(worldGroup); }
@@ -155,6 +163,7 @@ function buildCar(carDef, transmission) {
 function clearModeActors() {
   if (opponents) { opponents.dispose(); opponents = null; }
   if (police) { police.dispose(); police = null; }
+  if (chase) { chase.dispose(); chase = null; }
 }
 
 loadSponsors(); // 預載廣告主檔期 (Supabase;無資料時全部顯示佔位看板)
@@ -312,6 +321,24 @@ function renderSetupCards() {
       setup.mode === m.id,
       () => { setup.mode = m.id; persistSetup(); renderSetupCards(); }));
   }
+  // 角色選擇 (僅緝凶追捕顯示)
+  const isChase = setup.mode === 'chase';
+  $('role-sec').style.display = isChase ? '' : 'none';
+  $('role-cards').style.display = isChase ? '' : 'none';
+  if (isChase) {
+    const rc = $('role-cards');
+    rc.innerHTML = '';
+    for (const [id, nameK, enK, descK, icon] of [
+      ['cop', 'roleCop', 'roleCopEn', 'roleCopDesc', '🚔'],
+      ['thief', 'roleThief', 'roleThiefEn', 'roleThiefDesc', '🏎'],
+    ]) {
+      rc.appendChild(card(
+        `<div class="c-name">${icon} ${t(nameK)}</div><div class="c-en">${t(enK)}</div><div class="c-desc">${t(descK)}</div>`,
+        setup.role === id,
+        () => { setup.role = id; persistSetup(); renderSetupCards(); }));
+    }
+  }
+
   const dc = $('diff-cards');
   dc.innerHTML = '';
   for (const d of DIFFICULTIES) {
@@ -487,16 +514,27 @@ function startRace() {
   setup.name = (setup.name || '').toLowerCase();
   persistSetup();
   const trackDef = trackById(setup.trackId);
-  const carDef = carById(setup.carId);
   const mode = modeById(setup.mode);
   const weather = weatherById(setup.weather);
+
+  // 緝凶追捕:玩家車依角色決定 — 警察=固定警車(小黃底盤深色塗裝)、小偷=隨機贓車
+  let carDef = carById(setup.carId);
+  if (setup.mode === 'chase') {
+    if (setup.role === 'cop') carDef = { ...carById('taxi'), id: 'copcar', paint: 0x141a24 };
+    else carDef = { ...carById(randomStolenCarId()), id: 'stolen' };
+  }
 
   // 重建世界 (換賽道/時段) 與車輛
   buildWorld(trackDef, weather);
   buildCar(carDef, setup.transmission);
   clearModeActors();
+  playerCopLights = null;
   if (setup.mode === 'gp') opponents = new Opponents(scene, track, 5, setup.difficulty);
   if (setup.mode === 'police') police = new Police(scene, track, 2);
+  if (setup.mode === 'chase') {
+    chase = new Chase(scene, track, { role: setup.role, difficulty: setup.difficulty });
+    if (setup.role === 'cop') playerCopLights = addPoliceLights(car.mesh); // 玩家警車車頂燈
+  }
 
   reflections.markScene(scene); // 世界/車輛/AI 重建後重新標記發光體
 
@@ -512,6 +550,9 @@ function startRace() {
   hud.show();
   if (setup.mode === 'gp') hud.setPosition(6, 6); else hud.hidePosition();
   if (setup.mode === 'police') hud.setWanted(0); else hud.hideWanted();
+  if (setup.mode !== 'chase') hud.hideChase();
+  // 緝凶追捕:左上圈速/計時板無意義 → 隱藏,改用頂部 chase-pod
+  $('race-pod').style.display = setup.mode === 'chase' ? 'none' : '';
   touch.setVisible(isTouchDevice());
   touch.setManual(setup.transmission === 'manual');
   $('btn-abandon').classList.add('on');
@@ -525,6 +566,8 @@ function startRace() {
 
   race.mode = setup.mode;
   race.paused = false;
+  chaseResult = null;
+  chaseTimeLeft = setup.mode === 'chase' ? chaseTune(setup.difficulty).timeLimit : 0;
   adTracker = new ImpressionTracker(setup.trackId);
   adPrevLap = 1;
   race.state = 'countdown';
@@ -553,7 +596,10 @@ function updateRace(dt) {
       if (step >= 1 && step <= 3) { hud.centerMessage(String(step)); audio.countdownBeep(); }
       else if (step === 0) {
         hud.centerMessage('GO');
-        hud.subMessage(race.mode === 'police' ? t('goSubPolice') : t('goSub'));
+        const goSub = race.mode === 'police' ? t('goSubPolice')
+          : race.mode === 'chase' ? (setup.role === 'cop' ? t('goSubChaseCop') : t('goSubChaseThief'))
+            : t('goSub');
+        hud.subMessage(goSub);
         audio.goBeep();
         race.state = 'racing';
       }
@@ -561,6 +607,9 @@ function updateRace(dt) {
     return;
   }
   if (race.state !== 'racing') return;
+
+  // ---- 緝凶追捕:獨立流程 (無圈數,限時 + 血量) ----
+  if (race.mode === 'chase') { updateChase(dt); return; }
 
   race.currentLapTime += dt;
   race.totalTime += dt;
@@ -612,6 +661,62 @@ function updateRace(dt) {
     const st = police.update(dt, car, performance.now() / 1000);
     hud.setWanted(st.heat);
     if (st.busted) bustedRace();
+  }
+}
+
+// ---------- 緝凶追捕:每幀邏輯 ----------
+function updateChase(dt) {
+  race.totalTime += dt;
+  chaseTimeLeft = Math.max(0, chaseTimeLeft - dt);
+  // 玩家警車車頂燈閃爍
+  if (playerCopLights) playerCopLights.update(Math.floor(performance.now() / 1000 * 6) % 2 === 0);
+
+  const st = chase.update(dt, car);
+  // HUD:倒數 + 血量 + 距離
+  hud.setChase({
+    timeLeft: chaseTimeLeft,
+    health: st.health,
+    maxHealth: st.maxHealth,
+    dist: st.dist,
+    role: setup.role,
+    label: setup.role === 'cop' ? t('chaseCopLabel') : t('chaseThiefLabel'),
+  });
+
+  // 廣告曝光 (追捕也算場景曝光)
+  if (adTracker) adTracker.update(car.progress, false);
+
+  // 勝負判定
+  if (st.caught) {
+    // 獵物翻車被捕:cop 角色=玩家勝(制伏);thief 角色=玩家敗(被抓)
+    finishChase(setup.role === 'cop' ? 'win' : 'lose');
+    return;
+  }
+  if (chaseTimeLeft <= 0 && chase.rolloverT === 0) {
+    // 時間到:cop 沒抓到=敗;thief 撐過倒數=勝
+    finishChase(setup.role === 'cop' ? 'lose' : 'win');
+  }
+}
+
+// 緝凶追捕結束:win/lose。cop 制伏時先播逮捕過場動畫再結算。
+function finishChase(result) {
+  if (race.state !== 'racing') return;
+  chaseResult = result;
+  race.state = 'finished';
+
+  const preyBust = chase.caught; // 有翻車 → 進逮捕動畫
+  if (preyBust) {
+    const target = chase.getBustTarget(); // cop 角色:AI 小偷位置;thief:null
+    audio.finishFanfare();
+    document.body.classList.add('cutscene'); // 過場期間隱藏 HUD
+    // 逮捕過場動畫 (驗收重點);完成後開結算
+    runArrestCutscene({
+      scene, camera, chaseCam, car, chase, role: setup.role, target,
+      onDone: () => { document.body.classList.remove('cutscene'); showChaseResults(result); },
+    });
+  } else {
+    // 純時間到 (無翻車):直接結算
+    if (result === 'win') audio.finishFanfare(); else audio.collision(0.8);
+    showChaseResults(result);
   }
 }
 
@@ -679,6 +784,55 @@ function showResultsScreen(busted) {
   } else {
     uploadEl.textContent = '';
   }
+}
+
+// ---------- 緝凶追捕:結算 ----------
+function showChaseResults(result) {
+  mirrorOn = false;
+  $('mirror-frame').classList.remove('on');
+  $('btn-abandon').classList.remove('on');
+  $('btn-mirror').classList.remove('on');
+  hud.hideChase();
+  const win = result === 'win';
+  const role = setup.role;
+  // 標題:cop勝=制伏歸案 / thief勝=成功脫身 / cop敗=小偷脫逃(時間到) / thief敗=你被逮了
+  let title, zh;
+  if (win) { title = role === 'cop' ? t('chaseWin') : t('chaseEscape'); zh = role === 'cop' ? t('chaseWin') : t('chaseEscape'); }
+  else { title = role === 'cop' ? t('chaseTimeUp') : t('chaseCaught'); zh = role === 'cop' ? t('chaseEscape') : t('chaseCaught'); }
+  $('res-title').textContent = title;
+  $('res-zh').textContent = zh;
+
+  const healthLeft = chase ? chase.health : 0;
+  let html = '';
+  html += `<div class="res-row"><span class="k">${t('driver')}</span><span class="v">${escapeHtml(setup.name)}</span></div>`;
+  html += `<div class="res-row"><span class="k">${t('modeTrack')}</span><span class="v">${pick(modeById('chase'))} ・ ${pick(trackById(setup.trackId))}</span></div>`;
+  html += `<div class="res-row"><span class="k">${t('secRole')}</span><span class="v">${role === 'cop' ? t('roleCop') : t('roleThief')} / ${pick(DIFFICULTIES.find((d) => d.id === setup.difficulty))}</span></div>`;
+  if (role === 'cop') {
+    html += `<div class="res-row hl"><span class="k">${t('resTime')}</span><span class="v">${formatTime(race.totalTime)}</span></div>`;
+  } else {
+    html += `<div class="res-row"><span class="k">${t('resSurvive')}</span><span class="v">${formatTime(race.totalTime)}</span></div>`;
+    html += `<div class="res-row hl"><span class="k">${t('resHealth')}</span><span class="v">${'❤'.repeat(Math.max(0, healthLeft))}${'·'.repeat(3 - Math.max(0, healthLeft))}</span></div>`;
+  }
+  $('res-table').innerHTML = html;
+  $('results').classList.add('on');
+
+  // 成績入榜 (只記勝場;敗場如同 busted 不記)
+  const uploadEl = $('res-upload');
+  if (win) {
+    // cop:制伏耗時越短越強;thief:被撞次數越少越強 (皆 time_ms 升冪)
+    const scoreMs = role === 'cop' ? race.totalTime * 1000 : (3 - healthLeft) * 1000;
+    const entry = {
+      mode: role === 'cop' ? 'chase_cop' : 'chase_thief',
+      trackId: setup.trackId, carId: car?.def?.id || setup.carId,
+      difficulty: setup.difficulty, name: setup.name, timeMs: scoreMs, bestLapMs: 0,
+    };
+    saveLocalScore(entry);
+    if (remoteEnabled()) {
+      uploadEl.textContent = t('uploadUploading');
+      uploadScore(entry).then(() => { uploadEl.textContent = t('uploadDone'); })
+        .catch(() => { uploadEl.textContent = t('uploadFail'); });
+    } else uploadEl.textContent = t('uploadLocal');
+  } else uploadEl.textContent = '';
 }
 
 // ---------- 放棄比賽 (二次確認) ----------
@@ -766,7 +920,10 @@ function tick() {
 
   if (ui.screen === null && !race.paused) updateRace(frameDt);
 
-  if (ui.screen === null) {
+  if (window.__arrest && window.__arrest.active) {
+    // 逮捕過場動畫接管相機
+    window.__arrest.update(frameDt);
+  } else if (ui.screen === null) {
     chaseCam.update(frameDt, car, now);
   } else {
     // 選單背景:環繞地標的電影運鏡

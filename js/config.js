@@ -23,7 +23,23 @@ export const MODES = [
     id: 'gp', name: '大獎賽', nameEn: 'GRAND PRIX', icon: '🏆',
     desc: '與 5 台 AI 車手同場競速,搶下 P1', descEn: 'Beat 5 AI drivers to P1', laps: 2,
   },
+  {
+    id: 'chase', name: '緝凶追捕', nameEn: 'THE CHASE', icon: '🚔',
+    desc: '扮警察撞翻小偷,或當小偷開贓車逃 — 90 秒限時',
+    descEn: 'Cop rams the thief, or thief flees the cops — 90s',
+    laps: 0, timeLimit: 90, thiefHealth: 3, roles: true,
+  },
 ];
+
+// ---------- 緝凶追捕:難度參數 ----------
+// impactMode:'any' 任何接觸扣血 / 'force' 需相對速度門檻 + 扣血後無敵
+// aggressive:AI 是否積極逃竄(小偷)或積極追撞(警察)
+export const CHASE_TUNE = {
+  easy:   { impactMode: 'any',   minImpactKmh: 0,  invuln: 0,   aggressive: false, aiSkill: 0.78, timeLimit: 100 },
+  normal: { impactMode: 'any',   minImpactKmh: 0,  invuln: 0,   aggressive: false, aiSkill: 0.9,  timeLimit: 90 },
+  hard:   { impactMode: 'force', minImpactKmh: 42, invuln: 1.5, aggressive: true,  aiSkill: 1.02, timeLimit: 80 },
+};
+export function chaseTune(diffId) { return CHASE_TUNE[diffId] || CHASE_TUNE.normal; }
 
 
 // ---------- AI 難度 ----------
