@@ -346,6 +346,17 @@ export class Chase {
       a.speed = Math.max(2, a.speed - Math.abs(j) * 0.7);
     }
     playerCar.collisionImpulse = Math.max(playerCar.collisionImpulse, Math.min(1, overlap * 1.1));
+    // 反包夾脫困:玩家=小偷踩滿油門卻被警車頂到幾乎不動時,沿車頭給脫困推力 +
+    // 維持最低前進動能 (抵銷法向反彈殺速)。否則警車停在正前方=不動的牆,小偷只能靠
+    // Boost 突破 (使用者回報的『煞到 0 就再也開不動,只有 Boost 有用』的根因)。
+    if (this.role === 'thief' && a.kind === 'cop'
+        && playerCar.throttleSmooth > 0.35 && Math.abs(playerCar.speed) < 9) {
+      const hx = Math.sin(playerCar.heading), hz = Math.cos(playerCar.heading);
+      playerCar.pos.x += hx * overlap * 0.8;
+      playerCar.pos.z += hz * overlap * 0.8;
+      const vf = playerCar.vel.x * hx + playerCar.vel.z * hz;
+      if (vf < 4) { playerCar.vel.x += hx * (4 - vf) * 0.5; playerCar.vel.z += hz * (4 - vf) * 0.5; }
+    }
     this._place(a);
 
     // ---- 有效撞擊 → 扣獵物血量 ----

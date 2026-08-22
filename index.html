@@ -456,10 +456,21 @@ body.touch #speed-pod { left: 14px; bottom: calc(118px + env(safe-area-inset-bot
   body.touch #tc-boost { left: calc(78px + env(safe-area-inset-left, 0px)); bottom: calc(136px + env(safe-area-inset-bottom, 0px)); width: 82px; height: 82px; }
   body.touch #tc-up    { right: calc(40px + env(safe-area-inset-right, 0px)); bottom: calc(166px + env(safe-area-inset-bottom, 0px)); width: 70px; height: 70px; }
   body.touch #tc-down  { right: calc(258px + env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 70px; height: 70px; }
-  /* 手機:時速表移到底部中央 (道路上方空檔),不再與左上圈速板重疊 */
+  /* 手機:時速表移到右上角 (不再擋住畫面中央跑道);小地圖下移到其正下方,
+     名次/通緝板 (GP/警車模式) 讓到左上圈速板下方,右上角維持乾淨直排 */
   body.touch #speed-pod {
-    left: 50%; bottom: calc(4px + env(safe-area-inset-bottom, 0px));
-    transform: translateX(-50%) scale(0.62); transform-origin: bottom center;
+    left: auto; right: calc(8px + env(safe-area-inset-right, 0px));
+    top: calc(6px + env(safe-area-inset-top, 0px)); bottom: auto;
+    transform: scale(0.5); transform-origin: top right;
+  }
+  body.touch #minimap-wrap {
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    top: calc(104px + env(safe-area-inset-top, 0px)); bottom: auto;
+    width: 116px; height: 116px;
+  }
+  body.touch #pos-pod, body.touch #wanted-pod {
+    right: auto; left: calc(14px + env(safe-area-inset-left, 0px));
+    top: calc(70px + env(safe-area-inset-top, 0px));
   }
 }
 

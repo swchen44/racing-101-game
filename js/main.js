@@ -1054,9 +1054,9 @@ function tick() {
   effects.update(frameDt, ui.screen === null ? car : null, camera.position, now, input);
   audio.update(car, frameDt, race.state === 'racing');
   if (ui.screen === null && hud) {
-    // 小地圖上的其他車輛 (GP 對手各自車色 / 警車紅藍閃)
+    // 小地圖上的其他車輛 (GP 對手各自車色 / 警車紅藍閃 / 緝凶追捕:警車閃、小偷橙點)
     let mapOthers = null;
-    if (opponents || police) {
+    if (opponents || police || chase) {
       mapOthers = [];
       if (opponents) {
         for (const ai of opponents.cars) {
@@ -1069,6 +1069,13 @@ function tick() {
       if (police) {
         for (const u of police.units) {
           mapOthers.push({ x: u.mesh.position.x, z: u.mesh.position.z, police: true });
+        }
+      }
+      if (chase) {
+        for (const a of chase.actors) {
+          // 警車=紅藍閃爍;贓車(小偷)=橙色點,讓玩家看得到追捕對象/追兵位置
+          if (a.kind === 'cop') mapOthers.push({ x: a.mesh.position.x, z: a.mesh.position.z, police: true });
+          else mapOthers.push({ x: a.mesh.position.x, z: a.mesh.position.z, color: '#ff7a2c' });
         }
       }
     }
