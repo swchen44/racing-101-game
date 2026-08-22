@@ -70,6 +70,12 @@ scene.add(hemi);
 const carFill = new THREE.PointLight(0x9fb8e8, 3.5, 15, 1.7);
 carFill.position.set(0, 7, 0);
 scene.add(carFill);
+// 車體輪廓光 (做戲):置於車前上方的冷色聚光,朝車身打回 → 玩家車頂/腰線
+// 邊緣浮出一道冷高光,在暗色夜景中拉出立體剪影。範圍收斂,只戲玩家車。
+const carRim = new THREE.SpotLight(0x9ac4ff, 150, 30, 0.62, 0.75, 1.35);
+const carRimTarget = new THREE.Object3D();
+scene.add(carRim, carRimTarget);
+carRim.target = carRimTarget;
 const moonLight = new THREE.DirectionalLight(0x9fb8e8, 1.0);
 moonLight.position.set(-120, 260, -160);
 moonLight.castShadow = true;
@@ -958,6 +964,14 @@ function tick() {
     moonLight.target.position.set(car.pos.x, 0, car.pos.z);
   }
   carFill.position.set(car.pos.x, 7, car.pos.z);
+  {
+    // 輪廓光跟車:置於車頭前上方,打回車身 (相機在後 → 形成邊緣逆光)
+    const fx = Math.sin(car.heading), fz = Math.cos(car.heading);
+    carRim.position.set(car.pos.x + fx * 4.2, 7.5, car.pos.z + fz * 4.2);
+    carRimTarget.position.set(car.pos.x, 0.7, car.pos.z);
+    // Boost 瞬間輪廓光增強 (衝刺做戲:車身邊緣爆一下冷光)
+    carRim.intensity += ((car.boosting ? 270 : 150) - carRim.intensity) * Math.min(1, frameDt * 6);
+  }
 
   if (tower) tower.userData.update(now);
   if (worldGroup) {
