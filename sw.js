@@ -3,7 +3,7 @@
 //   同源 HTML/JS      → 網路優先、離線退快取 (確保有網路時永遠拿到最新版)
 //   CDN (three/字型)  → 快取優先、背景補快取 (首次上線玩過一場後即可離線)
 //   排行榜 API/IP查詢 → 純網路 (離線時遊戲自動退回本機排行榜)
-const VERSION = 'mc101-v1';
+const VERSION = 'mc101-v2';
 const PRECACHE = 'mc101-pre-' + VERSION;
 const RUNTIME = 'mc101-run-' + VERSION;
 
@@ -14,7 +14,8 @@ const PRECACHE_URLS = [
   './js/main.js', './js/config.js', './js/i18n.js', './js/track.js', './js/vehicle.js',
   './js/taipei101.js', './js/city.js', './js/effects.js', './js/audio.js', './js/hud.js',
   './js/camera.js', './js/opponents.js', './js/police.js', './js/leaderboard.js',
-  './js/touch.js', './js/reflections.js', './js/carpreview.js',
+  './js/touch.js', './js/reflections.js', './js/carpreview.js', './js/ghost.js',
+  './js/chase.js', './js/arrest.js', './js/sponsors.js',
   './js/cars/index.js', './js/cars/common.js', './js/cars/gt.js', './js/cars/f1.js',
   './js/cars/evsport.js', './js/cars/rally.js', './js/cars/pickup.js', './js/cars/taxi.js',
   './js/cars/evcity.js', './js/cars/suv.js',
