@@ -30,7 +30,9 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- 渲染器 ----------
 const canvas = document.getElementById('game');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+// ?cap 旗標:開啟 preserveDrawingBuffer,讓 canvas.toDataURL 能擷取畫面 (封面/宣傳截圖用)
+const _capMode = new URLSearchParams(location.search).has('cap');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: _capMode });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;

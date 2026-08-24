@@ -4,4 +4,4 @@ node_modules/
 
 # itch.io build artifacts
 midnight-circuit-itch.zip
-itch-cover-*.png
+itch-cover-*
