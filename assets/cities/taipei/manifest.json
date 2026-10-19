@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "taipei",
-  "version": "source-v1-359f74464472",
+  "version": "source-v1-f633ae38aa1e",
   "format": "taipei-source-buffer-v1",
   "conversionVersion": 1,
   "sourceFiles": [
@@ -151,7 +151,7 @@
       "id": "guling-book-street",
       "kind": "building",
       "url": "assets/cities/taipei/guling-book-street.json",
-      "sha256": "7fb3742d8928a1e0e0e582dac6dc115ed44c979d2941226bdb4d18e21eeab40f",
+      "sha256": "115cd2d85f1d75df0612857c8a6a9c8feeb48359398b4a2e17e5d24efc08c345",
       "source": {
         "file": "site-guling-book-street-CnJkaqMt.js",
         "symbol": "ye.default.near",
@@ -197,6 +197,69 @@
             "gl-board",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -270,7 +333,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -279,7 +342,7 @@
       "id": "bolero-1934",
       "kind": "building",
       "url": "assets/cities/taipei/bolero-1934.json",
-      "sha256": "ec4c12b9b1e3b628e65ac09cf74ed57be521ba1a441fcc58a23e9b1c6d5d19ae",
+      "sha256": "304d2e364f753ede07c986a81c262cc7fc74d27530aca1a0a105ff60fa7e170f",
       "source": {
         "file": "site-bolero-1934-BKWeTxEd.js",
         "symbol": "B.default.near",
@@ -322,6 +385,69 @@
             "jamb",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -377,7 +503,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -386,7 +512,7 @@
       "id": "linjiang-market",
       "kind": "building",
       "url": "assets/cities/taipei/linjiang-market.json",
-      "sha256": "e368047ed27aca4f101189387a93b27a25f830ecd92cca8ecef5434aa8c46d46",
+      "sha256": "3025c6744ee4290d86bf10e5c0b2a7af64c562d5c442f4efde9e6201268ad5b8",
       "source": {
         "file": "site-linjiang-market-BYAswNPx.js",
         "symbol": "q.default.near",
@@ -441,6 +567,69 @@
             "fig-faces",
             "lane-floor"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -568,7 +757,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -577,7 +766,7 @@
       "id": "cisheng-temple",
       "kind": "building",
       "url": "assets/cities/taipei/cisheng-temple.json",
-      "sha256": "0743824503ffa2431aaacfe3c7abfecf77423f9df9c37805b3ad177abb9b011a",
+      "sha256": "03107e08b1814333de86c9c395ccb79b86cd15ffef8652365fa8c51fa7c58130",
       "source": {
         "file": "site-cisheng-temple-D1A3qfTe.js",
         "symbol": "I.default.near",
@@ -619,6 +808,69 @@
             "cs-xiangqi",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -668,7 +920,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -677,7 +929,7 @@
       "id": "donqi-ximen",
       "kind": "building",
       "url": "assets/cities/taipei/donqi-ximen.json",
-      "sha256": "4b6f1ca6e7846e27d93f910c0a030954a348c9f1a77face872dcfcf351dd6aea",
+      "sha256": "cd8c0bd530cd339914b221d59486fd5a24aa65347404fa6d34f9330499e36d00",
       "source": {
         "file": "site-donqi-ximen-_AHvOx2t.js",
         "symbol": "H.default.near",
@@ -724,6 +976,69 @@
             "floors",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -803,7 +1118,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -812,7 +1127,7 @@
       "id": "regent-hotel",
       "kind": "building",
       "url": "assets/cities/taipei/regent-hotel.json",
-      "sha256": "b91178a0f902214dca3ad5ecd652059c066a8043f5ea26d8ae22d72b6bc013b9",
+      "sha256": "478631524c547f841b5a70a8d414fd4babcb2d1e319206c175a0ddc8f929668b",
       "source": {
         "file": "site-regent-hotel-C7n9FB8n.js",
         "symbol": "M.default.near",
@@ -856,6 +1171,69 @@
             "rg-addr",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -917,7 +1295,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -926,7 +1304,7 @@
       "id": "breezy-center",
       "kind": "building",
       "url": "assets/cities/taipei/breezy-center.json",
-      "sha256": "e856a24f366de21cb2b5eca91f108f8eabf586c3e4e6461aab85d821abe307f4",
+      "sha256": "dadafb78994d8c69e9f28aa27d38c57634c58dec8160dcc95c214ca08e8542a9",
       "source": {
         "file": "site-breezy-center-CdjhtWBP.js",
         "symbol": "ee.default.near",
@@ -971,6 +1349,69 @@
             "bz-led",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1038,7 +1479,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1047,7 +1488,7 @@
       "id": "chensanding-pearl-milk",
       "kind": "building",
       "url": "assets/cities/taipei/chensanding-pearl-milk.json",
-      "sha256": "316e0eed5e3994047ae2f453d5ac377caae7c39f1ea41328163b5face42a2fd5",
+      "sha256": "6f4053c311725ce71732ff8d9ef8895816e29a13de6d7c64517707bac52a1873",
       "source": {
         "file": "site-chensanding-pearl-milk-ZtZuT9Ix.js",
         "symbol": "L.default.near",
@@ -1092,6 +1533,69 @@
             "cup",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1159,7 +1663,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1168,7 +1672,7 @@
       "id": "fongda-coffee",
       "kind": "building",
       "url": "assets/cities/taipei/fongda-coffee.json",
-      "sha256": "09070a66e30c55fb303a6005d666da640e10a72d0897e7dda88518a8ee2ec523",
+      "sha256": "e8f6eea2092badb24bb2a99579eedd10d2c6f47ea3236c848ca01c14fb8ed690",
       "source": {
         "file": "site-fongda-coffee-B_XKMwCh.js",
         "symbol": "I.default.near",
@@ -1214,6 +1718,69 @@
             "pastry-card",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1287,7 +1854,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1296,7 +1863,7 @@
       "id": "zhangxiexing-tea",
       "kind": "building",
       "url": "assets/cities/taipei/zhangxiexing-tea.json",
-      "sha256": "78ae338d238089eff0210c1e9cb04aa4c97749fac5a42b7fd6a0815a4289dad7",
+      "sha256": "2093f67108d3598c512f594882af8ca8379359db442db99358acb22fd98abbde",
       "source": {
         "file": "site-zhangxiexing-tea-EcGpsdDm.js",
         "symbol": "E.default.near",
@@ -1342,6 +1909,69 @@
             "zx-in-sign",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1415,7 +2045,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1424,7 +2054,7 @@
       "id": "linhefa-oil-rice",
       "kind": "building",
       "url": "assets/cities/taipei/linhefa-oil-rice.json",
-      "sha256": "e748943e0d80a9347d95657b58d3b0252f41faebc2873dda9e2d93fe5bedfef2",
+      "sha256": "8207878e39687638de02ea546f85753b44e9da6d70d1151bce323a866bb1a52b",
       "source": {
         "file": "site-linhefa-oil-rice-BTlM57Xu.js",
         "symbol": "j.default.near",
@@ -1471,6 +2101,69 @@
             "ticket",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1550,7 +2243,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1559,7 +2252,7 @@
       "id": "liting-bakery",
       "kind": "building",
       "url": "assets/cities/taipei/liting-bakery.json",
-      "sha256": "a7e6a27d6b2f26a9addd6e74f81c9b9366779c1c2b3546a16e49bb73e094f0cb",
+      "sha256": "463ea72ffa05f9aaeeec228ed25bcc294b2ad830d1be04ae7430e6d230a75631",
       "source": {
         "file": "site-liting-bakery-BRWGCKvE.js",
         "symbol": "J.default.near",
@@ -1603,6 +2296,69 @@
             "lt-hours",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1664,7 +2420,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1673,7 +2429,7 @@
       "id": "shuanglian-sweet-soup",
       "kind": "building",
       "url": "assets/cities/taipei/shuanglian-sweet-soup.json",
-      "sha256": "04bfebd8a2e8eb0ee52270fb5f38dd1ba26c6cdff536b8a7716acceedcd3ff05",
+      "sha256": "dd1aa277ee8992cbac5d8741a8e41cf22505e26d3527e138c8793ffee9e01376",
       "source": {
         "file": "site-shuanglian-sweet-soup-BrkKb18L.js",
         "symbol": "R.default.near",
@@ -1718,6 +2474,69 @@
             "tile-front",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1785,7 +2604,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1794,7 +2613,7 @@
       "id": "jinfeng-lurou",
       "kind": "building",
       "url": "assets/cities/taipei/jinfeng-lurou.json",
-      "sha256": "24774dcf0c22c311b9a6e16123477308a360f085ab497553bb28522aa91d2204",
+      "sha256": "e74e621ef9326be4ee1578c12dad7f62427858fdbe0ef922d3db3c06cd07eeff",
       "source": {
         "file": "site-jinfeng-lurou-CSJprxm5.js",
         "symbol": "V.default.near",
@@ -1836,6 +2655,69 @@
             "jf-photo",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1885,7 +2767,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1894,7 +2776,7 @@
       "id": "longmen-pepper-bun",
       "kind": "building",
       "url": "assets/cities/taipei/longmen-pepper-bun.json",
-      "sha256": "4836ef7020c3e77af5737920deb54ff169971840b2ff27470062a914906df7f3",
+      "sha256": "282919686bad8d21bbbd9c195e6c8e15a4e98f382a59dd9251b7a9088ab34f13",
       "source": {
         "file": "site-longmen-pepper-bun-CLZFXb6a.js",
         "symbol": "T.default.near",
@@ -1936,6 +2818,69 @@
             "lm-bag",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -1985,7 +2930,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -1994,7 +2939,7 @@
       "id": "goose-mama-noodles",
       "kind": "building",
       "url": "assets/cities/taipei/goose-mama-noodles.json",
-      "sha256": "64a37199436fd4ad1d8f1046f852d9f134a1ff93d3541226f9f71057df40df80",
+      "sha256": "50074ff20bce47e68f709144e59136b6b06851a7b1fbaed85e59953739d5143a",
       "source": {
         "file": "site-goose-mama-noodles-Ue1hIyLx.js",
         "symbol": "C.default.near",
@@ -2037,6 +2982,69 @@
             "gm-hours",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -2092,7 +3100,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"
@@ -2101,7 +3109,7 @@
       "id": "dazhi-douhua",
       "kind": "building",
       "url": "assets/cities/taipei/dazhi-douhua.json",
-      "sha256": "b7482ac3102a732fb032448fad0689073ad716e486a65f05d3ae208497592cb7",
+      "sha256": "41a166ef5ae6e8a0ed37e29e8a9f13beba3192c53d4f6fcdf769ca2c5193ce82",
       "source": {
         "file": "site-dazhi-douhua-4LWmPbyC.js",
         "symbol": "F.default.near",
@@ -2145,6 +3153,69 @@
             "dh-floor",
             "fig-faces"
           ]
+        },
+        {
+          "id": "source-surfaces",
+          "url": "assets/cities/taipei/source-surfaces.rgba",
+          "sha256": "53e3df2b9ffebade0c8367793f005a7ee521f18db0ee4455693927238f947eee",
+          "width": 256,
+          "height": 256,
+          "depth": 35,
+          "dimension": "2d-array",
+          "format": "rgba8",
+          "colorSpace": "srgb",
+          "flipY": false,
+          "wrapS": 1000,
+          "wrapT": 1000,
+          "minFilter": 1008,
+          "magFilter": 1006,
+          "generateMipmaps": true,
+          "anisotropy": 4,
+          "premultiplyAlpha": false,
+          "source": {
+            "file": "world-BwYfSiTY.js",
+            "symbol": "Uv.buildMaterials / Jv / Kv / Gv",
+            "sha256": "2e92985392fd5c3428e33354529a1dc478d13c7972f7ffc4b6960abd6913f9c1"
+          },
+          "layers": {
+            "PLAIN": 0,
+            "LIT": 1,
+            "BRICK": 2,
+            "STONE": 3,
+            "ROOF_TILE": 4,
+            "WIN_OFFICE": 5,
+            "GLASS_101": 6,
+            "BRICK_ARCH_WIN": 7,
+            "BRICK_RECT_WIN": 8,
+            "LATTICE": 9,
+            "TEMPLE_DOOR": 10,
+            "PAINTED_BEAM": 11,
+            "PAVING": 12,
+            "PAVING_RED": 13,
+            "GRASS": 14,
+            "WATER": 15,
+            "GRAVEL": 16,
+            "CORRUGATED": 17,
+            "CONCRETE": 18,
+            "SMALL_TILE": 19,
+            "METAL_PANEL": 20,
+            "MARBLE": 21,
+            "GRANITE": 22,
+            "WOOD": 23,
+            "LEAVES": 24,
+            "BARK": 25,
+            "GLASS_MALL": 26,
+            "WIN_HOTEL": 27,
+            "WIN_STATION": 28,
+            "ROCK": 29,
+            "WIN_COLONIAL_WHITE": 30,
+            "DOOR_GOD": 31,
+            "WIN_HOSPITAL": 32,
+            "CUT_PORCELAIN": 33,
+            "FOLIAGE": 34,
+            "COUNT": 35
+          },
+          "interpretation": "Original Kv vertically reversed RGB surface color plus alpha emission mask, not opacity."
         }
       ],
       "atlasRects": {
@@ -2206,7 +3277,7 @@
         }
       },
       "limitations": [
-        "Source LM procedural surface shaders adapted to vertex colors; original aSurf/aMat attributes retained. Glass uses standard transparent material; original refraction shader is not reproduced.",
+        "Original LM 35-layer surface colors and emission masks recovered. Runtime must decode aSurf/aMat/aCol with source shader semantics. Glass refraction remains adapted.",
         "Source asset reuse license is unconfirmed."
       ],
       "format": "taipei-source-buffer-v1"

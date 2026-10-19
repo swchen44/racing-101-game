@@ -7,6 +7,7 @@ import {Extractor} from './lazy-extractor.mjs';
 import {recoverStreet} from './street.mjs';
 import {recoverCharacters} from './characters.mjs';
 import {recoverEffects} from './effects.mjs';
+import {recoverSurfaces,attachSurfaces} from './surfaces.mjs';
 const sourceRoot = process.env.TAIPEI_SOURCE_ROOT || '/Users/swchen.tw/git/rea_study_gta_taipei/archive/taipei-rush-2026-10-18/files/assets';
 const out = path.resolve('assets/cities/taipei');
 const evidence = path.resolve('docs/research/evidence/taipei-source');
@@ -19,6 +20,7 @@ const originalLoad = x.load.bind(x);
 x.load = name => {const m=originalLoad(name);m.box.document={createElement(tag){if(tag==='canvas')return createCanvas(1,1);throw Error('DOM forbidden: '+tag);}};m.box.OffscreenCanvas=class{constructor(w,h){return createCanvas(w,h);}};return m;};
 const w = x.load('world-BwYfSiTY.js');
 const assets=[];
+const surfaces=await recoverSurfaces({w,out,hash,source});
 function texture(id,canvas,extra={}) {
   const bytes=canvas.toBuffer('image/png'),filename=id+'.png';fs.writeFileSync(path.join(out,filename),bytes);
   return {id,url:'assets/cities/taipei/'+filename,sha256:hash(bytes),width:canvas.width,height:canvas.height,colorSpace:'srgb',flipY:true,...extra};
@@ -38,6 +40,7 @@ function save(id,kind,meshes,src,extra={}) {
   for(const m of meshes){const p=m.attributes.position.array;for(let i=0;i<p.length;i++){if(!Number.isFinite(p[i]))throw Error(id+' nonfinite');min[i%3]=Math.min(min[i%3],p[i]);max[i%3]=Math.max(max[i%3],p[i]);}}
   const bounds={min,max,size:max.map((n,i)=>n-min[i])};
   const doc={schema:1,format:'taipei-source-buffer-v1',id,coordinateSystem:'Y-up; source units (metres); vehicles face -Z',colorSpace:'linear vertex colors; sRGB PNG',meshes,...extra};
+  if(kind==='building'){attachSurfaces(doc,surfaces);extra.textures=doc.textures;extra.limitations=doc.limitations;}
   const bytes=JSON.stringify(doc),filename=id+'.json';fs.writeFileSync(path.join(out,filename),bytes);
   assets.push({id,kind,url:'assets/cities/taipei/'+filename,sha256:hash(bytes),source:src,bounds,triangles:meshes.reduce((s,m)=>s+m.index.length/3,0),...extra,format:doc.format});
   console.log(id,assets.at(-1).triangles);

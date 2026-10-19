@@ -26,6 +26,10 @@ test('every delivered asset, texture and dependency matches its receipt', async 
     for (const f of [...(a.textures || []), ...(a.dependencies || [])]) assert.equal(hash(await readFile(f.url)), f.sha256, f.url);
     for (const t of a.textures || []) {
       const png = await readFile(t.url);
+      if (t.dimension === '2d-array') {
+        assert.equal(png.length, t.width * t.height * t.depth * 4);
+        continue;
+      }
       assert.equal(png.subarray(1,4).toString(), 'PNG');
       assert.equal(png.readUInt32BE(16), t.width);
       assert.equal(png.readUInt32BE(20), t.height);
@@ -131,4 +135,26 @@ test('transitive source files and frozen extraction identity are traceable', asy
   assert.match(m.version,/^source-v1-[a-f0-9]{12}$/);
   assert.ok(m.sourceFiles.length>20);
   for(const s of m.sourceFiles)assert.equal(hash(await readFile(path.join(sourceRoot,s.file))),s.sha256,s.file);
+});
+
+test('building LM materials retain all 35 original RGBA surface and emissive-mask layers', async () => {
+  const manifest = await readJson('assets/cities/taipei/manifest.json');
+  const buildings = manifest.assets.filter(asset => asset.kind === 'building');
+  for (const asset of buildings) {
+    const data = await readJson(asset.url);
+    const surface = data.textures.find(texture => texture.id === 'source-surfaces');
+    assert.ok(surface, asset.id + ' source surface array');
+    assert.equal(surface.dimension, '2d-array');
+    assert.equal(surface.format, 'rgba8');
+    assert.equal(surface.depth, 35);
+    const bytes = await readFile(surface.url);
+    assert.equal(bytes.length, surface.width * surface.height * surface.depth * 4);
+    assert.equal(hash(bytes), surface.sha256);
+    for (const mesh of data.meshes.filter(mesh => ['lm', 'leaves'].includes(mesh.name))) {
+      assert.equal(mesh.material.surfaceMap, surface.id);
+    }
+    // At least one window layer must preserve its nonconstant emission mask.
+    assert.ok(bytes.some((v, i) => i % 4 === 3 && v > 0));
+    assert.ok(bytes.some((v, i) => i % 4 === 3 && v === 0));
+  }
 });

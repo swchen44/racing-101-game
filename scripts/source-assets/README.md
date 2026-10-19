@@ -41,7 +41,7 @@ A raw source-buffer format was selected over GLB to preserve custom source attri
 
 - `lm`/`leaves` source `aCol` is normalized Uint8 **RGBA**, with RGB linear base color and A source emissive/figure metadata, **not transparency**. Standard-material adapters must copy only RGB to `color`, retain original `aCol`, `aMat`, `aLight`, `aInfo`, and avoid accidental vertex-alpha. Original source shaders are not yet reproduced in full.
 - `art` carries exact per-tile UVs from original paint callbacks. Every building has actual Chinese text paint calls, tile rectangles and PNG data. Shared `sites-kit.Ae` face tiles are recovered too.
-- `glass` remains a separate transparent material bucket. It approximates the source refraction shader with standard transmission-free glass. Source LM microtexture, night-specific shader lighting, glass refraction and detailed emissive adaptation remain runtime work.
+- `glass` remains a separate transparent material bucket. It approximates the source refraction shader with standard transmission-free glass. Source LM surface RGB/emissive masks are now restored through the original array texture; runtime shader adaptation consumes aSurf/aMat/aCol. Glass refraction remains approximated.
 - Ground PNGs come from exact `world.Ls` Canvas layers. Source alpha stores roughness; exported diffuse alpha is made opaque and that channel is split to a linear grayscale roughness PNG. `aLayer` is preserved. Repeat UVs must use the recorded `metresPerRepeat` when reshaping road geometry.
 - Road/sidewalk/curb templates retain source ground datum, source normals and UVs. They are length 10 m; road width 2 m. Runtime route mapping is an authorized transform, not a newly authored surface.
 - Street lamp matrices are copied when original `ef`/`pd` submits each instance, because the original uses mutable scratch matrices. Colors are linear RGB arrays.
@@ -59,6 +59,10 @@ diffuseColor.rgb = diffuseColor.rgb * (1.0 - atl.a) + atl.rgb;
 Use sRGB texture with `premultiplyAlpha=true`. `preview-material.mjs` contains the tested r160 hook. Paint RGB is already baked for original first palette and source visibility seed 0.5. Material buckets preserve roughness, metalness and source light tag for original lights/sirens. Full wetness/damage/AO/lighting shaders remain excluded.
 
 `parts.wheels[]` comes from intercepting exact original `Ko → Uo` calls. Front pair then rear pair, original local +X side then −X side. Each wheel mesh has `part: wheel-N`, original source-space positions and a `pivot`. Subtract the pivot from geometry, then mount it under a steering group at that pivot with a spinner rotating on X. Only front wheels steer around Y. `radius`, axle coordinates and physics dimensions come from source `eo` and `Ja`, not inferred mesh bounds. Body meshes remain at origin. Source forward is −Z.
+
+### Original LM surface array
+
+`source-surfaces.rgba` is original `world.Uv(1).buildMaterials(4)` output: 256×256×35 RGBA8 layers (9,175,040 bytes). `Jv` paints RGB and emission passes with source seeded RNG, `Kv` flips rows and places emission red into output alpha. Alpha is an emission mask, not transparency. Meshes in `lm`/`leaves` reference `material.surfaceMap: 'source-surfaces'`; their texture descriptors have `dimension: '2d-array'`, `format: 'rgba8'`, depth35, and original sRGB/flipYfalse/repeat/mipmap settings. Construct a `DataArrayTexture` directly from these bytes. Descriptors also retain the original layer enum and source hash. To upgrade an existing extraction without regenerating geometry, run `node scripts/source-assets/surfaces.mjs`; full `recover.mjs` includes this step. The preview shares the game's LM material adapter.
 
 ### Characters and animation
 

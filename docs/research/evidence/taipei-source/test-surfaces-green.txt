@@ -1,0 +1,18 @@
+✔ Taipei has traceable dynamic cars and textured buildings (9.886459ms)
+✔ every delivered asset, texture and dependency matches its receipt (1022.185625ms)
+✔ source buffers have finite data, valid triangles and measured bounds (745.999166ms)
+✔ landmarks use actual painted atlas tiles and preserve glass and source materials (364.117125ms)
+✔ four original wheel ranges preserve pivots, radius and steering axle (45.097291ms)
+✔ characters preserve original rig, encoded painted atlas and real actions (69.439334ms)
+✔ street, road and effect source families are present (11.350167ms)
+✔ encoded vehicle and road atlases cannot silently use a plain diffuse map (56.151167ms)
+✔ transitive source files and frozen extraction identity are traceable (21.170875ms)
+✔ building LM materials retain all 35 original RGBA surface and emissive-mask layers (678.101333ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3294.938833
