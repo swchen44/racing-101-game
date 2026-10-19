@@ -2,7 +2,8 @@
 // 運動學跟線 + 彎心走線 (apex)、AI 互相避讓、被擠壓短暫失控、起跑反應延遲、
 // 終點後減速滑行、超車呼嘯音效、橡皮筋
 import * as THREE from 'three';
-import { CAR_BUILDERS } from './cars/index.js';
+import { buildCar } from './cars/index.js';
+import { sourceCarDefinitions, steerSourceVehicle } from './cities/vehicles.js';
 import { disposeObject } from './cars/common.js';
 import { modeById } from './config.js';
 import { activeAudio } from './audio.js';
@@ -25,7 +26,7 @@ const DIFFICULTY_TUNE = {
 };
 
 export class Opponents {
-  constructor(scene, track, count = 5, difficulty = 'normal') {
+  constructor(scene, track, count = 5, difficulty = 'normal', cityLease = null) {
     this.scene = scene;
     this.track = track;
     this.cars = [];
@@ -35,9 +36,9 @@ export class Opponents {
     this._lastUpdateAt = 0;
     this._coastPrev = 0;
     for (let i = 0; i < count; i++) {
-      const spec = AI_ROSTER[i % AI_ROSTER.length];
-      const builder = CAR_BUILDERS[spec.builder] || CAR_BUILDERS.gt;
-      const { mesh, parts } = builder({ paint: spec.paint });
+      const roster = cityLease ? sourceCarDefinitions : AI_ROSTER;
+      const spec = roster[i % roster.length];
+      const { mesh, parts } = buildCar(spec, cityLease);
       // 移除 AI 車的真實光源 (5 台 × 2 盞會炸光源預算),保留 emissive 燈條
       const toRemove = [];
       mesh.traverse((o) => { if (o.isSpotLight || o.isPointLight) toRemove.push(o); });
@@ -77,6 +78,7 @@ export class Opponents {
     const nx = -tan.z, nz = tan.x;
     ai.mesh.position.set(p.x + nx * ai.lane, 0, p.z + nz * ai.lane);
     ai.mesh.rotation.y = Math.atan2(tan.x, tan.z) + ai.wobbleYaw;
+    steerSourceVehicle(ai.parts, this.track, ai.s);
   }
 
   // 帶符號的進度位移:前跨線 +1 圈、回跨線 -1 圈 (碰撞把車推回線後不會灌圈數)
@@ -89,7 +91,8 @@ export class Opponents {
 
   _advance(ai, dt) {
     this._shiftS(ai, (ai.speed * dt) / this.track.length);
-    ai.wheelSpin += (ai.speed / 0.48) * dt;
+    ai.parts.updateLights?.(this.raceT);
+    ai.wheelSpin += (ai.speed / (ai.parts.wheelRadius || 0.48)) * dt;
     if (ai.parts.wheels) {
       for (const w of ai.parts.wheels) w.spinner.rotation.x = ai.wheelSpin % (Math.PI * 2);
     }
@@ -102,7 +105,7 @@ export class Opponents {
     const a = this.track.samples[i0].tan;
     const b = this.track.samples[(i0 + 40) % N].tan;
     const curv = 1 - (a.x * b.x + a.z * b.z); // 0=直線
-    const top = 56 * ai.skill;
+    const top = (ai.spec.tune?.maxSpeed ?? 56) * ai.skill;
     return THREE.MathUtils.clamp(top * (1 - curv * 7), 13, top);
   }
 

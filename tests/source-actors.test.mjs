@@ -173,3 +173,135 @@ test('characters keep their original rest feet and release mixers without dispos
     assert.equal(disposed, 0);
   } finally { lease.library.dispose(); }
 });
+
+// Exercise the actual gameplay entrypoints with no DOM/Canvas available: any
+// accidental legacy builder in a source race fails here before visual QA.
+const { Car } = await import('../js/vehicle.js');
+const { Opponents } = await import('../js/opponents.js');
+const { Police } = await import('../js/police.js');
+const { Chase, addPoliceLights, randomStolenCarId } = await import('../js/chase.js');
+const { GhostCar, loadGhost, hasGhost, saveGhost } = await import('../js/ghost.js');
+function trackFixture() {
+  const radius = 80;
+  const pointAt = (s) => new THREE.Vector3(Math.sin(s * Math.PI * 2) * radius, 0, Math.cos(s * Math.PI * 2) * radius);
+  const tangentAt = (s) => new THREE.Vector3(Math.cos(s * Math.PI * 2), 0, -Math.sin(s * Math.PI * 2));
+  return { length: radius * Math.PI * 2, pointAt, tangentAt,
+    samples: Array.from({ length: 128 }, (_, i) => ({ pos: pointAt(i / 128), tan: tangentAt(i / 128) })),
+    nearest: () => 0, query: (point) => ({ s: .8, index: 0, lateral: 0, normal: new THREE.Vector3(1, 0, 0), tangent: tangentAt(.8) }) };
+}
+const allCars = ['sedan', 'taxi', 'sports', 'suv', 'police'];
+
+test('Car and all race opponents consume the source context without invoking legacy visible builders', async () => {
+  globalThis.window ??= {};
+  const lease = await fixture(allCars);
+  try {
+    const track = trackFixture(), scene = new THREE.Group();
+    const car = new Car(track, sourceCarDefinitions[2], { cityLease: lease });
+    assert.equal(car.mesh.userData.sourceAssetId, 'sports');
+    assert.equal(car.wheelRadius, .34);
+    car.setRollover(1.9, .1);
+    car.reset();
+    near(car.bodyGroup.rotation.z, 0);
+    near(car.bodyGroup.rotation.x, 0);
+    car.update(.1, { forward: true });
+    assert.ok(car.wheels.every((wheel) => wheel.spinner.rotation.x > 0));
+    const opponents = new Opponents(scene, track, 5, 'normal', lease);
+    assert.equal(opponents.cars.length, 5);
+    assert.ok(opponents.cars.every((ai) => sourceCarDefinitions.some((def) => def.sourceAssetId === ai.mesh.userData.sourceAssetId)));
+    const ai = opponents.cars[0]; ai.speed = 10;
+    opponents._advance(ai, .1);
+    near(ai.wheelSpin, 1 / ai.parts.wheelRadius);
+    opponents._place(ai);
+    assert.ok(ai.parts.wheels.filter((wheel) => wheel.steerable).every((wheel) => Math.abs(wheel.group.rotation.y) > .001));
+    assert.ok(ai.parts.wheels.filter((wheel) => !wheel.steerable).every((wheel) => wheel.group.rotation.y === 0));
+    opponents.update(.1, car, car.progress);
+    opponents.dispose();
+    assert.equal(lease.library.instances.size, 1);
+    assert.throws(() => new Car(track, sourceCarDefinitions[0]), /source vehicle.*lease|lease.*source vehicle/i);
+  } finally { lease.library.dispose(); }
+});
+
+test('Police and both Chase roles use original sirens and roadblocks with no untagged visible model', async () => {
+  globalThis.window ??= {};
+  const lease = await fixture([...allCars, 'roadblock']);
+  try {
+    const scene = new THREE.Group(), track = trackFixture();
+    const player = new Car(track, sourceCarDefinitions[0], { cityLease: lease });
+    const police = new Police(scene, track, 2, lease);
+    assert.ok(police.units.every((unit) => unit.mesh.userData.sourceAssetId === 'police'));
+    police._buildBarriers(.2);
+    const count = lease.library.instances.size;
+    police._buildBarriers(.3);
+    assert.ok(lease.library.instances.size <= count + 1, 'old barriers released before replacement');
+    assert.ok(police.barriers.every((barrier) => barrier.mesh.userData.sourceAssetId === 'roadblock'));
+    assert.ok(meshes(scene).every((mesh) => mesh.userData.sourceAssetId));
+    police.update(.1, player, .1);
+    const cop = new Chase(scene, track, { role: 'cop', cityLease: lease });
+    const thief = new Chase(scene, track, { role: 'thief', cityLease: lease });
+    assert.ok(sourceCarDefinitions.some((def) => def.sourceAssetId === cop.prey.mesh.userData.sourceAssetId));
+    assert.ok(thief.actors.every((actor) => actor.mesh.userData.sourceAssetId === 'police'));
+    cop.update(.1, player); thief.update(.1, player);
+    const before = meshes(player.mesh).length;
+    assert.throws(() => addPoliceLights(player.mesh), /police.*source|source.*police/i);
+    assert.equal(meshes(player.mesh).length, before);
+    const built = buildSourceVehicle(sourcePoliceDefinition, lease);
+    addPoliceLights(built.mesh).update(true);
+    assert.ok(meshes(built.mesh).every((mesh) => mesh.userData.sourceAssetId === 'police'));
+    assert.ok(sourceCarDefinitions.some((def) => def.id === randomStolenCarId(lease)));
+    police.dispose(); cop.dispose(); thief.dispose();
+    assert.equal(lease.library.instances.size, 2, 'only player and separately built police remain');
+  } finally { lease.library.dispose(); }
+});
+
+test('source ghosts use current selected car, preserve shader callbacks and reject stale route records without deleting legacy data', async () => {
+  globalThis.window ??= {};
+  const storage = new Map();
+  globalThis.localStorage = { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
+  const lease = await fixture(['taxi', 'sports']);
+  try {
+    const samples = Array.from({ length: 6 }, (_, i) => ({ t: i, x: i, z: i * 3, h: 0, s: i / 6 }));
+    const recording = { lapTime: 12, samples };
+    saveGhost('old-track', 'timeattack', recording);
+    const legacyBytes = storage.get('mc101_ghost_old-track_timeattack');
+    assert.ok(loadGhost('old-track', 'timeattack'));
+    saveGhost('taipei', 'timeattack', recording, { routeRevision: 'r1', vehicleId: 'taipei-taxi' });
+    const source = loadGhost('taipei', 'timeattack', 'r1');
+    assert.equal(source.schema, 2);
+    assert.equal(source.recordedVehicleId, 'taipei-taxi');
+    assert.equal(source.routeRevision, 'r1');
+    assert.equal(loadGhost('taipei', 'timeattack', 'r2'), null);
+    assert.equal(hasGhost('taipei', 'timeattack', 'r2'), false);
+    assert.ok(hasGhost('taipei', 'timeattack', 'r1'));
+    assert.equal(storage.get('mc101_ghost_old-track_timeattack'), legacyBytes);
+    assert.equal(loadGhost('old-track', 'timeattack', 'r1'), null);
+    const scene = new THREE.Group();
+    const selected = sourceCarDefinitions.find((def) => def.sourceAssetId === 'sports');
+    const ghost = new GhostCar(scene, selected, lease);
+    assert.equal(ghost.mesh.userData.sourceAssetId, 'sports', 'current model wins over recorded taxi metadata');
+    ghost.setRecording(source); ghost.update(.1); ghost.update(.5);
+    const vehicle = meshes(ghost.mesh)[0];
+    assert.equal(vehicle.material.opacity, .3);
+    const shader = { uniforms: {}, vertexShader: '', fragmentShader: '#include <map_fragment>\n#include <color_fragment>' };
+    vehicle.material.onBeforeCompile(shader);
+    assert.match(shader.fragmentShader, /atl\.rgb/);
+    assert.ok(ghost.parts.wheels.every((wheel) => wheel.spinner.rotation.x !== 0));
+    ghost.dispose();
+    assert.equal(lease.library.instances.size, 0);
+  } finally { lease.library.dispose(); delete globalThis.localStorage; }
+});
+
+
+test('source flip pivots keep every rotated chassis/wheel vertex above the ground', async () => {
+  const lease = await fixture(['sports']);
+  try {
+    const vehicle = buildSourceVehicle(sourceCarDefinitions[2], lease);
+    vehicle.parts.setRollover(1.9, .1, .2);
+    vehicle.mesh.updateMatrixWorld(true);
+    const bounds = new THREE.Box3().setFromObject(vehicle.mesh);
+    assert.ok(bounds.min.y >= .2 - 1e-5);
+    assert.ok(bounds.min.y < .4, 'car rests on its side instead of floating above the road');
+    vehicle.parts.setRollover(0);
+    near(vehicle.parts.bodyGroup.rotation.z, 0);
+    assert.ok(new THREE.Box3().setFromObject(vehicle.mesh).min.y >= -1e-5);
+  } finally { lease.library.dispose(); }
+});

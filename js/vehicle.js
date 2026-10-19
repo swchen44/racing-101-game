@@ -1,7 +1,7 @@
 // vehicle.js — 車輛物理 (自訂街機物理 + 手自排變速箱);車模建構分派至 cars/
 import * as THREE from 'three';
 import { ROAD_HALF_WIDTH, WALL_HALF_WIDTH } from './track.js';
-import { CAR_BUILDERS } from './cars/index.js';
+import { buildCar } from './cars/index.js';
 
 export const DEFAULT_TUNE = {
   maxSpeed: 62,          // m/s
@@ -37,9 +37,8 @@ export class Car {
       this.dragEff = Math.max(0.0004,
         (thrustTop - this.tune.rollingResist * 0.35) / (this.tune.maxSpeed * this.tune.maxSpeed));
     }
-    const builder = CAR_BUILDERS[carDef?.builder] || CAR_BUILDERS.gt;
     // 玩家車生成駕駛艙內裝 (opts.cockpit === false 可關閉,如幽靈車)
-    const { mesh, parts } = builder({ ...(carDef || {}), _cockpit: opts.cockpit !== false });
+    const { mesh, parts } = buildCar({ ...(carDef || {}), _cockpit: opts.cockpit !== false }, opts.cityLease);
     this.mesh = mesh;
     Object.assign(this, parts);   // bodyGroup, wheels, tailMat?, underglow?, headlights, headlightPool?, rimMatRear?, wheelRadius
     this.wheelRadius = this.wheelRadius || 0.48;
@@ -73,6 +72,9 @@ export class Car {
     this.boostsLeft = 3;   // 每場 3 次 Boost
     this.boostT = 0;       // 剩餘秒數
     this.boosting = false;
+    this.setRollover?.(0);
+    this.setBraking?.(false);
+    this._sourceLightTime = 0;
     this._syncMesh(0);
   }
 
@@ -246,6 +248,9 @@ export class Car {
 
     // 煞車燈 / 熱碟 / underglow (車型可能缺件,全部 optional)
     const braking = brake || handbrake;
+    this.setBraking?.(braking);
+    this._sourceLightTime = (this._sourceLightTime || 0) + dt;
+    this.updateLights?.(this._sourceLightTime);
     if (this.tailMat) this.tailMat.emissiveIntensity = braking ? 4.5 : 1.6;
     if (this.tailMidMat) this.tailMidMat.emissiveIntensity = braking ? 2.2 : 0.8;
     if (this.rimMatRear) {

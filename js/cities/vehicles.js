@@ -5,8 +5,9 @@ import * as THREE from 'three';
 function definition(asset, name, nameEn, paint, speed, accel, brake, width, gears, grip, radius, stats) {
   return Object.freeze({
     id: 'taipei-' + asset, cityId: 'taipei', sourceAssetId: asset, builder: 'source',
-    name, nameEn, class: asset === 'police' ? '警車' : '來源車輛', paint,
-    desc: `台北來源${name}，保留原車身與輪組`, descEn: `Original Taipei ${nameEn.toLowerCase()} body and wheels`,
+    name, nameEn, class: asset === 'police' ? '警車' : '街道車', paint,
+    desc: { sedan: '均衡好上手，適合熟悉城市彎道', taxi: '靈活易操控，穿梭街巷的小黃', sports: '高速加速，考驗出彎油門控制', suv: '穩重休旅，從容掌握每個彎角', police: '強勁追擊，緊咬前方目標' }[asset],
+    descEn: { sedan: 'Balanced handling for city corners', taxi: 'Agile and easy to place through narrow streets', sports: 'Fast acceleration rewards a clean corner exit', suv: 'Steady handling for confident city driving', police: 'Strong acceleration for a determined pursuit' }[asset],
     stats: Object.freeze(stats), wheelRadius: radius,
     tune: Object.freeze({ maxSpeed: speed, maxReverse: 9, engineForce: accel * 3,
       brakeForce: brake * 3, carHalfWidth: width, gears, gripNormal: grip,
@@ -111,6 +112,18 @@ export function buildSourceVehicle(def, lease) {
         sourcePivot: [...wheel.pivot], sourcePart: wheel.id };
     });
     for (const piece of sourceMeshes) if (!piece.userData.sourcePart?.startsWith('wheel-')) sourceBody.add(piece);
+    mesh.updateMatrixWorld(true);
+    const visualBounds = new THREE.Box3().setFromObject(mesh);
+    const flipPivot = visualBounds.getCenter(new THREE.Vector3());
+    const halfSize = visualBounds.getSize(new THREE.Vector3()).multiplyScalar(.5);
+    const rotatedPivot = new THREE.Vector3(), rotationMatrix = new THREE.Matrix4();
+    const setRollover = (roll, pitch = 0, lift = 0) => {
+      bodyGroup.rotation.set(pitch, 0, roll);
+      rotatedPivot.copy(flipPivot).applyQuaternion(bodyGroup.quaternion);
+      const e = rotationMatrix.makeRotationFromQuaternion(bodyGroup.quaternion).elements;
+      const support = Math.abs(e[1]) * halfSize.x + Math.abs(e[5]) * halfSize.y + Math.abs(e[9]) * halfSize.z;
+      bodyGroup.position.set(flipPivot.x - rotatedPivot.x, support - rotatedPivot.y + lift, flipPivot.z - rotatedPivot.z);
+    };
     const lamps = lampMaterials(mesh);
     const state = { headlights: 0, brake: 0, reverse: 0, siren: 0, night: 0,
       indicatorLeft: 0, indicatorRight: 0, seed: data.parameters?.seed ?? .5 };
@@ -134,11 +147,11 @@ export function buildSourceVehicle(def, lease) {
     if (cameraAnchors.seat) cameraAnchors.cockpit = cameraAnchors.seat.clone().add(new THREE.Vector3(0, .65, 0));
     if (cameraAnchors.headAt) cameraAnchors.hood = cameraAnchors.headAt.clone().add(new THREE.Vector3(0, .2, -.15));
     updateLights();
-    return { mesh, parts: { bodyGroup, wheels, wheelRadius: wheelDefs[0].radius,
+    const parts = { bodyGroup, wheels, wheelRadius: wheelDefs[0].radius,
       headlights: [], sourceAssetId: def.sourceAssetId, cameraAnchors,
       collisionDimensions: { halfWidth: sourceDef.halfW, halfLength: sourceDef.halfL, height: sourceDef.height },
       cockpitAvailable: false, sourceForward: new THREE.Vector3(0, 0, -1),
-      flipPivot: new THREE.Vector3(0, (sourceDef.height ?? 1.5) / 2, 0),
+      flipPivot: flipPivot.clone(), setRollover,
       setLights, setBraking: (braking) => setLights({ brake: +!!braking }), updateLights,
       flashPolice(flash) {
         state.siren = 1;
@@ -148,9 +161,26 @@ export function buildSourceVehicle(def, lease) {
           lamp.material.emissiveIntensity = lamp.intensity.value;
         }
       },
-    } };
+    };
+    mesh.userData.sourcePoliceLights = def.sourceAssetId === 'police' ? { update: (flash) => parts.flashPolice(flash) } : null;
+    return { mesh, parts };
   } catch (error) {
     lease.releaseObject(mesh);
     throw error;
   }
+}
+
+
+// Kinematic AI follows the track instead of a steering input. Derive its visual
+// front-wheel angle from curvature using the original front/rear axle spacing.
+export function steerSourceVehicle(parts, track, progress, backwards = false) {
+  if (!parts.sourceAssetId) return;
+  const tangent = track.tangentAt(progress);
+  const next = track.tangentAt((progress + (backwards ? -5 : 5) / track.length + 1) % 1);
+  let angle = Math.atan2(next.x, next.z) - Math.atan2(tangent.x, tangent.z);
+  angle = Math.atan2(Math.sin(angle), Math.cos(angle));
+  const axles = parts.wheels.map((wheel) => wheel.sourcePivot[2]);
+  const wheelbase = Math.max(...axles) - Math.min(...axles);
+  const steer = THREE.MathUtils.clamp(Math.atan(wheelbase * angle / 5), -.6, .6);
+  for (const wheel of parts.wheels) if (wheel.steerable) wheel.group.rotation.y = steer;
 }

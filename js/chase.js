@@ -2,18 +2,26 @@
 // 雙角色:role='cop'(玩家=警察,AI=小偷,玩家撞翻小偷) / role='thief'(玩家=小偷,AI=警車追撞玩家)
 // 是 police.js 的鏡像,重用追蹤/PIT/碰撞;新增血量、翻車、受傷慌亂、難度分級。
 import * as THREE from 'three';
-import { CAR_BUILDERS } from './cars/index.js';
+import { buildCar } from './cars/index.js';
+import { sourceCarDefinitions, sourcePoliceDefinition, steerSourceVehicle } from './cities/vehicles.js';
 import { disposeObject } from './cars/common.js';
 import { radialGlowTexture } from './taipei101.js';
-import { chaseTune, CARS } from './config.js';
+import { chaseTune } from './config.js';
 import { activeAudio } from './audio.js';
 
 // AI 小偷可能開的贓車 (排除玩家警車;隨機一台)
 const STOLEN_CARS = ['evsport', 'rally', 'evcity', 'suv', 'gt', 'pickup'];
-export function randomStolenCarId() { return STOLEN_CARS[Math.floor(Math.random() * STOLEN_CARS.length)]; }
+export function randomStolenCarId(cityLease = null) {
+  const ids = cityLease ? sourceCarDefinitions.map((def) => def.id) : STOLEN_CARS;
+  return ids[Math.floor(Math.random() * ids.length)];
+}
 
 // 車頂警燈 (紅藍交替閃 + 光暈);回傳 { update(flash) } 供每幀閃爍。玩家警車與 AI 警車共用。
 export function addPoliceLights(mesh) {
+  if (mesh.userData.sourceManaged) {
+    if (!mesh.userData.sourcePoliceLights) throw new Error('Source police lights require the source police vehicle');
+    return mesh.userData.sourcePoliceLights;
+  }
   const barRed = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.12, 0.3),
     new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff2233, emissiveIntensity: 3 }));
   const barBlue = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.12, 0.3),
@@ -41,6 +49,7 @@ export class Chase {
   constructor(scene, track, opts = {}) {
     this.scene = scene;
     this.track = track;
+    this.cityLease = opts.cityLease ?? null;
     this.role = opts.role === 'thief' ? 'thief' : 'cop';
     this.tune = chaseTune(opts.difficulty);
     this.maxHealth = 3;
@@ -58,7 +67,7 @@ export class Chase {
 
     if (this.role === 'cop') {
       // 玩家=警察;生成 1 台 AI 小偷 (隨機贓車) 在玩家前方逃
-      const builderId = STOLEN_CARS[Math.floor(Math.random() * STOLEN_CARS.length)];
+      const builderId = randomStolenCarId(this.cityLease);
       const thief = this._spawnActor(builderId, this._randomPaint(), 0.06, 0, 'thief');
       this.prey = thief;          // 獵物 = AI 小偷
     } else {
@@ -77,14 +86,18 @@ export class Chase {
   }
 
   _spawnActor(builderId, paint, startS, lane, kind) {
-    const { mesh, parts } = (CAR_BUILDERS[builderId] || CAR_BUILDERS.gt)({ paint });
+    const definition = this.cityLease
+      ? kind === 'cop' ? sourcePoliceDefinition : sourceCarDefinitions.find((def) => def.id === builderId)
+      : { builder: builderId, paint };
+    if (!definition) throw new Error(`Missing source thief vehicle: ${builderId}`);
+    const { mesh, parts } = buildCar(definition, this.cityLease);
     // AI 車不可用真實光源
     const kill = [];
     mesh.traverse((o) => { if (o.isSpotLight || o.isPointLight) kill.push(o); });
     for (const l of kill) l.parent.remove(l);
 
     const actor = {
-      mesh, parts, kind,
+      mesh, parts, kind, definition,
       s: (startS + 1) % 1, lane, laneTarget: lane, speed: 0, wheelSpin: 0,
       skill: this.tune.aiSkill, wobbleYaw: 0, panic: 0,
       pitT: 0, pitCooldown: 4 + Math.random() * 3, pitSide: Math.random() < 0.5 ? -1 : 1,
@@ -110,6 +123,7 @@ export class Chase {
     // 倒車去撞:掉頭面向小偷(反切線方向),讀成迎面衝撞而非笨拙倒車
     const face = a.reversing ? Math.PI : 0;
     a.mesh.rotation.set(0, Math.atan2(tan.x, tan.z) + face + a.wobbleYaw, 0);
+    steerSourceVehicle(a.parts, this.track, a.s, a.reversing);
   }
 
   _shiftS(a, ds) {
@@ -125,7 +139,7 @@ export class Chase {
     const t0 = this.track.samples[i0].tan;
     const t1 = this.track.samples[(i0 + 40) % N].tan;
     const curv = 1 - (t0.x * t1.x + t0.z * t1.z);
-    const top = 56 * a.skill;
+    const top = (a.definition?.tune?.maxSpeed ?? 56) * a.skill;
     return THREE.MathUtils.clamp(top * (1 - curv * 7), 13, top);
   }
 
@@ -316,7 +330,8 @@ export class Chase {
   }
 
   _advanceVisual(a, dt) {
-    a.wheelSpin += (a.speed / 0.48) * dt;
+    a.parts.updateLights?.(this.flashT);
+    a.wheelSpin += (a.speed / (a.parts.wheelRadius || 0.48)) * dt;
     if (a.parts.wheels) for (const w of a.parts.wheels) w.spinner.rotation.x = a.wheelSpin % (Math.PI * 2);
   }
 
@@ -405,12 +420,18 @@ export class Chase {
       const p = this.track.pointAt(a.s);
       const tan = this.track.tangentAt(a.s);
       a.mesh.position.set(p.x + (-tan.z) * a.lane, Math.sin(k * Math.PI) * 0.6, p.z + tan.x * a.lane);
-      a.mesh.rotation.set(pitch, Math.atan2(tan.x, tan.z), roll);
+      if (a.parts.setRollover) {
+        a.mesh.rotation.set(0, Math.atan2(tan.x, tan.z), 0);
+        a.mesh.position.y = 0;
+        a.parts.setRollover(roll, pitch, Math.sin(k * Math.PI) * .6);
+      } else a.mesh.rotation.set(pitch, Math.atan2(tan.x, tan.z), roll);
     } else {
       // 玩家翻車:視覺傾倒 (main 已凍結操控)
       playerCar.vel.multiplyScalar(1 - dt * 4);
       const bg = playerCar.bodyGroup;
-      if (bg) { bg.rotation.z += (1.9 - bg.rotation.z) * Math.min(1, dt * 2.2); bg.position.y = Math.sin(k * Math.PI) * 0.5; }
+      if (playerCar.setRollover && bg) {
+        playerCar.setRollover(bg.rotation.z + (1.9 - bg.rotation.z) * Math.min(1, dt * 2.2), 0, Math.sin(k * Math.PI) * .5);
+      } else if (bg) { bg.rotation.z += (1.9 - bg.rotation.z) * Math.min(1, dt * 2.2); bg.position.y = Math.sin(k * Math.PI) * 0.5; }
     }
     if (k >= 1 && !this.caught) this.caught = true;   // 翻車完成 → 被捕
   }
