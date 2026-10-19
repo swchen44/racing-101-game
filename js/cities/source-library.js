@@ -20,7 +20,7 @@ function geometryFrom(mesh, id) {
     for (const attribute of Object.values(geometry.attributes)) {
       if (!attribute.isInstancedBufferAttribute && attribute.count !== position.count) throw new Error(`Source attribute count mismatch: ${id}`);
     }
-    // aCol.a carries the source light band, not opacity. Keep it but expose RGB to r160.
+    // aCol.a carries source AO, not opacity or emission. Keep it; expose RGB for plain material paths.
     if (!geometry.hasAttribute('color') && geometry.hasAttribute('aCol')) {
       const source = geometry.getAttribute('aCol');
       const colors = new Float32Array(source.count * 3);

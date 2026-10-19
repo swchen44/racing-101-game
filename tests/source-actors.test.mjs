@@ -247,7 +247,8 @@ test('Police and both Chase roles use original sirens and roadblocks with no unt
     const built = buildSourceVehicle(sourcePoliceDefinition, lease);
     addPoliceLights(built.mesh).update(true);
     assert.ok(meshes(built.mesh).every((mesh) => mesh.userData.sourceAssetId === 'police'));
-    assert.ok(sourceCarDefinitions.some((def) => def.id === randomStolenCarId(lease)));
+    const stolenId = randomStolenCarId(lease);
+    assert.ok(sourceCarDefinitions.some((def) => def.id === stolenId));
     police.dispose(); cop.dispose(); thief.dispose();
     assert.equal(lease.library.instances.size, 2, 'only player and separately built police remain');
   } finally { lease.library.dispose(); }
