@@ -8,7 +8,7 @@ import { Effects } from './effects.js';
 import { GameAudio } from './audio.js';
 import { HUD, formatTime } from './hud.js';
 import { ChaseCamera } from './camera.js';
-import { TRACKS, CARS, MODES, DIFFICULTIES, WEATHERS, trackById, carById, modeById, weatherById } from './config.js';
+import { TRACKS, CARS, MODES, DIFFICULTIES, WEATHERS, trackById, carById, carsForTrack, modeById, weatherById } from './config.js';
 import {
   loadProfile, saveProfile, saveLocalScore, topLocal,
   uploadScore, topRemote, remoteEnabled,
@@ -25,6 +25,10 @@ import { t, pick, setLang, getLang, applyStatic } from './i18n.js';
 import { attachSpin, clearSpins } from './carpreview.js';
 import { GhostCar, hasGhost, loadGhost, saveGhost } from './ghost.js';
 import { createSponsorBillboards, loadSponsors, ImpressionTracker } from './sponsors.js';
+import { prepareCity } from './cities/assets.js';
+import { createSelectionGate } from './cities/selection.js';
+import { buildSourceCity } from './cities/scene.js';
+import { sourcePoliceDefinition } from './cities/vehicles.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -40,6 +44,7 @@ renderer.toneMappingExposure = 1.15;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.info.autoReset = false;
 
 // ---------- 場景 ----------
 const scene = new THREE.Scene();
@@ -66,6 +71,7 @@ const pmrem = new THREE.PMREMGenerator(renderer);
   }
   scene.environment = pmrem.fromScene(envScene, 0.04).texture;
 }
+const legacyEnvironment = scene.environment;
 
 // ---------- 光照 ----------
 const hemi = new THREE.HemisphereLight(0x35496e, 0x1a1622, 0.85);
@@ -109,6 +115,56 @@ const setup = {
 function persistSetup() {
   saveProfile({ ...profile, ...setup });
 }
+const raceGate = createSelectionGate(), previewGate = createSelectionGate();
+let raceLoad = null, previewLoad = null, previewLease = null, previewCityId = null;
+let activeCityLease = null, cityScene = null, raceContainer = null;
+function cityStatus(key = '') {
+  $('city-load-status').textContent = key ? t(key) : '';
+  $('btn-go').setAttribute('aria-busy', String(key === 'cityLoading'));
+}
+function cancelRaceLoad() {
+  raceGate.cancel();
+  raceLoad?.abort();
+  raceLoad = null;
+}
+function clearCityPreview() {
+  previewGate.cancel();
+  previewLoad?.abort();
+  previewLoad = null;
+  previewLease?.release();
+  previewLease = null;
+  previewCityId = null;
+}
+async function ensureCityPreview(cityId) {
+  if (!cityId) { clearCityPreview(); cityStatus(); return; }
+  if (previewCityId === cityId && previewLoad) return;
+  if (previewCityId === cityId && previewLease) {
+    const current = previewLease;
+    const offline = await current.refreshOffline();
+    if (current === previewLease && ui.screen === 'setup') cityStatus(offline.ready ? 'cityOfflineReady' : 'cityReady');
+    return;
+  }
+  clearCityPreview();
+  previewCityId = cityId;
+  const token = previewGate.begin({ cityId });
+  const controller = new AbortController();
+  previewLoad = controller;
+  cityStatus('cityLoading');
+  try {
+    const lease = await prepareCity(cityId, { signal: controller.signal });
+    if (!previewGate.isCurrent(token) || ui.screen !== 'setup') { lease.release(); return; }
+    previewLease = lease;
+    previewLoad = null;
+    cityStatus(lease.offline.ready ? 'cityOfflineReady' : 'cityReady');
+    renderSetupCards(false);
+  } catch (error) {
+    if (previewGate.isCurrent(token) && error.name !== 'AbortError') {
+      previewLoad = null;
+      cityStatus('cityFailed');
+      console.warn('City preview:', error);
+    }
+  }
+}
 
 // ---------- 天氣 / 時段光照 ----------
 function applyWeatherLighting(w) {
@@ -122,6 +178,13 @@ function applyWeatherLighting(w) {
   renderer.toneMappingExposure = L.exposure;
   scene.fog.color.setHex(L.fogColor);
   scene.fog.density = L.fogDensity;
+  // Source street daylight should be lit by the sun; the legacy neon hero
+  // spotlight otherwise paints a blue pool across the dry source asphalt.
+  carFill.color.setHex(activeCityLease ? 0xdce5ed : 0x9fb8e8);
+  carRim.color.setHex(activeCityLease ? 0xdce5ed : 0x9ac4ff);
+  carFill.intensity = activeCityLease ? ({ day: .4, dusk: .7, night: 1 }[w.id] ?? 1) : 3.5;
+  carRim.userData.baseIntensity = activeCityLease ? ({ day: 6, dusk: 12, night: 28 }[w.id] ?? 28) : 150;
+  carRim.intensity = carRim.userData.baseIntensity;
 }
 
 // ---------- 世界生命週期 ----------
@@ -140,10 +203,8 @@ let playerCopLights = null;   // 玩家警車車頂燈 (緝凶追捕 cop 角色)
 let chaseTimeLeft = 0;        // 緝凶追捕倒數剩餘秒數
 let chaseResult = null;       // 'win' | 'lose' — 供結算判定
 
-function buildWorld(trackDef, weather = weatherById('night')) {
-  if (worldGroup) { scene.remove(worldGroup); disposeObject(worldGroup); }
-  if (tower) { scene.remove(tower); disposeObject(tower); tower = null; }
-  track = new Track(trackDef);
+function stageWorld(trackDef, weather = weatherById('night'), lease = null) {
+  const nextTrack = new Track(trackDef);
   // 主題 + 時段合成:時段的天色/發光倍率覆蓋主題預設
   const theme = {
     ...(trackDef.theme || {}),
@@ -151,20 +212,30 @@ function buildWorld(trackDef, weather = weatherById('night')) {
     emissiveMul: weather.emissiveMul,
     weatherId: weather.id,
   };
-  track.theme = theme;   // 路面標線/檢查點柱/濕反射條依時段調整
-  worldGroup = new THREE.Group();
-  worldGroup.add(track.buildMeshes());
-  worldGroup.add(createCity(track, theme));
+  nextTrack.theme = theme;
+  if (lease) {
+    const sourceCity = buildSourceCity(nextTrack, lease, weather);
+    return { track: nextTrack, group: sourceCity.group, tower: null, city: sourceCity };
+  }
+  const group = new THREE.Group();
+  group.add(nextTrack.buildMeshes());
+  group.add(createCity(nextTrack, theme));
   // 廣告看板:每條賽道固定 2 個位 (無廣告主時顯示「歡迎刊登廣告」)
-  worldGroup.add(createSponsorBillboards(track, trackDef.id || 'xinyi', weather.id));
+  group.add(createSponsorBillboards(nextTrack, trackDef.id || 'xinyi', weather.id));
+  const landmark = (trackDef.theme?.landmark ?? 'tower101') === 'tower101' ? createTaipei101() : null;
+  return { track: nextTrack, group, tower: landmark, city: null };
+}
+
+function buildWorld(trackDef, weather = weatherById('night')) {
+  const next = stageWorld(trackDef, weather);
+  if (worldGroup) { worldGroup.removeFromParent(); disposeObject(worldGroup); }
+  if (tower) { tower.removeFromParent(); disposeObject(tower); }
+  track = next.track; worldGroup = next.group; tower = next.tower;
   applyWeatherLighting(weather);
   // 無雨設定:路面為乾燥柏油,即時反射整組停用 (連同每幀反射 pass,省一次場景渲染)
   reflectionUniforms.uReflectStrength.value = 0;
   scene.add(worldGroup);
-  if ((trackDef.theme?.landmark ?? 'tower101') === 'tower101') {
-    tower = createTaipei101();
-    scene.add(tower);
-  }
+  if (tower) scene.add(tower);
 }
 
 function buildCar(carDef, transmission) {
@@ -185,7 +256,7 @@ loadSponsors(); // 預載廣告主檔期 (Supabase;無資料時全部顯示佔�
 
 // 初始世界:信義 (標題畫面背景)
 buildWorld(trackById('xinyi'));
-buildCar(carById(setup.carId), setup.transmission);
+buildCar(carById(setup.carId).sourceAssetId ? carById('gt') : carById(setup.carId), setup.transmission);
 
 const effects = new Effects(renderer, scene, camera);
 const audio = new GameAudio();
@@ -238,10 +309,10 @@ function switchScreen(name) {
   for (const id of ['title-screen', 'setup-screen', 'board-screen']) {
     $(id).classList.toggle('on', id === `${name}-screen`);
   }
-  if (name !== 'setup') clearSpins();
+  if (name !== 'setup') { clearSpins(); clearCityPreview(); }
   ui.screen = name;
 }
-function showTitle() { switchScreen('title'); }
+function showTitle() { cancelRaceLoad(); switchScreen('title'); cityStatus(); }
 
 // 帳號 = Email 格式 (不分大小寫,一律正規化為小寫)
 function readEmail() {
@@ -264,8 +335,8 @@ function showSetup() {
   if (!email) return;            // Email 無效:停在標題頁顯示錯誤
   setup.name = email;
   persistSetup();
-  renderSetupCards();
   switchScreen('setup');
+  renderSetupCards();
 }
 function showBoard() {
   renderBoard();                  // 看排行榜不強制帳號
@@ -327,7 +398,13 @@ function trackMiniSvg(def) {
 // 副標顯示「另一種語言」的名稱:zh 介面附英文名、EN 介面附中文名 (避免 EN 下主副標重複)
 const altName = (obj) => (getLang() === 'en' ? obj.name : obj.nameEn);
 
-function renderSetupCards() {
+function renderSetupCards(cancelPending = true) {
+  if (cancelPending) cancelRaceLoad();
+  clearSpins();
+  const trackDef = trackById(setup.trackId);
+  const availableCars = carsForTrack(setup.trackId);
+  if (!availableCars.some((car) => car.id === setup.carId)) setup.carId = availableCars[0].id;
+  ensureCityPreview(trackDef.cityId);
   const mc = $('mode-cards');
   mc.innerHTML = '';
   for (const m of MODES) {
@@ -369,7 +446,7 @@ function renderSetupCards() {
   if (isSolo) {
     const gc = $('ghost-cards');
     gc.innerHTML = '';
-    const rec = hasGhost(setup.trackId, 'solo');
+    const rec = hasGhost(setup.trackId, 'solo', trackDef.routeRevision);
     if (!rec) setup.ghost = false;   // 沒紀錄不能開
     gc.appendChild(card(
       `<div class="c-name">✕ ${t('ghostOff')}</div><div class="c-desc">${t('ghostOffDesc')}</div>`,
@@ -398,7 +475,7 @@ function renderSetupCards() {
   for (const t of TRACKS) {
     const chips = (pick(t, 'tags') || []).map((tag) => `<span class="tag-chip">${tag}</span>`).join('');
     tc.appendChild(card(
-      `<div class="track-photo" style="background-image:url('assets/tracks/${t.id}.jpg')">${trackMiniSvg(t)}</div>` +
+      `<div class="track-photo"${t.cityId ? '' : ` style="background-image:url('assets/tracks/${t.id}.jpg')"`}>${trackMiniSvg(t)}</div>` +
       `<div class="c-name">${pick(t)}</div><div class="c-en">${altName(t)}</div>` +
       `<div class="tag-row">${chips}</div>` +
       `<div class="c-intro">${pick(t, 'intro') || pick(t, 'desc')}</div>` +
@@ -408,7 +485,7 @@ function renderSetupCards() {
   }
   const cc = $('car-cards');
   cc.innerHTML = '';
-  for (const c of CARS) {
+  for (const c of availableCars) {
     const statKeys = { speed: 'statSpeed', accel: 'statAccel', grip: 'statGrip', drift: 'statDrift' };
     const bars = ['speed', 'accel', 'grip', 'drift'].map((k) =>
       `<span class="sk">${t(statKeys[k])}</span><span class="sb"><i style="width:${c.stats[k] * 20}%"></i></span>`
@@ -422,7 +499,7 @@ function renderSetupCards() {
       setup.carId === c.id,
       () => { setup.carId = c.id; persistSetup(); renderSetupCards(); });
     cc.appendChild(carCard);
-    attachSpin(carCard.querySelector('.car-spin'), c);
+    if (!c.sourceAssetId || previewLease) attachSpin(carCard.querySelector('.car-spin'), c, previewLease);
   }
   const trc = $('trans-cards');
   trc.innerHTML = '';
@@ -547,39 +624,101 @@ const race = {
   paused: false,
 };
 
-function startRace() {
+async function startRace() {
   audio.start();
+  cancelRaceLoad();
   setup.name = (setup.name || '').toLowerCase();
+  const available = carsForTrack(setup.trackId);
+  if (!available.some((definition) => definition.id === setup.carId)) setup.carId = available[0].id;
   persistSetup();
-  const trackDef = trackById(setup.trackId);
-  const mode = modeById(setup.mode);
-  const weather = weatherById(setup.weather);
-
-  // 緝凶追捕:玩家車依角色決定 — 警察=固定警車(小黃底盤深色塗裝)、小偷=隨機贓車
-  let carDef = carById(setup.carId);
-  if (setup.mode === 'chase') {
-    if (setup.role === 'cop') carDef = { ...carById('taxi'), id: 'copcar', paint: 0x141a24 };
-    else carDef = { ...carById(randomStolenCarId()), id: 'stolen' };
+  const token = raceGate.begin(setup);
+  const selected = token.snapshot;
+  const trackDef = trackById(selected.trackId);
+  const mode = modeById(selected.mode);
+  const weather = weatherById(selected.weather);
+  const controller = new AbortController();
+  raceLoad = controller;
+  let lease = null;
+  let staged = null;
+  try {
+    if (trackDef.cityId) {
+      cityStatus('cityLoading');
+      lease = await prepareCity(trackDef.cityId, { signal: controller.signal });
+      lease.weather = { id: weather.id, headlights: weather.headlights };
+    }
+    if (!raceGate.isCurrent(token)) { lease?.release(); return false; }
+    let carDef = carById(selected.carId);
+    if (selected.mode === 'chase') {
+      if (selected.role === 'cop') carDef = lease ? sourcePoliceDefinition : { ...carById('taxi'), id: 'copcar', paint: 0x141a24 };
+      else carDef = lease ? carById(randomStolenCarId(lease)) : { ...carById(randomStolenCarId()), id: 'stolen' };
+    }
+    const root = new THREE.Group();
+    staged = { root, lease };
+    const world = stageWorld(trackDef, weather, lease);
+    staged.world = world;
+    root.add(world.group);
+    if (world.tower) root.add(world.tower);
+    staged.car = new Car(world.track, carDef, { transmission: selected.transmission, cityLease: lease });
+    root.add(staged.car.mesh);
+    if (selected.mode === 'gp') staged.opponents = new Opponents(root, world.track, 5, selected.difficulty, lease);
+    if (selected.mode === 'police') staged.police = new Police(root, world.track, 2, lease);
+    if (selected.mode === 'chase') {
+      staged.chase = new Chase(root, world.track, { role: selected.role, difficulty: selected.difficulty, cityLease: lease });
+      if (selected.role === 'cop') staged.copLights = addPoliceLights(staged.car.mesh);
+    }
+    if (selected.mode === 'solo' && selected.ghost) {
+      const rec = loadGhost(selected.trackId, 'solo', trackDef.routeRevision);
+      if (rec) {
+        staged.ghost = new GhostCar(root, carDef, lease);
+        staged.ghost.setRecording(rec);
+        staged.ghost.update(0);
+      }
+    }
+    staged.sourceEffects = effects.prepareCityContext(lease, weather, root);
+    if (!raceGate.isCurrent(token)) { disposeStagedRace(staged); return false; }
+  } catch (error) {
+    if (staged) disposeStagedRace(staged); else lease?.release();
+    if (raceGate.isCurrent(token) && error.name !== 'AbortError') {
+      cityStatus('cityFailed');
+      console.warn('Race preparation:', error);
+    }
+    return false;
   }
 
-  // 重建世界 (換賽道/時段) 與車輛
-  buildWorld(trackDef, weather);
-  buildCar(carDef, setup.transmission);
+  // Commit only after every world/car/mode object exists. The old scene stays live until here.
+  window.__arrest?.dispose?.();
+  document.body.classList.remove('cutscene');
+  effects.setCityContext?.(null);
   clearModeActors();
-  playerCopLights = null;
-  if (setup.mode === 'gp') opponents = new Opponents(scene, track, 5, setup.difficulty);
-  if (setup.mode === 'police') police = new Police(scene, track, 2);
-  if (setup.mode === 'chase') {
-    chase = new Chase(scene, track, { role: setup.role, difficulty: setup.difficulty });
-    if (setup.role === 'cop') playerCopLights = addPoliceLights(car.mesh); // 玩家警車車頂燈
-  }
-  // 幽靈車對戰 (僅單人計時賽):恆錄本場軌跡以更新紀錄;若開關開啟且已有紀錄則生成幽靈
+  cityScene?.dispose();
+  if (worldGroup) { worldGroup.removeFromParent(); disposeObject(worldGroup); }
+  if (tower) { tower.removeFromParent(); disposeObject(tower); }
+  if (car) { car.mesh.removeFromParent(); disposeObject(car.mesh); }
+  raceContainer?.removeFromParent();
+  activeCityLease?.release();
+  activeCityLease = lease;
+  cityScene = staged.world.city;
+  track = staged.world.track;
+  worldGroup = staged.world.group;
+  tower = staged.world.tower;
+  car = staged.car;
+  opponents = staged.opponents ?? null;
+  police = staged.police ?? null;
+  chase = staged.chase ?? null;
+  ghost = staged.ghost ?? null;
+  playerCopLights = staged.copLights ?? null;
+  raceContainer = staged.root;
+  scene.add(raceContainer);
+  Object.assign(setup, selected);
+  applyWeatherLighting(weather);
+  scene.background = lease ? new THREE.Color(weather.lighting.fogColor) : null;
+  scene.environment = lease ? null : legacyEnvironment;
+  reflectionUniforms.uReflectStrength.value = 0;
+  effects.setCityContext(lease, weather, staged.sourceEffects);
+  raceLoad = null;
   ghostBuf = [];
   ghostAccum = 0;
-  if (setup.mode === 'solo' && setup.ghost) {
-    const rec = loadGhost(setup.trackId, 'solo');
-    if (rec) { ghost = new GhostCar(scene, carDef); ghost.setRecording(rec); ghost.update(0); }
-  }
+  cityStatus();
 
   reflections.markScene(scene); // 世界/車輛/AI 重建後重新標記發光體
 
@@ -605,6 +744,7 @@ function startRace() {
   $('confirm-modal').classList.remove('on');
   // 白天關閉車燈/光池/underglow
   const lightsOn = weather.headlights;
+  car.setLights?.({ headlights: lightsOn, night: weather.id === 'night' ? 1 : weather.id === 'dusk' ? .5 : 0 });
   for (const h of car.headlights || []) h.intensity = lightsOn ? h.intensity : 0;
   if (car.headlightPool) car.headlightPool.visible = lightsOn;
   if (car.underglow) car.underglow.visible = lightsOn;
@@ -628,8 +768,16 @@ function startRace() {
   chaseCam.snapTo(car);
 }
 
+function disposeStagedRace(bundle) {
+  bundle.sourceEffects?.dispose();
+  for (const name of ['opponents', 'police', 'chase', 'ghost']) bundle[name]?.dispose();
+  bundle.world?.city?.dispose();
+  disposeObject(bundle.root);
+  bundle.lease?.release();
+}
+
 function restartRace() {
-  startRace();
+  return startRace();
 }
 
 // 幽靈車秒差 HUD:d<0 領先 (綠) / d>0 落後 (紅);d=null 隱藏
@@ -703,7 +851,8 @@ function updateRace(dt) {
       // 幽靈車對戰:新最佳單圈 → 存軌跡供下次對戰;每圈重置緩衝
       if (race.mode === 'solo') {
         if (isRecord && ghostBuf.length > 4) {
-          saveGhost(setup.trackId, 'solo', { samples: ghostBuf.slice(), lapTime: lapT });
+          const routeRevision = trackById(setup.trackId).routeRevision;
+          saveGhost(setup.trackId, 'solo', { samples: ghostBuf.slice(), lapTime: lapT }, routeRevision ? { routeRevision, vehicleId: car.def.id } : undefined);
         }
         ghostBuf = [];
         ghostAccum = 0;
@@ -797,7 +946,7 @@ function finishChase(result) {
     document.body.classList.add('cutscene'); // 過場期間隱藏 HUD
     // 逮捕過場動畫 (驗收重點);完成後開結算
     runArrestCutscene({
-      scene, camera, chaseCam, car, chase, role: setup.role, target,
+      scene, camera, chaseCam, car, chase, role: setup.role, target, cityLease: activeCityLease, weather: weatherById(setup.weather),
       onDone: () => { document.body.classList.remove('cutscene'); showChaseResults(result); },
     });
   } else {
@@ -988,6 +1137,7 @@ let lastCollision = 0;
 
 function tick() {
   requestAnimationFrame(tick);
+  renderer.info.reset();
   const now = performance.now() / 1000;
   const frameDt = Math.min(0.1, now - lastT);
   lastT = now;
@@ -1019,8 +1169,8 @@ function tick() {
   } else {
     // 選單背景:環繞地標的電影運鏡
     const a = now * 0.06;
-    const R = 425;
-    camera.position.set(Math.cos(a) * R, 110 + Math.sin(now * 0.25) * 24, -40 + Math.sin(a) * R);
+    const R = cityScene ? 260 : 425;
+    camera.position.set(Math.cos(a) * R, (cityScene ? 45 : 110) + Math.sin(now * 0.25) * 24, -40 + Math.sin(a) * R);
     camera.fov = 55;
     camera.updateProjectionMatrix();
     // 望向 101 (或賽道中心) — 動態左偏讓地標落在畫面右 1/3
@@ -1028,7 +1178,7 @@ function tick() {
     const camDir = new THREE.Vector3(lookX - camera.position.x, 0, lookZ - camera.position.z).normalize();
     const rightDir = new THREE.Vector3(-camDir.z, 0, camDir.x);
     const shift = Math.tan(THREE.MathUtils.degToRad(camera.fov * camera.aspect * 0.5) * 0.42) * R;
-    camera.lookAt(lookX + rightDir.x * shift * 0.35, 165, lookZ + rightDir.z * shift * 0.35);
+    camera.lookAt(lookX + rightDir.x * shift * 0.35, cityScene ? 8 : 165, lookZ + rightDir.z * shift * 0.35);
   }
 
   {
@@ -1043,11 +1193,13 @@ function tick() {
     carRim.position.set(car.pos.x + fx * 4.2, 7.5, car.pos.z + fz * 4.2);
     carRimTarget.position.set(car.pos.x, 0.7, car.pos.z);
     // Boost 瞬間輪廓光增強 (衝刺做戲:車身邊緣爆一下冷光)
-    carRim.intensity += ((car.boosting ? 270 : 150) - carRim.intensity) * Math.min(1, frameDt * 6);
+    const rimBase = carRim.userData.baseIntensity ?? 150;
+    carRim.intensity += ((car.boosting ? rimBase * 1.8 : rimBase) - carRim.intensity) * Math.min(1, frameDt * 6);
   }
 
   if (tower) tower.userData.update(now);
-  if (worldGroup) {
+  cityScene?.update(frameDt, now);
+  if (worldGroup && !cityScene) {
     for (const c of worldGroup.children) {
       if (c.userData.update) c.userData.update(now);
       for (const cc of c.children) if (cc.userData?.update) cc.userData.update(now);
@@ -1141,6 +1293,15 @@ window.__game = {
   get race() { return race; },
   get track() { return track; },
   camera, chaseCam, startRace, restartRace, setup, showSetup, showTitle,
+  get cityAudit() { return cityScene?.audit() ?? null; },
+  sourceAudit() {
+    const missing = [];
+    scene.traverseVisible((object) => {
+      if ((object.isMesh || object.isSprite || object.isLine || object.isPoints) && !object.userData.sourceAssetId) missing.push(object.name || object.type);
+    });
+    return { active: !!activeCityLease, missing, manifest: activeCityLease?.manifest.version };
+  },
+  get rendererInfo() { return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, memory: { ...renderer.info.memory }, quality }; },
   teleport(sVal, speedKmh = 0) {
     const p = track.pointAt(sVal);
     const tan = track.tangentAt(sVal);
@@ -1148,6 +1309,7 @@ window.__game = {
     car.heading = Math.atan2(tan.x, tan.z);
     car.vel.set(tan.x, 0, tan.z).multiplyScalar(speedKmh / 3.6);
     car.trackHint = track.nearest(car.pos, -1);
+    car._syncMesh(0);
     chaseCam.snapTo(car);
   },
   // QA:直接觸發逮捕過場動畫 (需在緝凶追捕 racing 狀態)。role='cop' 演小偷被捕、'thief' 演玩家被捕

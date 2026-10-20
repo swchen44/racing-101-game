@@ -7,6 +7,10 @@
 
 ## 1. 核心概念
 
+此文件原有程序化場景說明適用於 `xinyi`、`wangan`、`mountain`、`gp`。新 `taipei` 走獨立來源資產路徑：`js/cities/assets.js` 驗證 manifest 與 hash，`source-library.js` 管理共用幾何／貼圖及實例材質／骨架，`scene.js` 依 `taipei.js` 配置街區，車與人物 adapters 接回既有物理／AI。來源特效與逮捕過場也使用同一城市 lease；載入完成後一次提交整個賽事，取消或失敗時保留原場景。
+
+資產採可追溯 BufferGeometry JSON、PNG 與原始 RGBA texture array，保留來源自訂屬性、輪軸及 shader 語意。城市快取以完整 manifest 版本提交，核心更新不要求一次下載所有城市。實作細節與限制見[台北驗收紀錄](TAIPEI-ACCEPTANCE.md)。
+
 **一句話**:午夜(或黃昏、白天)的台北,環繞台北101 的第三人稱街機賽車。
 
 三大設計支柱:

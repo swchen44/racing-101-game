@@ -1,0 +1,66 @@
+### ds source offsets 254510-254560
+[7,7,2.4,2.4,3,4,4.8,5,1.6,3,2,2.4,2.4,2.4,4.8]
+
+### fs source offsets 254561-254618
+[.88,.92,.86,.8,.9,1,.74,.93,.55,1,.8,.72,.88,.95,.92]
+
+### ps source offsets 254619-254672
+[1,1,.92,.95,.8,.35,.95,.9,1,.3,.75,.95,.9,.6,.15]
+
+### ms source offsets 254673-254726
+[.2,.2,.85,.8,.35,.25,.7,.3,.85,0,.5,.8,.85,.8,.3]
+
+### Ls source offsets 264578-265588
+(async function Ls(e,t=!1,n){let r=gs(),i=new st(360167),a=[Ss([86,87,90],!1),Ss([95,94,93],!0),Es,As,js(152,0),Ms,Ns,js(128,3),Ps,Is,Fs,Ds,Ts(!0),Os,ks],o=t?W/2:W,s=new Uint8Array(o*o*4*15),[c,l]=Be(W,W),u=ss(W,4,3,91,.55),d=new Uint8Array(W*W*4);for(let e=0;e<15;e++){l.clearRect(0,0,W,W),a[e](l,r,i.fork(e+1));let c=l.getImageData(0,0,W,W).data;for(let t=0;t<W;t++)for(let n=0;n<W;n++){let r=(t*W+n)*4;d[r]=c[r],d[r+1]=c[r+1],d[r+2]=c[r+2];let i=cs(u,W,n+e*61,t+e*23),a=(c[r]+c[r+1]+c[r+2])/765,o=Math.max(0,Math.min(1,(i-.5)*5+.5-a*.3));d[r+3]=Math.round(o*255)}let f=e*o*o*4;if(!t)s.set(d,f);else for(let e=0;e<o;e++)for(let t=0;t<o;t++){let n=(e*2*W+t*2)*4,r=n+W*4,i=f+(e*o+t)*4;for(let e=0;e<4;e++)s[i+e]=d[n+e]+d[n+4+e]+d[r+e]+d[r+4+e]+2>>2}n&&e%3==2&&await n()}_s=null;let f=new E(s,o,o,15);return f.onUpdate=()=>{f.image.data=null,f.onUpdate=null},f.format=ve,f.type=pe,f.colorSpace=be,f.wrapS=f.wrapT=L,f.magFilter=se,f.minFilter=Pe,f.generateMipmaps=!0,f.anisotropy=Math.min(8,e),f.needsUpdate=!0,f})
+
+### Sc source offsets 302826-303124
+`
+  float gLayer = float(vLayer);
+  vec4 gTex = texture(uGroundTex, vec3(vGuv * uScale[vLayer], gLayer));
+  float gFlat = uFlat[vLayer] * smoothstep(14.0, 40.0, length(vViewPosition));
+  if (gFlat > 0.0) gTex.rgb = mix(gTex.rgb, textureLod(uGroundTex, vec3(0.5, 0.5, gLayer), 12.0).rgb, gFlat);`
+
+### wc source offsets 303452-303755
+`
+  float wetA = uWet * gWetK;
+  roughnessFactor = mix(roughnessFactor, 0.3, wetA);
+  float pud = gPuddle * smoothstep(0.2, 0.75, uWet);
+  roughnessFactor = mix(roughnessFactor, 0.045, pud);
+  diffuseColor.rgb *= mix(1.0, mix(0.52, 0.35, smoothstep(0.25, 0.8, uNight)), wetA) * mix(1.0, 0.72, pud);
+`
+
+### Tc source offsets 303756-303918
+`
+  #if defined( RE_IndirectSpecular )
+  radiance *= mix(1.0, mix(0.4, 0.75, pud), smoothstep(0.25, 0.85, uNight));
+  #endif
+  #include <lights_fragment_end>
+`
+
+### Ec source offsets 303919-305936
+(function Ec(e,t=!1){if(t)return Dc(e);let n=new N({vertexColors:!0,roughness:.9,metalness:0,envMapIntensity:.9});return n.name=`streets:ground`,n.onBeforeCompile=t=>{t.uniforms.uGroundTex={value:e},t.uniforms.uWet=ut.uWet,t.uniforms.uScale={value:ds.map(e=>1/e)},t.uniforms.uRough={value:fs},t.uniforms.uWetK={value:ps},t.uniforms.uFlat={value:ms},t.uniforms.uNight=ut.uNight,gc(t.uniforms),t.vertexShader=Cc(t.vertexShader),t.fragmentShader=t.fragmentShader.replace(`#include <lights_fragment_end>`,Tc).replace(`#include <common>`,`#include <common>
+        uniform float uNight;
+        uniform highp sampler2DArray uGroundTex;
+        uniform float uScale[15];
+        uniform float uRough[15];
+        uniform float uWetK[15];
+        uniform float uFlat[15];
+        uniform float uWet;
+        flat varying int vLayer;
+        varying vec2 vGuv;
+        ${hc}`).replace(`#include <map_fragment>`,`${Sc}
+        float gMacro = texture(uGroundTex, vec3(vGuv * 0.011 + vec2(0.37, 0.11), gLayer)).a;
+        float gMacro2 = texture(uGroundTex, vec3(vGuv * 0.0037 + vec2(0.71, 0.29), gLayer)).a;
+        diffuseColor.rgb *= gTex.rgb * (0.88 + 0.15 * gMacro + 0.1 * gMacro2);
+        ${bc}
+        float gWetK = uWetK[vLayer];
+        float gPuddle = smoothstep(0.66, 0.9, gTex.a * 0.4 + gMacro * 0.3 + gMacro2 * 0.42) * gWetK;`).replace(`#include <roughnessmap_fragment>`,`float roughnessFactor = uRough[vLayer];\n${wc}`).replace(`#include <emissivemap_fragment>`,`#include <emissivemap_fragment>
+        #if !defined( USE_ENVMAP ) && defined( USE_FOG )
+        // fallback wet sheen when no environment map is present: grazing-angle reflection of the haze colour
+        {
+          vec3 vd = normalize(vViewPosition);
+          float fr = pow(1.0 - clamp(dot(vd, normalize(vNormal)), 0.0, 1.0), 5.0);
+          totalEmissiveRadiance += fogColor * fr * (uWet * gWetK * 0.25 + gPuddle * smoothstep(0.2, 0.75, uWet) * 0.45);
+        }
+        #endif
+        ${xc}`)},n.customProgramCacheKey=()=>`streets-ground-v4`,n})

@@ -1,40 +1,47 @@
 // ghost.js — 幽靈車對戰:錄製/重播玩家最佳單圈,半透明自車幽靈 + 即時秒差
 // 資料存 localStorage:key = mc101_ghost_<track>_<mode>,內容 { lapTime, samples:[{t,x,z,h,s}] }
 import * as THREE from 'three';
-import { CAR_BUILDERS } from './cars/index.js';
+import { buildCar } from './cars/index.js';
 import { disposeObject } from './cars/common.js';
 
 const KEY = (trackId, mode) => `mc101_ghost_${trackId}_${mode}`;
 
-export function hasGhost(trackId, mode) {
+export function hasGhost(trackId, mode, routeRevision) {
+  if (routeRevision !== undefined) return !!loadGhost(trackId, mode, routeRevision);
   try { return !!localStorage.getItem(KEY(trackId, mode)); } catch { return false; }
 }
 
-export function loadGhost(trackId, mode) {
+export function loadGhost(trackId, mode, routeRevision) {
   try {
     const raw = localStorage.getItem(KEY(trackId, mode));
     if (!raw) return null;
     const rec = JSON.parse(raw);
+    if (routeRevision !== undefined && (rec?.schema !== 2 || rec.routeRevision !== routeRevision || typeof rec.recordedVehicleId !== 'string')) return null;
     return (rec && Array.isArray(rec.samples) && rec.samples.length > 4) ? rec : null;
   } catch { return null; }
 }
 
-export function saveGhost(trackId, mode, rec) {
+export function saveGhost(trackId, mode, rec, sourceContext) {
   try {
     // 壓縮:座標 2 位、heading 3 位、進度 4 位 → 控制 localStorage 佔用
     const samples = rec.samples.map((p) => ({
       t: +p.t.toFixed(2), x: +p.x.toFixed(2), z: +p.z.toFixed(2),
       h: +p.h.toFixed(3), s: +p.s.toFixed(4),
     }));
-    localStorage.setItem(KEY(trackId, mode), JSON.stringify({ lapTime: rec.lapTime, samples }));
+    const metadata = sourceContext ? { schema: 2, routeRevision: sourceContext.routeRevision, recordedVehicleId: sourceContext.vehicleId } : {};
+    if (sourceContext && (typeof metadata.routeRevision !== 'string' || !metadata.routeRevision || typeof metadata.recordedVehicleId !== 'string' || !metadata.recordedVehicleId)) return;
+    localStorage.setItem(KEY(trackId, mode), JSON.stringify({ lapTime: rec.lapTime, samples, ...metadata }));
   } catch (e) { /* 配額不足:靜默略過 */ }
 }
 
 // 半透明幽靈自車:重播 best-lap 軌跡。不含真實光源/駕駛艙。
 export class GhostCar {
-  constructor(scene, carDef) {
+  constructor(scene, carDef, cityLease = null) {
     this.scene = scene;
-    const { mesh } = (CAR_BUILDERS[carDef.builder] || CAR_BUILDERS.gt)({ paint: carDef.paint });
+    const { mesh, parts } = buildCar({ ...carDef, _cockpit: false }, cityLease);
+    this.parts = parts;
+    this.wheelSpin = 0;
+    this._lastPosition = null;
     // 去光源 (幽靈不打光)
     const kill = [];
     mesh.traverse((o) => { if (o.isSpotLight || o.isPointLight) kill.push(o); });
@@ -45,7 +52,9 @@ export class GhostCar {
       const wasArray = Array.isArray(o.material);
       const mats = wasArray ? o.material : [o.material];
       const cloned = mats.map((m) => {
-        const c = m.clone();
+        // Source materials already belong to this instance. Their compile hooks
+        // decode the original atlas and must survive ghost transparency.
+        const c = cityLease ? m : m.clone();
         c.transparent = true; c.opacity = 0.30; c.depthWrite = false;
         if ('emissive' in c && c.emissive) { c.emissive = new THREE.Color(0x38d2ff); c.emissiveIntensity = 0.7; }
         return c;
@@ -62,6 +71,8 @@ export class GhostCar {
   }
 
   setRecording(rec) {
+    this._lastPosition = null;
+    this.wheelSpin = 0;
     this.samples = rec.samples || [];
     this.lapTime = rec.lapTime || 0;
     this.mesh.visible = this.samples.length > 1;
@@ -86,6 +97,13 @@ export class GhostCar {
     while (dh > Math.PI) dh -= Math.PI * 2;
     while (dh < -Math.PI) dh += Math.PI * 2;
     this.mesh.rotation.y = a.h + dh * f;
+    if (this._lastPosition && this.parts.wheels) {
+      const movement = this.mesh.position.clone().sub(this._lastPosition);
+      const sign = Math.sign(movement.x * Math.sin(this.mesh.rotation.y) + movement.z * Math.cos(this.mesh.rotation.y));
+      this.wheelSpin += movement.length() * sign / (this.parts.wheelRadius || .48);
+      for (const wheel of this.parts.wheels) wheel.spinner.rotation.x = this.wheelSpin % (Math.PI * 2);
+    }
+    this._lastPosition = this.mesh.position.clone();
   }
 
   // 給定進度 prog(0-1) → 幽靈跑到該進度所花時間 (HUD 秒差用);無資料回 null

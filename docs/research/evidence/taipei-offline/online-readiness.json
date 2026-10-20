@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-20T11:51:38.981Z",
+  "cacheEntries": 99,
+  "readiness": {
+    "cacheName": "mc101:http%3A%2F%2F127.0.0.1%3A8937%2F:city:source-v1:taipei:source-v1-f633ae38aa1e:959a6367-be8c-4ab8-a9a1-f3875279a284",
+    "cityId": "taipei",
+    "cityReady": true,
+    "manifestURL": "http://127.0.0.1:8937/assets/cities/taipei/manifest.json",
+    "missing": [],
+    "ready": true,
+    "reason": null,
+    "version": "source-v1-f633ae38aa1e"
+  },
+  "status": "台北街區已準備就緒，可離線遊玩。",
+  "sw": true,
+  "url": "http://127.0.0.1:8937/index.html",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "viewport": [
+    1280,
+    577
+  ]
+}

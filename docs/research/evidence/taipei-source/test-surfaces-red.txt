@@ -1,0 +1,34 @@
+✔ Taipei has traceable dynamic cars and textured buildings (9.168375ms)
+✔ every delivered asset, texture and dependency matches its receipt (444.35525ms)
+✔ source buffers have finite data, valid triangles and measured bounds (700.362084ms)
+✔ landmarks use actual painted atlas tiles and preserve glass and source materials (615.3135ms)
+✔ four original wheel ranges preserve pivots, radius and steering axle (61.333208ms)
+✔ characters preserve original rig, encoded painted atlas and real actions (105.483875ms)
+✔ street, road and effect source families are present (8.39275ms)
+✔ encoded vehicle and road atlases cannot silently use a plain diffuse map (96.544333ms)
+✔ transitive source files and frozen extraction identity are traceable (152.353667ms)
+✖ building LM materials retain all 35 original RGBA surface and emissive-mask layers (77.573709ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 9
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2519.9535
+
+✖ failing tests:
+
+test at tests/source-assets.test.mjs:136:1
+✖ building LM materials retain all 35 original RGBA surface and emissive-mask layers (77.573709ms)
+  AssertionError [ERR_ASSERTION]: guling-book-street source surface array
+      at TestContext.<anonymous> (file:///Users/swchen.tw/git/racing-game/.worktrees/taipei-source/tests/source-assets.test.mjs:142:12)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

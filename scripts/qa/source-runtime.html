@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>Taipei source runtime QA</title>
+<style>body{margin:0;background:#b5c6d0}canvas{display:block}#status{position:absolute;top:12px;left:16px;font:16px monospace;color:#172934;background:#ffffffdd;padding:8px}</style>
+<script type="importmap">{"imports":{"three":"../../node_modules/three/build/three.module.js"}}</script>
+<div id="status">Loading source library…</div><script type="module">
+import * as THREE from 'three';
+import {createCityLoader} from '../../js/cities/assets.js';
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
+document.body.append(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#b5c6d0');scene.add(new THREE.HemisphereLight(0xe7f3ff,0x81735c,2.4));const sun=new THREE.DirectionalLight(0xfff2da,3.2);sun.position.set(-20,40,-30);scene.add(sun);
+const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,.05,2000);
+const lease=await createCityLoader({baseURL:new URL('../../',location.href).href})('taipei');
+let root;
+window.showSource=async(id)=>{if(root)lease.releaseObject(root);root=lease.instantiate(id);scene.add(root);const box=new THREE.Box3().setFromObject(root),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),d=Math.max(size.x,size.y,size.z,3);camera.position.copy(center).add(new THREE.Vector3(.7*d,.4*d,-1.3*d));camera.lookAt(center);
+if(id==='source-fx'){root.children[0].geometry.attributes.iPos.setXYZW(0,0,1,0,0);root.children[0].geometry.attributes.iSize.setXYZW(0,2,2,0,0);root.children[0].geometry.attributes.iColor.setXYZW(0,.4,.4,.4,.8);}
+if(id==='source-markers'){root.children[0].geometry.attributes.iColor.setXYZW(0,1,1,1,1);}
+renderer.render(scene,camera);document.querySelector('#status').textContent=id;window.sourceReceipt={id,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,assets:lease.manifest.assets.length};return window.sourceReceipt;};
+window.sourceLease=lease;window.sourceRenderer=renderer;window.ready=true;await window.showSource(new URLSearchParams(location.search).get('asset')??'taxi');
+</script></html>

@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-20T11:53:44.900Z",
+  "audit": {
+    "active": true,
+    "manifest": "source-v1-f633ae38aa1e",
+    "missing": []
+  },
+  "online": false,
+  "race": {
+    "mode": "solo",
+    "state": "racing",
+    "track": "taipei"
+  },
+  "renderer": {
+    "calls": 544,
+    "memory": {
+      "geometries": 234,
+      "textures": 51
+    },
+    "quality": 1,
+    "triangles": 460993
+  },
+  "task": {
+    "state": "countdown",
+    "value": null
+  }
+}

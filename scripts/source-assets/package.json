@@ -1,0 +1,1 @@
+{"name":"taipei-source-recovery","private":true,"type":"module","dependencies":{"@babel/parser":"7.28.5","@napi-rs/canvas":"0.1.80"}}

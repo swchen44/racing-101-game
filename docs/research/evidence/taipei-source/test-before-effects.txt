@@ -1,0 +1,31 @@
+✔ Taipei has traceable dynamic cars and textured buildings (6.357208ms)
+✔ every delivered asset, texture and dependency matches its receipt (136.061208ms)
+✔ source buffers have finite data, valid triangles and measured bounds (213.30025ms)
+✔ landmarks use actual painted atlas tiles and preserve glass and source materials (109.519792ms)
+✔ four original wheel ranges preserve pivots, radius and steering axle (25.189917ms)
+✔ characters preserve original rig, encoded painted atlas and real actions (38.999625ms)
+✖ street, road and effect source families are present (2.140791ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 661.54525
+
+✖ failing tests:
+
+test at tests/source-assets.test.mjs:114:1
+✖ street, road and effect source families are present (2.140791ms)
+  AssertionError [ERR_ASSERTION]: source-fx
+      at TestContext.<anonymous> (file:///Users/swchen.tw/git/racing-game/.worktrees/taipei-source/tests/source-assets.test.mjs:116:209)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

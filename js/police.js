@@ -1,7 +1,8 @@
 // police.js — 警車追逐模式:追撃 AI、PIT 撞尾、第 2 圈增援、甩開 300m 觸發路障攔截、
 //              警笛 (音量隨距離)、通緝熱度與攔停判定
 import * as THREE from 'three';
-import { CAR_BUILDERS } from './cars/index.js';
+import { buildCar } from './cars/index.js';
+import { sourcePoliceDefinition, steerSourceVehicle } from './cities/vehicles.js';
 import { disposeObject } from './cars/common.js';
 import { radialGlowTexture } from './taipei101.js';
 import { activeAudio } from './audio.js';
@@ -9,10 +10,56 @@ import { activeAudio } from './audio.js';
 const ESCAPE_DIST = 300;   // 玩家甩開這麼多公尺 → 路障攔截
 const ROADBLOCK_AHEAD = 265; // 路障設在玩家前方多少公尺
 
+function legacyPoliceVisuals(mesh) {
+  // 車頂警示燈條 (紅藍交替閃)
+  const barRed = new THREE.Mesh(
+    new THREE.BoxGeometry(0.42, 0.12, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff2233, emissiveIntensity: 3 }));
+  const barBlue = new THREE.Mesh(
+    new THREE.BoxGeometry(0.42, 0.12, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0x000022, emissive: 0x2266ff, emissiveIntensity: 3 }));
+  barRed.position.set(-0.24, 1.42, -0.1);
+  barBlue.position.set(0.24, 1.42, -0.1);
+  mesh.add(barRed, barBlue);
+  // 警示光暈 sprite (放射狀漸層貼圖,無硬邊)
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: radialGlowTexture('#ff3355'),
+    color: 0xff3355, transparent: true, opacity: 0.45,
+    blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+  }));
+  glow.scale.setScalar(3.2);
+  glow.position.set(0, 1.6, 0);
+  mesh.add(glow);
+  // 警燈掃射:紅藍光斑貼地繞警車旋轉 (additive 拉長光斑,像燈組掃過路面/護欄)
+  const sweep = new THREE.Group();
+  sweep.position.y = 0.06;
+  const dayMode = (typeof window !== 'undefined' && window.__game?.setup?.weather === 'day');
+  const mkBeam = (colorHex, angle) => {
+    const beamMat = new THREE.MeshBasicMaterial({
+      map: radialGlowTexture(colorHex >= 0x800000 ? '#ff3355' : '#3366ff'),
+      color: colorHex, transparent: true, opacity: dayMode ? 0.12 : 0.34,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    });
+    const arm = new THREE.Group();
+    arm.rotation.y = angle;
+    const beam = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 12), beamMat);
+    beam.rotation.x = -Math.PI / 2;
+    beam.position.z = 6.4;      // 光斑中心離車 6.4m → 掃到路面與護欄根部
+    arm.add(beam);
+    sweep.add(arm);
+    return beamMat;
+  };
+  const sweepRedMat = mkBeam(0xff3355, 0);
+  const sweepBlueMat = mkBeam(0x3366ff, Math.PI);
+  mesh.add(sweep);
+  return { barRed, barBlue, glow, sweep, sweepRedMat, sweepBlueMat };
+}
+
 export class Police {
-  constructor(scene, track, count = 2) {
+  constructor(scene, track, count = 2, cityLease = null) {
     this.scene = scene;
     this.track = track;
+    this.cityLease = cityLease;
     this.units = [];
     this.heat = 0;          // 攔停累積 0..1 (被貼身且低速時上升)
     this.busted = false;
@@ -35,51 +82,11 @@ export class Police {
   }
 
   _spawnUnit(startS, lane) {
-    const { mesh, parts } = (CAR_BUILDERS.taxi || CAR_BUILDERS.gt)({ paint: 0x14181f });
+    const { mesh, parts } = buildCar(this.cityLease ? sourcePoliceDefinition : { builder: 'taxi', paint: 0x14181f }, this.cityLease);
     const toRemove = [];
     mesh.traverse((o) => { if (o.isSpotLight || o.isPointLight) toRemove.push(o); });
     for (const l of toRemove) l.parent.remove(l); // AI 車不可用真實光源
-    // 車頂警示燈條 (紅藍交替閃)
-    const barRed = new THREE.Mesh(
-      new THREE.BoxGeometry(0.42, 0.12, 0.3),
-      new THREE.MeshStandardMaterial({ color: 0x220000, emissive: 0xff2233, emissiveIntensity: 3 }));
-    const barBlue = new THREE.Mesh(
-      new THREE.BoxGeometry(0.42, 0.12, 0.3),
-      new THREE.MeshStandardMaterial({ color: 0x000022, emissive: 0x2266ff, emissiveIntensity: 3 }));
-    barRed.position.set(-0.24, 1.42, -0.1);
-    barBlue.position.set(0.24, 1.42, -0.1);
-    mesh.add(barRed, barBlue);
-    // 警示光暈 sprite (放射狀漸層貼圖,無硬邊)
-    const glow = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: radialGlowTexture('#ff3355'),
-      color: 0xff3355, transparent: true, opacity: 0.45,
-      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
-    }));
-    glow.scale.setScalar(3.2);
-    glow.position.set(0, 1.6, 0);
-    mesh.add(glow);
-    // 警燈掃射:紅藍光斑貼地繞警車旋轉 (additive 拉長光斑,像燈組掃過路面/護欄)
-    const sweep = new THREE.Group();
-    sweep.position.y = 0.06;
-    const dayMode = (typeof window !== 'undefined' && window.__game?.setup?.weather === 'day');
-    const mkBeam = (colorHex, angle) => {
-      const beamMat = new THREE.MeshBasicMaterial({
-        map: radialGlowTexture(colorHex >= 0x800000 ? '#ff3355' : '#3366ff'),
-        color: colorHex, transparent: true, opacity: dayMode ? 0.12 : 0.34,
-        blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
-      });
-      const arm = new THREE.Group();
-      arm.rotation.y = angle;
-      const beam = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 12), beamMat);
-      beam.rotation.x = -Math.PI / 2;
-      beam.position.z = 6.4;      // 光斑中心離車 6.4m → 掃到路面與護欄根部
-      arm.add(beam);
-      sweep.add(arm);
-      return beamMat;
-    };
-    const sweepRedMat = mkBeam(0xff3355, 0);
-    const sweepBlueMat = mkBeam(0x3366ff, Math.PI);
-    mesh.add(sweep);
+    const { barRed, barBlue, glow, sweep, sweepRedMat, sweepBlueMat } = this.cityLease ? {} : legacyPoliceVisuals(mesh);
     const u = {
       mesh, parts, barRed, barBlue, glow, sweep, sweepRedMat, sweepBlueMat,
       s: (startS + 1) % 1, lane, speed: 0, wheelSpin: 0,
@@ -101,6 +108,7 @@ export class Police {
     const nx = -tan.z, nz = tan.x;
     u.mesh.position.set(p.x + nx * u.lane, 0, p.z + nz * u.lane);
     u.mesh.rotation.y = Math.atan2(tan.x, tan.z) + u.blockYaw;
+    steerSourceVehicle(u.parts, this.track, u.s);
   }
 
   // ---- 路障攔截:2 台橫停在玩家前方 + 隨機變化的路障水馬 ----
@@ -125,7 +133,7 @@ export class Police {
   }
 
   _buildBarriers(aheadS) {
-    if (this.barrierGroup) this.scene.remove(this.barrierGroup);
+    if (this.barrierGroup) { this.scene.remove(this.barrierGroup); disposeObject(this.barrierGroup); }
     const g = new THREE.Group();
     this.barriers = [];
     const s = (aheadS - 7 / this.track.length + 1) % 1;
@@ -136,16 +144,18 @@ export class Police {
     const n = 3 + Math.floor(Math.random() * 2); // 3~4 個,排列每次隨機
     for (let i = 0; i < n; i++) {
       const lane = -5 + (i + 0.5) * (10 / n) + (Math.random() - 0.5) * 1.4;
-      const b = new THREE.Group();
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(1.7, 0.62, 0.24),
-        new THREE.MeshStandardMaterial({ color: 0xd94f00, emissive: 0xff5500, emissiveIntensity: 0.7 }));
-      body.position.y = 0.5;
-      const stripe = new THREE.Mesh(
-        new THREE.BoxGeometry(1.7, 0.14, 0.26),
-        new THREE.MeshStandardMaterial({ color: 0xeeeeee, emissive: 0xffffff, emissiveIntensity: 0.9 }));
-      stripe.position.y = 0.72;
-      b.add(body, stripe);
+      const b = this.cityLease ? this.cityLease.instantiate('roadblock') : new THREE.Group();
+      if (!this.cityLease) {
+        const body = new THREE.Mesh(
+          new THREE.BoxGeometry(1.7, 0.62, 0.24),
+          new THREE.MeshStandardMaterial({ color: 0xd94f00, emissive: 0xff5500, emissiveIntensity: 0.7 }));
+        body.position.y = 0.5;
+        const stripe = new THREE.Mesh(
+          new THREE.BoxGeometry(1.7, 0.14, 0.26),
+          new THREE.MeshStandardMaterial({ color: 0xeeeeee, emissive: 0xffffff, emissiveIntensity: 0.9 }));
+        stripe.position.y = 0.72;
+        b.add(body, stripe);
+      }
       b.position.set(p.x + nx * lane, 0, p.z + nz * lane);
       b.rotation.y = yaw + Math.PI / 2 + (Math.random() - 0.5) * 0.5;
       g.add(b);
@@ -272,7 +282,7 @@ export class Police {
         }
         u.s = (u.s + (u.speed * dt) / this.track.length + 1) % 1;
         this._place(u);
-        u.wheelSpin += (u.speed / 0.48) * dt;
+        u.wheelSpin += (u.speed / (u.parts.wheelRadius || 0.48)) * dt;
         if (u.parts.wheels) {
           for (const w of u.parts.wheels) w.spinner.rotation.x = u.wheelSpin % (Math.PI * 2);
         }
@@ -306,7 +316,7 @@ export class Police {
           u.lane = THREE.MathUtils.clamp(u.lane + (Math.random() - 0.5) * 3, -5, 5);
         }
         this._place(u);
-        u.wheelSpin += (u.speed / 0.48) * dt;
+        u.wheelSpin += (u.speed / (u.parts.wheelRadius || 0.48)) * dt;
         if (u.parts.wheels) {
           for (const w of u.parts.wheels) w.spinner.rotation.x = u.wheelSpin % (Math.PI * 2);
         }
@@ -341,11 +351,17 @@ export class Police {
           Math.min(1, overlap * (u.state === 'roadblock' ? 1.4 : 1.0)));
       }
 
-      // 警燈閃爍
-      u.barRed.material.emissiveIntensity = flash ? 5 : 0.4;
-      u.barBlue.material.emissiveIntensity = flash ? 0.4 : 5;
-      u.glow.material.color.setHex(flash ? 0xff3355 : 0x3366ff);
-      u.glow.material.opacity = 0.35 + 0.25 * Math.sin(this.flashT * 12);
+      // Source vehicles carry their original red/blue light geometry.
+      if (this.cityLease) {
+        u.parts.updateLights(this.flashT);
+        u.parts.flashPolice(flash);
+      } else {
+        // 警燈閃爍
+        u.barRed.material.emissiveIntensity = flash ? 5 : 0.4;
+        u.barBlue.material.emissiveIntensity = flash ? 0.4 : 5;
+        u.glow.material.color.setHex(flash ? 0xff3355 : 0x3366ff);
+        u.glow.material.opacity = 0.35 + 0.25 * Math.sin(this.flashT * 12);
+      }
       // 掃射光斑:持續旋轉 (2.2 圈/秒),與燈條同步強弱交替 → 紅藍輪流掃過路面
       if (u.sweep) {
         u.sweep.rotation.y = this.flashT * Math.PI * 4.4;

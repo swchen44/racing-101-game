@@ -6,6 +6,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { WALL_HALF_WIDTH } from './track.js';
+import { SourceEffects } from './cities/effects.js';
 
 // 超輕量全螢幕色彩分級:暗部壓藍紫、高光偏暖、飽和 +13%、vignette、
 // 高速時畫面外圈徑向模糊 (uSpeed 0..1,同一個 fullscreen pass,零額外成本)
@@ -106,8 +107,49 @@ export class Effects {
   setSize(w, h) { this.composer.setSize(w, h); }
   render(dt) { this.composer.render(dt); }
 
+  prepareCityContext(lease, weather = {}, target = this.scene) {
+    return lease ? new SourceEffects(target, lease, weather) : null;
+  }
+
+  setCityContext(lease, weather = {}, prepared) {
+    if (lease && this.sourceEffects?.lease === lease && prepared === undefined) {
+      this.sourceEffects.setWeather(weather);
+      this._setCityBloom(weather);
+      return;
+    }
+    // Build first: a failed source allocation leaves the current city intact.
+    const next = prepared === undefined ? this.prepareCityContext(lease, weather) : prepared;
+    this.sourceEffects?.dispose();
+    this.sourceEffects = next;
+    this._setCityBloom(next ? weather : null);
+    this.resetTransient();
+    if (next) this._hideLegacyEffects();
+    else if (this._legacyVisibility) {
+      for (const [object, visible] of this._legacyVisibility) object.visible = visible;
+      this._legacyVisibility = null;
+    }
+  }
+
+  _setCityBloom(weather) {
+    const id = typeof weather === 'string' ? weather : weather?.id;
+    this.bloom.strength = weather ? (id === 'night' ? .32 : id === 'dusk' ? .24 : .12) : .75;
+  }
+
+  _hideLegacyEffects(car) {
+    this._legacyVisibility ??= new Map();
+    const objects = [this.skidInst, this.sparkLines, this.rain, this.streaks, this.brakePool,
+      ...this.smokes.map(smoke => smoke.sprite), ...(this._flames || []).map(flame => flame.group),
+      car?.headlightPool, car?.underglow];
+    for (const object of objects) if (object) {
+      if (!this._legacyVisibility.has(object)) this._legacyVisibility.set(object, object.visible);
+      object.visible = false;
+    }
+  }
+
   // 換賽道/重賽時清除暫存痕跡 (胎痕、煙、火花)
   resetTransient() {
+    this.sourceEffects?.reset();
+    if (this.streaks) this.streaks.visible = false;
     if (this.brakePool) { this.brakePool.visible = false; this.brakePool.material.opacity = 0; }
     for (const f of this._flames || []) f.group.visible = false;
     this.skidCursor = 0;
@@ -256,6 +298,7 @@ export class Effects {
 
   // 沿速度方向對齊 + 依每幀移動距離拉長,stamp 首尾相接無縫
   addSkid(x, z, dirAngle, len) {
+    if (this.sourceEffects) return this.sourceEffects.addSkid(x, z, dirAngle, len);
     this._q.setFromAxisAngle(this._up, dirAngle);
     this._v3s.set(1, 1, len);
     this._m4.compose(this._v3a.set(x, 0.02, z), this._q, this._v3s);
@@ -291,6 +334,7 @@ export class Effects {
 
   // small=true → 中低速手煞的小號煙 (scale 0.6、opacity 減半)
   addSmoke(x, z, vx, vz, small = false) {
+    if (this.sourceEffects) return this.sourceEffects.addSmoke(x, z, vx, vz, small);
     const s = this.smokes[this.smokeCursor % this.smokeMax];
     this.smokeCursor++;
     s.life = 0.5 + Math.random() * 0.35;
@@ -328,6 +372,7 @@ export class Effects {
 
   // (x,y,z) = 實際接觸點 (輪拱/護欄高度);bvx,bvz = 基底速度 (火花順著車行方向拖尾噴出)
   burstSparks(x, y, z, count, bvx = 0, bvz = 0) {
+    if (this.sourceEffects) return this.sourceEffects.burstSparks(x, y, z, count, bvx, bvz);
     for (let i = 0; i < count; i++) {
       const s = this.sparks[this.sparkCursor % this.sparkMax];
       this.sparkCursor++;
@@ -442,6 +487,11 @@ export class Effects {
       const target = THREE.MathUtils.clamp((kmh - 70) / 110, 0, 1) * 0.85;
       const u = this.grade.uniforms.uSpeed;
       u.value += (target - u.value) * Math.min(1, dt * 4);
+    }
+    if (this.sourceEffects) {
+      this._hideLegacyEffects(car);
+      this.sourceEffects.update(dt, car, camPos, input);
+      return;
     }
     // 煙:緩慢自轉、深藍灰基色、靠近車尾被尾燈染紅
     if (car) {

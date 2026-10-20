@@ -1,4 +1,6 @@
 // config.js — 中央定義:賽道、車型、遊戲模式、排行榜後端設定
+import { trackDef as taipeiTrack } from './cities/taipei.js';
+import { sourceCarDefinitions } from './cities/vehicles.js';
 //
 // ⚙️ 全球排行榜設定 (可選):
 //   到 https://supabase.com 建立免費專案 → SQL Editor 執行 SETUP-LEADERBOARD.md 中的建表語句
@@ -225,6 +227,11 @@ export const CARS = [
   },
 ];
 
+TRACKS.push(taipeiTrack);
+CARS.push(...sourceCarDefinitions);
+export function carsForTrack(id) {
+  return trackById(id).cityId ? sourceCarDefinitions : CARS.filter((car) => !car.sourceAssetId);
+}
 export function trackById(id) { return TRACKS.find((t) => t.id === id) || TRACKS[0]; }
 export function carById(id) { return CARS.find((c) => c.id === id) || CARS[1]; }
 export function modeById(id) { return MODES.find((m) => m.id === id) || MODES[0]; }

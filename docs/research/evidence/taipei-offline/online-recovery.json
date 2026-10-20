@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-20T11:56:13.607Z",
+  "audit": {
+    "active": true,
+    "manifest": "source-v1-f633ae38aa1e",
+    "missing": []
+  },
+  "online": true,
+  "race": {
+    "mode": "solo",
+    "state": "racing",
+    "track": "taipei"
+  },
+  "readiness": {
+    "cacheName": "mc101:http%3A%2F%2F127.0.0.1%3A8937%2F:city:source-v1:taipei:source-v1-f633ae38aa1e:42cd31c8-f5ec-4154-bb39-963345795e76",
+    "cityId": "taipei",
+    "cityReady": true,
+    "manifestURL": "http://127.0.0.1:8937/assets/cities/taipei/manifest.json",
+    "missing": [],
+    "ready": true,
+    "reason": null,
+    "version": "source-v1-f633ae38aa1e"
+  },
+  "task": {
+    "state": "countdown",
+    "value": null
+  }
+}

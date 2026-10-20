@@ -3,6 +3,7 @@
 // 對外:runArrestCutscene(opts) 建立控制器存於 window.__arrest;main 的主迴圈每幀呼叫 update。
 import * as THREE from 'three';
 import { radialGlowTexture } from './taipei101.js';
+import { runSourceArrestCutscene } from './cities/arrest.js';
 
 // ---- 程序化人物 (低多邊,約 5.5 頭身卡通比例;夜間可讀:布料低 emissive + 反光帶) ----
 // 骨架階層:g → body(腰部樞紐,可前傾/側傾/上下彈) → 軀幹/頸/頭/雙臂(肩→肘→手)
@@ -171,6 +172,7 @@ function makeFigure(kind, { scale = 1.06 } = {}) {
 }
 
 export function runArrestCutscene(opts) {
+  if (opts.cityLease) return runSourceArrestCutscene(opts);
   const { scene, camera, chaseCam, car, chase, role, target, onDone } = opts;
   const dur = 4.6; // 過場總長 (定稿)
   let t = 0;

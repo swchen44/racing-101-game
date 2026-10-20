@@ -53,7 +53,10 @@ function markShared(tex) { tex.userData.shared = true; return tex; }
 
 // 徹底釋放物件樹 GPU 資源;userData.shared 的貼圖 (模組快取) 不釋放
 export function disposeObject(root) {
+  const sourceReleases = new Set();
   root.traverse((o) => {
+    if (o.userData.releaseSource) sourceReleases.add(o.userData.releaseSource);
+    if (o.userData.sourceManaged) return;
     if (o.geometry) o.geometry.dispose();
     const mats = Array.isArray(o.material) ? o.material : (o.material ? [o.material] : []);
     for (const m of mats) {
@@ -64,6 +67,8 @@ export function disposeObject(root) {
       m.dispose();
     }
   });
+  // Source leases own immutable geometry and textures; only release instance state here.
+  for (const release of sourceReleases) release();
 }
 
 let _carEnvTex = null;

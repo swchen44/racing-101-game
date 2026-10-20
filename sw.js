@@ -1,79 +1,109 @@
-// sw.js — Service Worker:離線遊玩支援
-// 策略:
-//   同源 HTML/JS      → 網路優先、離線退快取 (確保有網路時永遠拿到最新版)
-//   CDN (three/字型)  → 快取優先、背景補快取 (首次上線玩過一場後即可離線)
-//   排行榜 API/IP查詢 → 純網路 (離線時遊戲自動退回本機排行榜)
-const VERSION = 'mc101-v2';
-const PRECACHE = 'mc101-pre-' + VERSION;
-const RUNTIME = 'mc101-run-' + VERSION;
+// Module worker: core and city caches share compatibility/readiness rules.
+import { cacheNamespace, coreCacheName, runtimeCacheName, runtimeURLs,
+  readCityReadiness, sha256 } from './js/cities/offline.js';
 
-const PRECACHE_URLS = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './js/main.js', './js/config.js', './js/i18n.js', './js/track.js', './js/vehicle.js',
-  './js/taipei101.js', './js/city.js', './js/effects.js', './js/audio.js', './js/hud.js',
-  './js/camera.js', './js/opponents.js', './js/police.js', './js/leaderboard.js',
-  './js/touch.js', './js/reflections.js', './js/carpreview.js', './js/ghost.js',
-  './js/chase.js', './js/arrest.js', './js/sponsors.js',
-  './js/cars/index.js', './js/cars/common.js', './js/cars/gt.js', './js/cars/f1.js',
-  './js/cars/evsport.js', './js/cars/rally.js', './js/cars/pickup.js', './js/cars/taxi.js',
-  './js/cars/evcity.js', './js/cars/suv.js',
+const BASE = self.registration.scope;
+const PRECACHE = coreCacheName(BASE);
+const RUNTIME = runtimeCacheName(BASE);
+const PRECACHE_URLS = [...runtimeURLs(BASE), ...[
+  './', './manifest.webmanifest',
   './assets/tracks/xinyi.jpg', './assets/tracks/wangan.jpg',
   './assets/tracks/mountain.jpg', './assets/tracks/gp.jpg',
   './assets/icons/icon-192.png', './assets/icons/icon-512.png', './assets/icons/apple-touch-icon.png',
-];
-
-// 離線時不需要、也不該快取的端點
+].map((path) => new URL(path, BASE).href)];
 const NETWORK_ONLY = ['supabase.co', 'api.ipify.org'];
-// CDN:快取優先 (three.js 模組鏈與 Google Fonts)
 const CDN_HOSTS = ['unpkg.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+const isHost = (hostname, domain) => hostname === domain || hostname.endsWith('.' + domain);
+const unavailable = () => new Response('Offline asset unavailable', { status: 503 });
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(PRECACHE)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting()));
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(PRECACHE).then((cache) => cache.addAll(PRECACHE_URLS)).then(() => self.skipWaiting()));
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.filter((k) => k !== PRECACHE && k !== RUNTIME).map((k) => caches.delete(k)),
-    )).then(() => self.clients.claim()));
+self.addEventListener('activate', (event) => {
+  const namespace = cacheNamespace(BASE);
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((name) =>
+    (name.startsWith(namespace + 'core:') && name !== PRECACHE)
+    || (name.startsWith(namespace + 'runtime:') && name !== RUNTIME)
+    || name === 'mc101-pre-mc101-v2' || name === 'mc101-run-mc101-v2',
+  ).map((name) => caches.delete(name)))).then(() => self.clients.claim()));
 });
 
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
+async function coreMatch(request) {
+  return (await (await caches.open(RUNTIME)).match(request))
+    || (await (await caches.open(PRECACHE)).match(request));
+}
 
-  if (NETWORK_ONLY.some((h) => url.hostname.includes(h))) return; // 交給瀏覽器,離線自然失敗→遊戲退本機榜
+async function cityAsset(request, url) {
+  // Exact query matching preserves old/new generations side-by-side.
+  const namespace = cacheNamespace(BASE);
+  for (const name of await caches.keys()) {
+    if (!name.startsWith(namespace + 'city:')) continue;
+    const response = await (await caches.open(name)).match(request);
+    if (response) return response;
+  }
+  try {
+    const response = await fetch(request);
+    if (!response.ok) return response;
+    if (await sha256(await response.clone().arrayBuffer()) !== url.searchParams.get('sha')) {
+      return new Response('City asset hash mismatch', { status: 502 });
+    }
+    // Only the loader's complete verified transaction commits city responses.
+    return response;
+  } catch { return unavailable(); }
+}
 
-  // CDN:快取優先,未中則抓網路並存入
-  if (CDN_HOSTS.some((h) => url.hostname.includes(h))) {
-    e.respondWith(
-      caches.match(req).then((hit) => hit || fetch(req).then((res) => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(RUNTIME).then((c) => c.put(req, clone));
-        }
-        return res;
-      })));
+async function cityManifest(request, id) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) return response;
+    // HTTP errors may accompany an interrupted deploy; a complete version can run.
+  } catch { /* Use a fully committed compatible generation only. */ }
+  const state = await readCityReadiness(id, { baseURL: BASE, cacheStorage: caches, includeRuntime: false });
+  if (!state.cityReady) return unavailable();
+  return (await (await caches.open(state.cacheName)).match(state.manifestURL)) || unavailable();
+}
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (NETWORK_ONLY.some((domain) => isHost(url.hostname, domain))) return;
+
+  const cityRoot = new URL('assets/cities/', BASE);
+  if (url.origin === cityRoot.origin && url.pathname.startsWith(cityRoot.pathname)) {
+    const relative = url.pathname.slice(cityRoot.pathname.length);
+    const manifest = relative.match(/^([a-z0-9-]+)\/manifest\.json$/);
+    if (manifest) event.respondWith(cityManifest(request, manifest[1]));
+    else if (/^[a-f0-9]{64}$/.test(url.searchParams.get('sha') ?? '')) event.respondWith(cityAsset(request, url));
+    else event.respondWith(fetch(request).catch(unavailable));
     return;
   }
 
-  // 同源:網路優先 (拿最新版),失敗退快取 (離線遊玩)
-  if (url.origin === self.location.origin) {
-    e.respondWith(
-      fetch(req).then((res) => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(RUNTIME).then((c) => c.put(req, clone));
+  if (CDN_HOSTS.some((domain) => isHost(url.hostname, domain))) {
+    event.respondWith(coreMatch(request).then(async (hit) => {
+      if (hit) return hit;
+      try {
+        const response = await fetch(request);
+        if (response.ok || response.type === 'opaque') {
+          const copy = response.clone();
+          event.waitUntil(caches.open(RUNTIME).then((cache) => cache.put(request, copy)).catch(() => {}));
         }
-        return res;
-      }).catch(() =>
-        caches.match(req).then((hit) => hit
-          || (req.mode === 'navigate' ? caches.match('./index.html') : undefined))));
+        return response;
+      } catch { return unavailable(); }
+    }));
+    return;
+  }
+
+  if (url.origin === self.location.origin) {
+    event.respondWith(fetch(request).then((response) => {
+      if (response.ok) {
+        const copy = response.clone();
+        event.waitUntil(caches.open(RUNTIME).then((cache) => cache.put(request, copy)).catch(() => {}));
+      }
+      return response;
+    }).catch(async () => (await coreMatch(request))
+      || (request.mode === 'navigate' ? await coreMatch(new URL('index.html', BASE).href) : null)
+      || unavailable()));
   }
 });

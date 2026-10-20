@@ -1,0 +1,14 @@
+{
+  "audit": {
+    "active": true,
+    "manifest": "source-v1-f633ae38aa1e",
+    "missing": []
+  },
+  "pass": true,
+  "state": "countdown",
+  "touchPresentationSimulated": true,
+  "viewport": [
+    844,
+    390
+  ]
+}

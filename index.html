@@ -892,6 +892,7 @@ body.touch #btn-mirror { top: 204px; }
     <div class="card-row" id="car-cards"></div>
     <div class="sec-label" data-i18n="secTrans">變速箱 TRANSMISSION</div>
     <div class="card-row" id="trans-cards"></div>
+    <p id="city-load-status" role="status" aria-live="polite" style="color:#b7d9e4;min-height:1.5em;line-height:1.5"></p>
     <div id="setup-actions">
       <div class="menu-btn primary" id="btn-go" data-i18n="go">出發 RACE — ENTER</div>
       <div class="menu-btn ghost" id="btn-setup-back" data-i18n="back">返回 BACK</div>
@@ -939,7 +940,7 @@ body.touch #btn-mirror { top: 204px; }
 // PWA:註冊 Service Worker (離線遊玩;localhost 與 https 皆可)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js', { type: 'module' }).catch(() => {});
   });
 }
 </script>

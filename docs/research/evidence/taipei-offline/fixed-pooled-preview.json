@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-20T11:59:04.774Z",
+  "audit": {
+    "active": true,
+    "manifest": "source-v1-f633ae38aa1e",
+    "missing": []
+  },
+  "online": false,
+  "path": "new preview lease while active race holds pooled library",
+  "readiness": {
+    "cityId": "taipei",
+    "cityReady": false,
+    "missing": [
+      "http://127.0.0.1:8937/assets/cities/taipei/guling-book-street-atlas.png?sha=7622c38d50b8b66d68e6d93b96f2b0c5d98682c71526cc93680e05f4f47b37af"
+    ],
+    "ready": false,
+    "reason": "city-incomplete"
+  },
+  "status": "台北街區已準備就緒。"
+}

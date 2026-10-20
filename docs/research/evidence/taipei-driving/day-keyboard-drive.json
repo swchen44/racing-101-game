@@ -1,0 +1,4197 @@
+{
+  "audit": {
+    "active": true,
+    "manifest": "source-v1-f633ae38aa1e",
+    "missing": []
+  },
+  "boosted": true,
+  "elapsed": 73.85529999999405,
+  "environment": {
+    "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "car": "taipei-taxi",
+    "devicePixelRatio": 1,
+    "drawingBuffer": [
+      1280,
+      577
+    ],
+    "manifest": "source-v1-f633ae38aa1e",
+    "note": "Keyboard autopilot, 2 second warmup, adaptive game resolution; no in-drive teleport.",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+    "viewport": [
+      1280,
+      577
+    ],
+    "weather": "day"
+  },
+  "finished": true,
+  "frameTimeMs": {
+    "frames": 4260,
+    "max": 350,
+    "mean": 16.869436619718307,
+    "p50": 16.699999999953434,
+    "p95": 16.79999999998836,
+    "p99": 16.800000000046566
+  },
+  "lapTimes": [
+    32.19190000000596,
+    41.00470000000304
+  ],
+  "maxLateral": 7.700000000000004,
+  "samples": [
+    {
+      "boosting": false,
+      "calls": 652,
+      "lap": 1,
+      "lateral": 0.005667558175462772,
+      "memory": {
+        "geometries": 208,
+        "textures": 65
+      },
+      "quality": 1,
+      "s": 0.0011208067778873954,
+      "speedKmh": 5.184108904047856,
+      "time": 0.2582999999940512,
+      "triangles": 598236
+    },
+    {
+      "boosting": false,
+      "calls": 689,
+      "lap": 1,
+      "lateral": 0.11968101709925756,
+      "memory": {
+        "geometries": 208,
+        "textures": 65
+      },
+      "quality": 1,
+      "s": 0.0018709715233704571,
+      "speedKmh": 16.345060163044177,
+      "time": 0.5248999999940279,
+      "triangles": 670393
+    },
+    {
+      "boosting": false,
+      "calls": 711,
+      "lap": 1,
+      "lateral": 0.5035501307482766,
+      "memory": {
+        "geometries": 209,
+        "textures": 65
+      },
+      "quality": 1,
+      "s": 0.0034872327287616134,
+      "speedKmh": 29.885524488404,
+      "time": 0.7915999999940395,
+      "triangles": 696544
+    },
+    {
+      "boosting": false,
+      "calls": 720,
+      "lap": 1,
+      "lateral": 0.964875024828156,
+      "memory": {
+        "geometries": 209,
+        "textures": 65
+      },
+      "quality": 1,
+      "s": 0.006140868071345951,
+      "speedKmh": 42.56900244830513,
+      "time": 1.058199999994016,
+      "triangles": 724628
+    },
+    {
+      "boosting": false,
+      "calls": 731,
+      "lap": 1,
+      "lateral": 1.402026392187791,
+      "memory": {
+        "geometries": 209,
+        "textures": 65
+      },
+      "quality": 1,
+      "s": 0.009699022306602243,
+      "speedKmh": 54.56769636087614,
+      "time": 1.324899999994028,
+      "triangles": 773515
+    },
+    {
+      "boosting": false,
+      "calls": 738,
+      "lap": 1,
+      "lateral": 1.7228463604593176,
+      "memory": {
+        "geometries": 209,
+        "textures": 65
+      },
+      "quality": 1,
+      "s": 0.014112410174923484,
+      "speedKmh": 65.69958358876235,
+      "time": 1.5914999999940629,
+      "triangles": 801593
+    },
+    {
+      "boosting": false,
+      "calls": 744,
+      "lap": 1,
+      "lateral": 1.8891573940181567,
+      "memory": {
+        "geometries": 209,
+        "textures": 65
+      },
+      "quality": 1,
+      "s": 0.01895107987475053,
+      "speedKmh": 75.20756660402463,
+      "time": 1.8415999999940396,
+      "triangles": 804589
+    },
+    {
+      "boosting": false,
+      "calls": 751,
+      "lap": 1,
+      "lateral": 1.894540614063152,
+      "memory": {
+        "geometries": 209,
+        "textures": 65
+      },
+      "quality": 1,
+      "s": 0.02476106382587151,
+      "speedKmh": 84.61316115752744,
+      "time": 2.1081999999940164,
+      "triangles": 820228
+    },
+    {
+      "boosting": false,
+      "calls": 766,
+      "lap": 1,
+      "lateral": 1.7662966744133652,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.031133866256880305,
+      "speedKmh": 90.46300265284782,
+      "time": 2.374799999994051,
+      "triangles": 851627
+    },
+    {
+      "boosting": false,
+      "calls": 780,
+      "lap": 1,
+      "lateral": 1.5357349916278744,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.03758132268802061,
+      "speedKmh": 89.97032216475293,
+      "time": 2.6414999999940627,
+      "triangles": 833119
+    },
+    {
+      "boosting": false,
+      "calls": 798,
+      "lap": 1,
+      "lateral": 1.2553758647868658,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.04399969035933937,
+      "speedKmh": 90.1614130654873,
+      "time": 2.9080999999940396,
+      "triangles": 834739
+    },
+    {
+      "boosting": false,
+      "calls": 798,
+      "lap": 1,
+      "lateral": 0.9268767585962364,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.05039623493417311,
+      "speedKmh": 90.353326151922,
+      "time": 3.1747999999940513,
+      "triangles": 839655
+    },
+    {
+      "boosting": false,
+      "calls": 797,
+      "lap": 1,
+      "lateral": 0.5846802537248225,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.05677962708435835,
+      "speedKmh": 89.86145064301799,
+      "time": 3.441499999994063,
+      "triangles": 834033
+    },
+    {
+      "boosting": false,
+      "calls": 795,
+      "lap": 1,
+      "lateral": 0.2244635440265076,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.06315865915031793,
+      "speedKmh": 90.05385759407105,
+      "time": 3.7080999999940394,
+      "triangles": 822187
+    },
+    {
+      "boosting": false,
+      "calls": 795,
+      "lap": 1,
+      "lateral": -0.13204882047546,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.06953782514972606,
+      "speedKmh": 90.24492972511644,
+      "time": 3.974799999994051,
+      "triangles": 816940
+    },
+    {
+      "boosting": false,
+      "calls": 785,
+      "lap": 1,
+      "lateral": -0.4360160571497605,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.07592060841587567,
+      "speedKmh": 90.43689431493304,
+      "time": 4.2413999999940275,
+      "triangles": 822684
+    },
+    {
+      "boosting": false,
+      "calls": 784,
+      "lap": 1,
+      "lateral": -0.6302412971215919,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.08231289532370423,
+      "speedKmh": 89.94542503862377,
+      "time": 4.508099999994039,
+      "triangles": 823922
+    },
+    {
+      "boosting": false,
+      "calls": 782,
+      "lap": 1,
+      "lateral": -0.6196452070656194,
+      "memory": {
+        "geometries": 209,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.088814106155924,
+      "speedKmh": 90.1356814233783,
+      "time": 4.7746999999940165,
+      "triangles": 820963
+    },
+    {
+      "boosting": true,
+      "calls": 784,
+      "lap": 1,
+      "lateral": -0.5245655530700634,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.09475872970555256,
+      "speedKmh": 92.13268155316004,
+      "time": 5.024799999994051,
+      "triangles": 810862
+    },
+    {
+      "boosting": true,
+      "calls": 775,
+      "lap": 1,
+      "lateral": -0.43864899581585853,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.10209141370515629,
+      "speedKmh": 114.09699425383111,
+      "time": 5.291399999994028,
+      "triangles": 808081
+    },
+    {
+      "boosting": true,
+      "calls": 716,
+      "lap": 1,
+      "lateral": -0.35937152261990296,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.11094578979738734,
+      "speedKmh": 135.16755035930564,
+      "time": 5.557999999994063,
+      "triangles": 796527
+    },
+    {
+      "boosting": true,
+      "calls": 714,
+      "lap": 1,
+      "lateral": -0.28330019945838075,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.12126605438275571,
+      "speedKmh": 155.2255016644078,
+      "time": 5.824699999994016,
+      "triangles": 810314
+    },
+    {
+      "boosting": true,
+      "calls": 712,
+      "lap": 1,
+      "lateral": -0.2003432809215448,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.13296501303950992,
+      "speedKmh": 174.1798352271718,
+      "time": 6.091399999994028,
+      "triangles": 814772
+    },
+    {
+      "boosting": true,
+      "calls": 697,
+      "lap": 1,
+      "lateral": -0.07182221882314438,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.1459656080743008,
+      "speedKmh": 191.96736605672407,
+      "time": 6.35809999999404,
+      "triangles": 823313
+    },
+    {
+      "boosting": true,
+      "calls": 685,
+      "lap": 1,
+      "lateral": -0.0032632147370155627,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.16018845559341588,
+      "speedKmh": 208.55147357441373,
+      "time": 6.624699999994016,
+      "triangles": 798027
+    },
+    {
+      "boosting": true,
+      "calls": 703,
+      "lap": 1,
+      "lateral": -0.08662159739045133,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.17553604649188914,
+      "speedKmh": 223.9198499924543,
+      "time": 6.891299999994051,
+      "triangles": 781600
+    },
+    {
+      "boosting": true,
+      "calls": 645,
+      "lap": 1,
+      "lateral": -0.14339705243245487,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.19194645941584132,
+      "speedKmh": 238.0815592598045,
+      "time": 7.157899999994028,
+      "triangles": 752792
+    },
+    {
+      "boosting": true,
+      "calls": 641,
+      "lap": 1,
+      "lateral": 0.6197623886450202,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.209291123778375,
+      "speedKmh": 251.06369997850095,
+      "time": 7.424599999994039,
+      "triangles": 731035
+    },
+    {
+      "boosting": true,
+      "calls": 632,
+      "lap": 1,
+      "lateral": 2.3995603592315313,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.22752935289922127,
+      "speedKmh": 262.9079336989188,
+      "time": 7.691299999994051,
+      "triangles": 715613
+    },
+    {
+      "boosting": true,
+      "calls": 630,
+      "lap": 1,
+      "lateral": 4.6723949845171315,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.24684972345538148,
+      "speedKmh": 273.6670916479841,
+      "time": 7.957899999994028,
+      "triangles": 692337
+    },
+    {
+      "boosting": true,
+      "calls": 564,
+      "lap": 1,
+      "lateral": 6.324773750903187,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.2674556588383856,
+      "speedKmh": 283.40201792112066,
+      "time": 8.22459999999404,
+      "triangles": 685709
+    },
+    {
+      "boosting": true,
+      "calls": 566,
+      "lap": 1,
+      "lateral": 7.680785449607951,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.2887395605491332,
+      "speedKmh": 292.5040434999075,
+      "time": 8.491299999994052,
+      "triangles": 684415
+    },
+    {
+      "boosting": true,
+      "calls": 566,
+      "lap": 1,
+      "lateral": 7.502235524945848,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3019857305604854,
+      "speedKmh": 141.3193479150044,
+      "time": 8.757899999994027,
+      "triangles": 692869
+    },
+    {
+      "boosting": true,
+      "calls": 573,
+      "lap": 1,
+      "lateral": 6.8182874128483695,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3135085830343143,
+      "speedKmh": 161.6267679118199,
+      "time": 9.02459999999404,
+      "triangles": 720688
+    },
+    {
+      "boosting": true,
+      "calls": 574,
+      "lap": 1,
+      "lateral": 6.6938967572826265,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3267014944869082,
+      "speedKmh": 180.20045190413256,
+      "time": 9.291199999994015,
+      "triangles": 731040
+    },
+    {
+      "boosting": true,
+      "calls": 554,
+      "lap": 1,
+      "lateral": 6.342834907945453,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.34135514023529767,
+      "speedKmh": 197.5923604583649,
+      "time": 9.557799999994051,
+      "triangles": 728620
+    },
+    {
+      "boosting": true,
+      "calls": 560,
+      "lap": 1,
+      "lateral": 5.96528692256725,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.35674217109346285,
+      "speedKmh": 213.7742118728501,
+      "time": 9.824499999994062,
+      "triangles": 744409
+    },
+    {
+      "boosting": false,
+      "calls": 560,
+      "lap": 1,
+      "lateral": 5.603004887138477,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.37193600593790355,
+      "speedKmh": 221.6568008095383,
+      "time": 10.07459999999404,
+      "triangles": 745554
+    },
+    {
+      "boosting": false,
+      "calls": 540,
+      "lap": 1,
+      "lateral": 5.308985738633971,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.38285057118461663,
+      "speedKmh": 214.93779336061263,
+      "time": 10.407799999994053,
+      "triangles": 753961
+    },
+    {
+      "boosting": false,
+      "calls": 524,
+      "lap": 1,
+      "lateral": 4.980664285744075,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3966798793347248,
+      "speedKmh": 206.6170280267276,
+      "time": 10.657899999994028,
+      "triangles": 740839
+    },
+    {
+      "boosting": false,
+      "calls": 524,
+      "lap": 1,
+      "lateral": 4.777602307661727,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.41130806892926497,
+      "speedKmh": 198.0732528503306,
+      "time": 10.924499999994064,
+      "triangles": 724138
+    },
+    {
+      "boosting": false,
+      "calls": 536,
+      "lap": 1,
+      "lateral": 5.134835270871572,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4254059726250785,
+      "speedKmh": 190.1273338694963,
+      "time": 11.19109999999404,
+      "triangles": 715416
+    },
+    {
+      "boosting": false,
+      "calls": 545,
+      "lap": 1,
+      "lateral": 5.96092655826457,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.43826383370159494,
+      "speedKmh": 183.1644830975283,
+      "time": 11.441199999994016,
+      "triangles": 732348
+    },
+    {
+      "boosting": false,
+      "calls": 539,
+      "lap": 1,
+      "lateral": 7.127667363023993,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4517531334207278,
+      "speedKmh": 176.32591958751505,
+      "time": 11.707799999994052,
+      "triangles": 729134
+    },
+    {
+      "boosting": false,
+      "calls": 604,
+      "lap": 1,
+      "lateral": 7.652279328385111,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4649472941052762,
+      "speedKmh": 152.89426560308536,
+      "time": 11.974399999994027,
+      "triangles": 749427
+    },
+    {
+      "boosting": false,
+      "calls": 604,
+      "lap": 1,
+      "lateral": 7.250028856990467,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.47621590699115,
+      "speedKmh": 148.687068214919,
+      "time": 12.224499999994062,
+      "triangles": 739969
+    },
+    {
+      "boosting": false,
+      "calls": 600,
+      "lap": 1,
+      "lateral": 6.6094732514176116,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4874089045983738,
+      "speedKmh": 144.13372254256012,
+      "time": 12.49109999999404,
+      "triangles": 716282
+    },
+    {
+      "boosting": false,
+      "calls": 618,
+      "lap": 1,
+      "lateral": 5.947191616181322,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.498047259179931,
+      "speedKmh": 139.40252240477193,
+      "time": 12.75779999999405,
+      "triangles": 752649
+    },
+    {
+      "boosting": false,
+      "calls": 623,
+      "lap": 1,
+      "lateral": 5.265907544838777,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5081676523739014,
+      "speedKmh": 134.90665842347516,
+      "time": 13.024499999994063,
+      "triangles": 751485
+    },
+    {
+      "boosting": false,
+      "calls": 626,
+      "lap": 1,
+      "lateral": 4.715720155876221,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5178916290079394,
+      "speedKmh": 130.62737877945634,
+      "time": 13.29109999999404,
+      "triangles": 741027
+    },
+    {
+      "boosting": false,
+      "calls": 632,
+      "lap": 1,
+      "lateral": 4.374820335427555,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5272538852673909,
+      "speedKmh": 126.54785679361068,
+      "time": 13.557799999994051,
+      "triangles": 756918
+    },
+    {
+      "boosting": false,
+      "calls": 642,
+      "lap": 1,
+      "lateral": 4.155526322205755,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5364190519019285,
+      "speedKmh": 122.65294946082416,
+      "time": 13.824399999994029,
+      "triangles": 738298
+    },
+    {
+      "boosting": false,
+      "calls": 650,
+      "lap": 1,
+      "lateral": 3.887881351070962,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5452293504989361,
+      "speedKmh": 118.92899142931216,
+      "time": 14.090999999994064,
+      "triangles": 745869
+    },
+    {
+      "boosting": false,
+      "calls": 652,
+      "lap": 1,
+      "lateral": 3.484940936694903,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5537509203729614,
+      "speedKmh": 115.36361849891924,
+      "time": 14.357699999994017,
+      "triangles": 737900
+    },
+    {
+      "boosting": false,
+      "calls": 642,
+      "lap": 1,
+      "lateral": 3.029133608003679,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5619733175683457,
+      "speedKmh": 111.94561581800552,
+      "time": 14.624399999994028,
+      "triangles": 693093
+    },
+    {
+      "boosting": false,
+      "calls": 636,
+      "lap": 1,
+      "lateral": 2.560931707021259,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5698758583874954,
+      "speedKmh": 108.66478683769462,
+      "time": 14.890999999994063,
+      "triangles": 685203
+    },
+    {
+      "boosting": false,
+      "calls": 632,
+      "lap": 1,
+      "lateral": 2.120744185459841,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.577526879203974,
+      "speedKmh": 105.5118397850292,
+      "time": 15.15759999999404,
+      "triangles": 674481
+    },
+    {
+      "boosting": false,
+      "calls": 627,
+      "lap": 1,
+      "lateral": 1.7194223890273077,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5849291468619349,
+      "speedKmh": 102.47828898144245,
+      "time": 15.424399999994028,
+      "triangles": 674823
+    },
+    {
+      "boosting": false,
+      "calls": 622,
+      "lap": 1,
+      "lateral": 1.3518506464403703,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5921047865702862,
+      "speedKmh": 99.55636878932114,
+      "time": 15.690999999994062,
+      "triangles": 661038
+    },
+    {
+      "boosting": false,
+      "calls": 611,
+      "lap": 1,
+      "lateral": 1.0245244507347184,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5990684035917189,
+      "speedKmh": 96.7389583400058,
+      "time": 15.957699999994016,
+      "triangles": 652887
+    },
+    {
+      "boosting": false,
+      "calls": 606,
+      "lap": 1,
+      "lateral": 0.7278742604987465,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6058301442468386,
+      "speedKmh": 94.01951549887148,
+      "time": 16.224299999994052,
+      "triangles": 624711
+    },
+    {
+      "boosting": false,
+      "calls": 605,
+      "lap": 1,
+      "lateral": 0.48438540366976446,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6123979714424892,
+      "speedKmh": 91.39201877088576,
+      "time": 16.490999999994063,
+      "triangles": 640962
+    },
+    {
+      "boosting": false,
+      "calls": 597,
+      "lap": 1,
+      "lateral": 0.3057986506273863,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6188068190944351,
+      "speedKmh": 90.13008200313072,
+      "time": 16.75759999999404,
+      "triangles": 623174
+    },
+    {
+      "boosting": false,
+      "calls": 589,
+      "lap": 1,
+      "lateral": 0.20674476002308884,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6252254558211814,
+      "speedKmh": 90.16710447568374,
+      "time": 17.024199999994018,
+      "triangles": 576241
+    },
+    {
+      "boosting": false,
+      "calls": 584,
+      "lap": 1,
+      "lateral": 0.1528442306713571,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6316089223475023,
+      "speedKmh": 90.20906404825124,
+      "time": 17.29089999999403,
+      "triangles": 586953
+    },
+    {
+      "boosting": false,
+      "calls": 577,
+      "lap": 1,
+      "lateral": 0.1233574135893918,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6380003421264939,
+      "speedKmh": 90.24935267616858,
+      "time": 17.557499999994064,
+      "triangles": 573088
+    },
+    {
+      "boosting": false,
+      "calls": 566,
+      "lap": 1,
+      "lateral": 0.11314879086650728,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6443941382423874,
+      "speedKmh": 90.28803593993752,
+      "time": 17.824199999994015,
+      "triangles": 556935
+    },
+    {
+      "boosting": false,
+      "calls": 562,
+      "lap": 1,
+      "lateral": 0.12098499719895336,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6507906573413935,
+      "speedKmh": 90.32517692200844,
+      "time": 18.09079999999405,
+      "triangles": 548587
+    },
+    {
+      "boosting": false,
+      "calls": 552,
+      "lap": 1,
+      "lateral": 0.1437020048161637,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6571789559294192,
+      "speedKmh": 90.3672634858299,
+      "time": 18.35749999999406,
+      "triangles": 520859
+    },
+    {
+      "boosting": false,
+      "calls": 580,
+      "lap": 1,
+      "lateral": 0.1832857420149782,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6631705035357047,
+      "speedKmh": 89.92101007291272,
+      "time": 18.60759999999404,
+      "triangles": 505333
+    },
+    {
+      "boosting": false,
+      "calls": 601,
+      "lap": 1,
+      "lateral": 0.24314637594408112,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6695659913823255,
+      "speedKmh": 89.95996537735257,
+      "time": 18.874199999994016,
+      "triangles": 505375
+    },
+    {
+      "boosting": false,
+      "calls": 598,
+      "lap": 1,
+      "lateral": 0.3189467227632217,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6759659332435262,
+      "speedKmh": 89.99736772895967,
+      "time": 19.140899999994023,
+      "triangles": 498305
+    },
+    {
+      "boosting": false,
+      "calls": 589,
+      "lap": 1,
+      "lateral": 0.39887218897731375,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6823626536798582,
+      "speedKmh": 90.03810267688222,
+      "time": 19.407499999994062,
+      "triangles": 477771
+    },
+    {
+      "boosting": false,
+      "calls": 578,
+      "lap": 1,
+      "lateral": 0.5017330078275289,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6887629862119509,
+      "speedKmh": 90.07879102582368,
+      "time": 19.67409999999404,
+      "triangles": 468517
+    },
+    {
+      "boosting": false,
+      "calls": 572,
+      "lap": 1,
+      "lateral": 0.6079921627546717,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6947718741547275,
+      "speedKmh": 90.27684184016933,
+      "time": 19.924199999994016,
+      "triangles": 441476
+    },
+    {
+      "boosting": false,
+      "calls": 569,
+      "lap": 1,
+      "lateral": 0.7084587003624006,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7011863036225803,
+      "speedKmh": 90.31442921441972,
+      "time": 20.190799999994052,
+      "triangles": 439505
+    },
+    {
+      "boosting": false,
+      "calls": 554,
+      "lap": 1,
+      "lateral": 0.7535548128059351,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7075940099473399,
+      "speedKmh": 90.35536176621731,
+      "time": 20.457499999994063,
+      "triangles": 407107
+    },
+    {
+      "boosting": false,
+      "calls": 549,
+      "lap": 1,
+      "lateral": 0.7163675670328048,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.713948126623301,
+      "speedKmh": 90.39624643600494,
+      "time": 20.72409999999404,
+      "triangles": 386511
+    },
+    {
+      "boosting": false,
+      "calls": 545,
+      "lap": 1,
+      "lateral": 0.6444586812271621,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7204261703545716,
+      "speedKmh": 90.43550232595538,
+      "time": 20.990699999994018,
+      "triangles": 382681
+    },
+    {
+      "boosting": false,
+      "calls": 541,
+      "lap": 1,
+      "lateral": 0.636523364411409,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7264282409882687,
+      "speedKmh": 89.98679093008266,
+      "time": 21.240799999994053,
+      "triangles": 373794
+    },
+    {
+      "boosting": false,
+      "calls": 532,
+      "lap": 1,
+      "lateral": 0.6841289939602364,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.73283180367038,
+      "speedKmh": 90.02635570580136,
+      "time": 21.50739999999403,
+      "triangles": 354948
+    },
+    {
+      "boosting": false,
+      "calls": 529,
+      "lap": 1,
+      "lateral": 0.7856580083157029,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7392362418036402,
+      "speedKmh": 90.06751188186483,
+      "time": 21.77409999999404,
+      "triangles": 346316
+    },
+    {
+      "boosting": false,
+      "calls": 523,
+      "lap": 1,
+      "lateral": 0.9369966727855766,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7456501469861982,
+      "speedKmh": 90.10702864795424,
+      "time": 22.040699999994015,
+      "triangles": 346539
+    },
+    {
+      "boosting": false,
+      "calls": 527,
+      "lap": 1,
+      "lateral": 1.1569749585891411,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7520805794737702,
+      "speedKmh": 90.1449703830926,
+      "time": 22.30739999999403,
+      "triangles": 345887
+    },
+    {
+      "boosting": false,
+      "calls": 520,
+      "lap": 1,
+      "lateral": 1.4365963184413444,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7585171055752387,
+      "speedKmh": 90.18463798758567,
+      "time": 22.57399999999406,
+      "triangles": 338794
+    },
+    {
+      "boosting": false,
+      "calls": 522,
+      "lap": 1,
+      "lateral": 1.7766489667107654,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7649742928025163,
+      "speedKmh": 90.22589945210429,
+      "time": 22.84059999999404,
+      "triangles": 346571
+    },
+    {
+      "boosting": false,
+      "calls": 518,
+      "lap": 1,
+      "lateral": 2.193790722138002,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7714787836992274,
+      "speedKmh": 90.26551736121368,
+      "time": 23.10729999999405,
+      "triangles": 335067
+    },
+    {
+      "boosting": false,
+      "calls": 521,
+      "lap": 1,
+      "lateral": 2.6648457699576147,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7780220628208143,
+      "speedKmh": 90.3035562528991,
+      "time": 23.373999999994066,
+      "triangles": 329288
+    },
+    {
+      "boosting": false,
+      "calls": 520,
+      "lap": 1,
+      "lateral": 3.0831411002723605,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7846848478823762,
+      "speedKmh": 90.34332384960584,
+      "time": 23.640699999994016,
+      "triangles": 329981
+    },
+    {
+      "boosting": false,
+      "calls": 576,
+      "lap": 1,
+      "lateral": 3.358232076502375,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7913885212800071,
+      "speedKmh": 90.38468790605911,
+      "time": 23.907299999994052,
+      "triangles": 349458
+    },
+    {
+      "boosting": false,
+      "calls": 580,
+      "lap": 1,
+      "lateral": 3.4351351739603526,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7980874010251198,
+      "speedKmh": 90.42440436760272,
+      "time": 24.173999999994063,
+      "triangles": 347804
+    },
+    {
+      "boosting": false,
+      "calls": 576,
+      "lap": 1,
+      "lateral": 3.3542146879359507,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8047816533193832,
+      "speedKmh": 90.46253792714012,
+      "time": 24.44059999999404,
+      "triangles": 350841
+    },
+    {
+      "boosting": false,
+      "calls": 574,
+      "lap": 1,
+      "lateral": 3.1818119046062514,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8113963232613437,
+      "speedKmh": 89.85603241140186,
+      "time": 24.707299999994053,
+      "triangles": 334395
+    },
+    {
+      "boosting": false,
+      "calls": 587,
+      "lap": 1,
+      "lateral": 2.930848862157464,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8179555818823618,
+      "speedKmh": 89.89757608907013,
+      "time": 24.973999999994064,
+      "triangles": 342488
+    },
+    {
+      "boosting": false,
+      "calls": 579,
+      "lap": 1,
+      "lateral": 2.651862575332755,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8244817850363104,
+      "speedKmh": 89.93746516462558,
+      "time": 25.24059999999404,
+      "triangles": 340714
+    },
+    {
+      "boosting": false,
+      "calls": 580,
+      "lap": 1,
+      "lateral": 2.3261894212090333,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8309696173831964,
+      "speedKmh": 89.97576459446665,
+      "time": 25.507199999994015,
+      "triangles": 349244
+    },
+    {
+      "boosting": false,
+      "calls": 558,
+      "lap": 1,
+      "lateral": 2.04606324347802,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8374344479181248,
+      "speedKmh": 90.01416108298115,
+      "time": 25.77389999999403,
+      "triangles": 349660
+    },
+    {
+      "boosting": false,
+      "calls": 527,
+      "lap": 1,
+      "lateral": 1.8332605027772473,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8438734673792583,
+      "speedKmh": 90.05580282931474,
+      "time": 26.04059999999404,
+      "triangles": 364596
+    },
+    {
+      "boosting": false,
+      "calls": 529,
+      "lap": 1,
+      "lateral": 1.7276893016758383,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8503030198933894,
+      "speedKmh": 90.09578611239814,
+      "time": 26.307199999994015,
+      "triangles": 380088
+    },
+    {
+      "boosting": false,
+      "calls": 546,
+      "lap": 1,
+      "lateral": 1.750148556652079,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8567839260582459,
+      "speedKmh": 90.1341760366884,
+      "time": 26.573899999994023,
+      "triangles": 390156
+    },
+    {
+      "boosting": false,
+      "calls": 564,
+      "lap": 1,
+      "lateral": 1.6921562105819368,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8632498912425697,
+      "speedKmh": 90.17266279127924,
+      "time": 26.840499999994066,
+      "triangles": 391862
+    },
+    {
+      "boosting": false,
+      "calls": 565,
+      "lap": 1,
+      "lateral": 1.5724651264872689,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8697038940834547,
+      "speedKmh": 90.21440107524644,
+      "time": 27.107199999994016,
+      "triangles": 392064
+    },
+    {
+      "boosting": false,
+      "calls": 557,
+      "lap": 1,
+      "lateral": 1.4231180329486484,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8761399773340708,
+      "speedKmh": 90.25447709497308,
+      "time": 27.373799999994052,
+      "triangles": 381190
+    },
+    {
+      "boosting": false,
+      "calls": 565,
+      "lap": 1,
+      "lateral": 1.260859695969688,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8825649234288737,
+      "speedKmh": 90.29295610067928,
+      "time": 27.640499999994063,
+      "triangles": 404728
+    },
+    {
+      "boosting": false,
+      "calls": 564,
+      "lap": 1,
+      "lateral": 1.0924590385197686,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8889810811098053,
+      "speedKmh": 90.33153177774126,
+      "time": 27.90709999999404,
+      "triangles": 402209
+    },
+    {
+      "boosting": false,
+      "calls": 557,
+      "lap": 1,
+      "lateral": 0.93040796723319,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8953882642831665,
+      "speedKmh": 90.3733653491042,
+      "time": 28.173799999994053,
+      "triangles": 401195
+    },
+    {
+      "boosting": false,
+      "calls": 554,
+      "lap": 1,
+      "lateral": 0.7811190685466936,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9017910921179668,
+      "speedKmh": 90.41353290435742,
+      "time": 28.44039999999403,
+      "triangles": 392847
+    },
+    {
+      "boosting": false,
+      "calls": 528,
+      "lap": 1,
+      "lateral": 0.6334178818755832,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9081912900016228,
+      "speedKmh": 90.45209983760856,
+      "time": 28.70709999999404,
+      "triangles": 370931
+    },
+    {
+      "boosting": false,
+      "calls": 509,
+      "lap": 1,
+      "lateral": 0.484142222251049,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9145890839002516,
+      "speedKmh": 89.84437036652218,
+      "time": 28.97379999999405,
+      "triangles": 368277
+    },
+    {
+      "boosting": false,
+      "calls": 493,
+      "lap": 1,
+      "lateral": 0.29846207624569915,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9209793883770144,
+      "speedKmh": 89.88637834007496,
+      "time": 29.240499999994064,
+      "triangles": 349157
+    },
+    {
+      "boosting": false,
+      "calls": 489,
+      "lap": 1,
+      "lateral": 0.03831995537564683,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9275715707652016,
+      "speedKmh": 89.84754100952146,
+      "time": 29.50709999999404,
+      "triangles": 347313
+    },
+    {
+      "boosting": false,
+      "calls": 489,
+      "lap": 1,
+      "lateral": -0.27711394971961745,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9339036465315212,
+      "speedKmh": 90.20929426015438,
+      "time": 29.773699999994015,
+      "triangles": 331134
+    },
+    {
+      "boosting": false,
+      "calls": 506,
+      "lap": 1,
+      "lateral": -0.5432971667636961,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9401737725287074,
+      "speedKmh": 90.32916863004054,
+      "time": 30.04039999999403,
+      "triangles": 312842
+    },
+    {
+      "boosting": false,
+      "calls": 520,
+      "lap": 1,
+      "lateral": -0.5689291137097625,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9465639496804676,
+      "speedKmh": 90.37109628314995,
+      "time": 30.306999999994066,
+      "triangles": 313324
+    },
+    {
+      "boosting": false,
+      "calls": 476,
+      "lap": 1,
+      "lateral": -0.39713445953007814,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.952556062974157,
+      "speedKmh": 89.92470487379745,
+      "time": 30.55709999999404,
+      "triangles": 314378
+    },
+    {
+      "boosting": false,
+      "calls": 463,
+      "lap": 1,
+      "lateral": -0.02355943556924458,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9589358802376968,
+      "speedKmh": 89.96351292285406,
+      "time": 30.823699999994016,
+      "triangles": 321559
+    },
+    {
+      "boosting": false,
+      "calls": 472,
+      "lap": 1,
+      "lateral": 0.5615463690340043,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.965312085491429,
+      "speedKmh": 90.00077380782831,
+      "time": 31.090399999994027,
+      "triangles": 328035
+    },
+    {
+      "boosting": false,
+      "calls": 522,
+      "lap": 1,
+      "lateral": 1.4259110125462626,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9716776572695158,
+      "speedKmh": 90.04294851452735,
+      "time": 31.356999999994063,
+      "triangles": 366250
+    },
+    {
+      "boosting": false,
+      "calls": 545,
+      "lap": 1,
+      "lateral": 2.6347122058788672,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9781101523711344,
+      "speedKmh": 90.0834438529998,
+      "time": 31.623699999994017,
+      "triangles": 436070
+    },
+    {
+      "boosting": false,
+      "calls": 595,
+      "lap": 1,
+      "lateral": 4.250281256173787,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9847384007382828,
+      "speedKmh": 90.12232572301724,
+      "time": 31.890399999994028,
+      "triangles": 491363
+    },
+    {
+      "boosting": false,
+      "calls": 641,
+      "lap": 1,
+      "lateral": 6.0539031977316355,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9919400364711306,
+      "speedKmh": 90.15965751503812,
+      "time": 32.156899999994025,
+      "triangles": 562831
+    },
+    {
+      "boosting": false,
+      "calls": 674,
+      "lap": 2,
+      "lateral": 7.329426847333592,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.000631612856952346,
+      "speedKmh": 90.43086098554168,
+      "time": 32.42359999999404,
+      "triangles": 625644
+    },
+    {
+      "boosting": false,
+      "calls": 701,
+      "lap": 2,
+      "lateral": 7.328144525194616,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.007819306425652206,
+      "speedKmh": 89.56121786574707,
+      "time": 32.89029999999405,
+      "triangles": 678191
+    },
+    {
+      "boosting": false,
+      "calls": 707,
+      "lap": 2,
+      "lateral": 7.040538013938305,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.010804005997563593,
+      "speedKmh": 92.7593197089322,
+      "time": 33.15699999999406,
+      "triangles": 685391
+    },
+    {
+      "boosting": false,
+      "calls": 727,
+      "lap": 2,
+      "lateral": 6.294706533134059,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.017966539254569813,
+      "speedKmh": 90.38419603113262,
+      "time": 33.42359999999404,
+      "triangles": 726440
+    },
+    {
+      "boosting": false,
+      "calls": 738,
+      "lap": 2,
+      "lateral": 5.4460856105610596,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.024839634334236305,
+      "speedKmh": 90.097848538879,
+      "time": 33.690199999994014,
+      "triangles": 784835
+    },
+    {
+      "boosting": false,
+      "calls": 752,
+      "lap": 2,
+      "lateral": 4.55606862180807,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.03144223239216726,
+      "speedKmh": 90.46141174052644,
+      "time": 33.95689999999403,
+      "triangles": 811522
+    },
+    {
+      "boosting": false,
+      "calls": 767,
+      "lap": 2,
+      "lateral": 3.704555411937072,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.037932737520689264,
+      "speedKmh": 89.85494902763861,
+      "time": 34.22349999999406,
+      "triangles": 799756
+    },
+    {
+      "boosting": false,
+      "calls": 789,
+      "lap": 2,
+      "lateral": 2.9895384167646366,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.043966267683680726,
+      "speedKmh": 90.37642721607216,
+      "time": 34.473599999994036,
+      "triangles": 809448
+    },
+    {
+      "boosting": false,
+      "calls": 791,
+      "lap": 2,
+      "lateral": 2.289906281165727,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.05036136412597614,
+      "speedKmh": 89.76919381301553,
+      "time": 34.74019999999402,
+      "triangles": 821713
+    },
+    {
+      "boosting": false,
+      "calls": 790,
+      "lap": 2,
+      "lateral": 1.6595179278398011,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.056734327586393185,
+      "speedKmh": 90.13250009071244,
+      "time": 35.006899999994026,
+      "triangles": 803562
+    },
+    {
+      "boosting": false,
+      "calls": 793,
+      "lap": 2,
+      "lateral": 1.0762838442151754,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.06310268600518998,
+      "speedKmh": 90.17103468516392,
+      "time": 35.273499999994065,
+      "triangles": 820357
+    },
+    {
+      "boosting": false,
+      "calls": 795,
+      "lap": 2,
+      "lateral": 0.5628589666022007,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.06906785523157177,
+      "speedKmh": 90.04587837273834,
+      "time": 35.52359999999404,
+      "triangles": 816748
+    },
+    {
+      "boosting": false,
+      "calls": 784,
+      "lap": 2,
+      "lateral": 0.09647724106722524,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.07543348297990238,
+      "speedKmh": 90.08625700789024,
+      "time": 35.79009999999404,
+      "triangles": 822528
+    },
+    {
+      "boosting": false,
+      "calls": 784,
+      "lap": 2,
+      "lateral": -0.20347048008028373,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.08161788803791548,
+      "speedKmh": 90.20570936516292,
+      "time": 36.05679999999405,
+      "triangles": 817632
+    },
+    {
+      "boosting": false,
+      "calls": 780,
+      "lap": 2,
+      "lateral": -0.31180845104019705,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.0880934450395936,
+      "speedKmh": 90.24292300537118,
+      "time": 36.32339999999403,
+      "triangles": 812979
+    },
+    {
+      "boosting": false,
+      "calls": 781,
+      "lap": 2,
+      "lateral": -0.2819555008344622,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.09424520101860168,
+      "speedKmh": 90.03851914743878,
+      "time": 36.57349999999406,
+      "triangles": 804254
+    },
+    {
+      "boosting": false,
+      "calls": 769,
+      "lap": 2,
+      "lateral": -0.258751340603202,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.10043862589834696,
+      "speedKmh": 90.47820973093374,
+      "time": 36.84009999999404,
+      "triangles": 790836
+    },
+    {
+      "boosting": false,
+      "calls": 724,
+      "lap": 2,
+      "lateral": -0.2348625311392627,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.10682570214151375,
+      "speedKmh": 90.19620517583571,
+      "time": 37.10679999999405,
+      "triangles": 776122
+    },
+    {
+      "boosting": false,
+      "calls": 697,
+      "lap": 2,
+      "lateral": -0.21711094024128771,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.11341908015700652,
+      "speedKmh": 90.47674916795602,
+      "time": 37.37339999999403,
+      "triangles": 767361
+    },
+    {
+      "boosting": false,
+      "calls": 696,
+      "lap": 2,
+      "lateral": -0.21087502734028513,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.11981123923340609,
+      "speedKmh": 89.86888014126718,
+      "time": 37.64009999999404,
+      "triangles": 763093
+    },
+    {
+      "boosting": false,
+      "calls": 691,
+      "lap": 2,
+      "lateral": -0.19787218588905528,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.126201206793761,
+      "speedKmh": 89.90830670676448,
+      "time": 37.90669999999402,
+      "triangles": 760461
+    },
+    {
+      "boosting": false,
+      "calls": 695,
+      "lap": 2,
+      "lateral": -0.187554702746376,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.13258919535827296,
+      "speedKmh": 90.2719661917296,
+      "time": 38.173399999994025,
+      "triangles": 784371
+    },
+    {
+      "boosting": false,
+      "calls": 686,
+      "lap": 2,
+      "lateral": -0.18515191704602663,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.13897997131525042,
+      "speedKmh": 89.98796490955998,
+      "time": 38.44009999999404,
+      "triangles": 773599
+    },
+    {
+      "boosting": false,
+      "calls": 678,
+      "lap": 2,
+      "lateral": -0.1733766116351141,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.1453693805787224,
+      "speedKmh": 90.35077979561746,
+      "time": 38.706699999994015,
+      "triangles": 771065
+    },
+    {
+      "boosting": false,
+      "calls": 673,
+      "lap": 2,
+      "lateral": -0.13671528112502776,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.15176740760753304,
+      "speedKmh": 90.3858025039418,
+      "time": 38.97339999999403,
+      "triangles": 754214
+    },
+    {
+      "boosting": false,
+      "calls": 666,
+      "lap": 2,
+      "lateral": -0.12678392957557508,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.15815862874961173,
+      "speedKmh": 90.42468387190593,
+      "time": 39.23999999999406,
+      "triangles": 733342
+    },
+    {
+      "boosting": false,
+      "calls": 686,
+      "lap": 2,
+      "lateral": -0.11814100798116035,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.16454348248794817,
+      "speedKmh": 89.82122663868816,
+      "time": 39.50669999999402,
+      "triangles": 743401
+    },
+    {
+      "boosting": false,
+      "calls": 684,
+      "lap": 2,
+      "lateral": -0.12724057399568922,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.17093079294017732,
+      "speedKmh": 90.18566366919946,
+      "time": 39.77339999999403,
+      "triangles": 708149
+    },
+    {
+      "boosting": false,
+      "calls": 650,
+      "lap": 2,
+      "lateral": -0.18590703391822505,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.17712295864333782,
+      "speedKmh": 89.98059512261858,
+      "time": 40.039999999994066,
+      "triangles": 681587
+    },
+    {
+      "boosting": false,
+      "calls": 624,
+      "lap": 2,
+      "lateral": -0.29119348032965375,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.18341742824191257,
+      "speedKmh": 90.0204067037726,
+      "time": 40.30659999999404,
+      "triangles": 670486
+    },
+    {
+      "boosting": false,
+      "calls": 622,
+      "lap": 2,
+      "lateral": -0.3860624113942839,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.1901189368632339,
+      "speedKmh": 90.30269153284912,
+      "time": 40.57329999999405,
+      "triangles": 661825
+    },
+    {
+      "boosting": false,
+      "calls": 619,
+      "lap": 2,
+      "lateral": -0.38709351899320626,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.196310360768307,
+      "speedKmh": 90.10004467915142,
+      "time": 40.839899999994024,
+      "triangles": 650987
+    },
+    {
+      "boosting": false,
+      "calls": 618,
+      "lap": 2,
+      "lateral": -0.3382510668938419,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.2029018785536436,
+      "speedKmh": 90.38221837553948,
+      "time": 41.106699999994014,
+      "triangles": 648410
+    },
+    {
+      "boosting": false,
+      "calls": 609,
+      "lap": 2,
+      "lateral": -0.23355261904119431,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.20948781931034532,
+      "speedKmh": 90.34397342124318,
+      "time": 41.37329999999405,
+      "triangles": 646456
+    },
+    {
+      "boosting": false,
+      "calls": 605,
+      "lap": 2,
+      "lateral": -0.0780231422459975,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.21566606454815584,
+      "speedKmh": 89.82382912165896,
+      "time": 41.63989999999403,
+      "triangles": 641959
+    },
+    {
+      "boosting": false,
+      "calls": 601,
+      "lap": 2,
+      "lateral": 0.11589743609831236,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.22185527859059384,
+      "speedKmh": 89.94503549415042,
+      "time": 41.90659999999404,
+      "triangles": 620280
+    },
+    {
+      "boosting": false,
+      "calls": 603,
+      "lap": 2,
+      "lateral": 0.3859021398086972,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.22844459528096792,
+      "speedKmh": 90.22769628510996,
+      "time": 42.17319999999402,
+      "triangles": 614840
+    },
+    {
+      "boosting": false,
+      "calls": 603,
+      "lap": 2,
+      "lateral": 0.6500192123477879,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.2346454518866774,
+      "speedKmh": 90.3476631228994,
+      "time": 42.439899999994026,
+      "triangles": 622241
+    },
+    {
+      "boosting": false,
+      "calls": 597,
+      "lap": 2,
+      "lateral": 0.9624913833234914,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.2410601941949122,
+      "speedKmh": 90.38644763688518,
+      "time": 42.706499999994065,
+      "triangles": 598667
+    },
+    {
+      "boosting": false,
+      "calls": 571,
+      "lap": 2,
+      "lateral": 1.263401062630948,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.24749332905635835,
+      "speedKmh": 90.10641406829752,
+      "time": 42.973199999994016,
+      "triangles": 594861
+    },
+    {
+      "boosting": false,
+      "calls": 534,
+      "lap": 2,
+      "lateral": 1.5105152506211452,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.25416532430887706,
+      "speedKmh": 90.38594724849956,
+      "time": 43.23979999999405,
+      "triangles": 616420
+    },
+    {
+      "boosting": false,
+      "calls": 531,
+      "lap": 2,
+      "lateral": 1.608717527063642,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.26065516834321123,
+      "speedKmh": 89.78276119223831,
+      "time": 43.50649999999406,
+      "triangles": 620254
+    },
+    {
+      "boosting": false,
+      "calls": 528,
+      "lap": 2,
+      "lateral": 1.5795366173513072,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.26670235886406246,
+      "speedKmh": 89.98598932096228,
+      "time": 43.75659999999404,
+      "triangles": 618448
+    },
+    {
+      "boosting": false,
+      "calls": 526,
+      "lap": 2,
+      "lateral": 1.5933118079835782,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.27314727207529055,
+      "speedKmh": 90.35015531594458,
+      "time": 44.02309999999404,
+      "triangles": 621471
+    },
+    {
+      "boosting": false,
+      "calls": 529,
+      "lap": 2,
+      "lateral": 1.6370480540781425,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.2795956523935976,
+      "speedKmh": 90.3912473328205,
+      "time": 44.28989999999403,
+      "triangles": 611580
+    },
+    {
+      "boosting": false,
+      "calls": 533,
+      "lap": 2,
+      "lateral": 1.7186179643642372,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.2860546126372163,
+      "speedKmh": 90.43070243104248,
+      "time": 44.55649999999406,
+      "triangles": 625751
+    },
+    {
+      "boosting": false,
+      "calls": 538,
+      "lap": 2,
+      "lateral": 1.8486453260801992,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.2925346908448594,
+      "speedKmh": 90.46939347020576,
+      "time": 44.82309999999404,
+      "triangles": 626640
+    },
+    {
+      "boosting": false,
+      "calls": 542,
+      "lap": 2,
+      "lateral": 2.03852182714522,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.29881242676401687,
+      "speedKmh": 90.26321146849352,
+      "time": 45.08969999999402,
+      "triangles": 636653
+    },
+    {
+      "boosting": false,
+      "calls": 548,
+      "lap": 2,
+      "lateral": 2.2657846350152715,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.30512998685986514,
+      "speedKmh": 90.37734947724468,
+      "time": 45.33979999999405,
+      "triangles": 665992
+    },
+    {
+      "boosting": false,
+      "calls": 555,
+      "lap": 2,
+      "lateral": 2.5672617328987,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3114635680863054,
+      "speedKmh": 89.8491497881249,
+      "time": 45.606399999994025,
+      "triangles": 688223
+    },
+    {
+      "boosting": false,
+      "calls": 562,
+      "lap": 2,
+      "lateral": 2.8933870488348696,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.31826770534294546,
+      "speedKmh": 90.45225227887734,
+      "time": 45.87309999999404,
+      "triangles": 706327
+    },
+    {
+      "boosting": false,
+      "calls": 545,
+      "lap": 2,
+      "lateral": 3.128222328076975,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.32469982043613976,
+      "speedKmh": 89.92449725339519,
+      "time": 46.139699999994015,
+      "triangles": 671491
+    },
+    {
+      "boosting": false,
+      "calls": 547,
+      "lap": 2,
+      "lateral": 3.267057342275973,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3315963205662733,
+      "speedKmh": 90.20437198566864,
+      "time": 46.40639999999403,
+      "triangles": 686376
+    },
+    {
+      "boosting": false,
+      "calls": 522,
+      "lap": 2,
+      "lateral": 3.2319154744383916,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.338267922903031,
+      "speedKmh": 89.91979101763404,
+      "time": 46.67299999999406,
+      "triangles": 692032
+    },
+    {
+      "boosting": false,
+      "calls": 524,
+      "lap": 2,
+      "lateral": 3.1106744589894735,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.344244645407374,
+      "speedKmh": 89.87983588778178,
+      "time": 46.92309999999404,
+      "triangles": 689166
+    },
+    {
+      "boosting": false,
+      "calls": 521,
+      "lap": 2,
+      "lateral": 2.886747443415313,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3508036856757999,
+      "speedKmh": 89.91883971665375,
+      "time": 47.18969999999402,
+      "triangles": 682067
+    },
+    {
+      "boosting": false,
+      "calls": 518,
+      "lap": 2,
+      "lateral": 2.63860865349934,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3573340187886269,
+      "speedKmh": 90.27487711920094,
+      "time": 47.45639999999403,
+      "triangles": 684789
+    },
+    {
+      "boosting": false,
+      "calls": 525,
+      "lap": 2,
+      "lateral": 2.369219472412906,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.3640368929711053,
+      "speedKmh": 89.91352804061894,
+      "time": 47.72309999999404,
+      "triangles": 691897
+    },
+    {
+      "boosting": false,
+      "calls": 528,
+      "lap": 2,
+      "lateral": 2.134413268305744,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.37029517932730416,
+      "speedKmh": 90.03485447603389,
+      "time": 47.989699999994016,
+      "triangles": 696737
+    },
+    {
+      "boosting": false,
+      "calls": 523,
+      "lap": 2,
+      "lateral": 1.9260496298137473,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.37674925432053286,
+      "speedKmh": 90.07604174027126,
+      "time": 48.25629999999405,
+      "triangles": 711313
+    },
+    {
+      "boosting": false,
+      "calls": 517,
+      "lap": 2,
+      "lateral": 1.7248246114093546,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.383398058063364,
+      "speedKmh": 90.03665780059815,
+      "time": 48.52299999999406,
+      "triangles": 727858
+    },
+    {
+      "boosting": false,
+      "calls": 510,
+      "lap": 2,
+      "lateral": 1.5667997907901368,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.38984732603071937,
+      "speedKmh": 90.39429627352388,
+      "time": 48.78969999999401,
+      "triangles": 717686
+    },
+    {
+      "boosting": false,
+      "calls": 508,
+      "lap": 2,
+      "lateral": 1.403639424832121,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.396052784175279,
+      "speedKmh": 89.87431629094785,
+      "time": 49.05629999999405,
+      "triangles": 707423
+    },
+    {
+      "boosting": false,
+      "calls": 511,
+      "lap": 2,
+      "lateral": 1.2950968633134032,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4024932257379597,
+      "speedKmh": 90.23978509969668,
+      "time": 49.32299999999406,
+      "triangles": 703977
+    },
+    {
+      "boosting": false,
+      "calls": 504,
+      "lap": 2,
+      "lateral": 1.2580405477334422,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.40911689704202536,
+      "speedKmh": 90.20172392162088,
+      "time": 49.58969999999402,
+      "triangles": 706584
+    },
+    {
+      "boosting": false,
+      "calls": 505,
+      "lap": 2,
+      "lateral": 1.275111750563915,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4153396962979343,
+      "speedKmh": 89.99729805007897,
+      "time": 49.85619999999402,
+      "triangles": 695221
+    },
+    {
+      "boosting": false,
+      "calls": 508,
+      "lap": 2,
+      "lateral": 1.3545691649067615,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.42177365655729426,
+      "speedKmh": 90.35782420510536,
+      "time": 50.122999999994065,
+      "triangles": 696453
+    },
+    {
+      "boosting": false,
+      "calls": 504,
+      "lap": 2,
+      "lateral": 1.4929987594559488,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4282183325287541,
+      "speedKmh": 90.07651251035436,
+      "time": 50.38959999999404,
+      "triangles": 691674
+    },
+    {
+      "boosting": false,
+      "calls": 518,
+      "lap": 2,
+      "lateral": 1.7556140794293842,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.43467684823676,
+      "speedKmh": 90.11769972103464,
+      "time": 50.656299999994054,
+      "triangles": 709000
+    },
+    {
+      "boosting": false,
+      "calls": 510,
+      "lap": 2,
+      "lateral": 2.084377240228524,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.441161303858689,
+      "speedKmh": 90.47641886419387,
+      "time": 50.92289999999403,
+      "triangles": 700294
+    },
+    {
+      "boosting": false,
+      "calls": 512,
+      "lap": 2,
+      "lateral": 2.475402379154579,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4476853486923369,
+      "speedKmh": 90.51567265191238,
+      "time": 51.18959999999404,
+      "triangles": 703641
+    },
+    {
+      "boosting": false,
+      "calls": 528,
+      "lap": 2,
+      "lateral": 2.910850020844882,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.454256378284158,
+      "speedKmh": 89.90995317092485,
+      "time": 51.45619999999401,
+      "triangles": 708143
+    },
+    {
+      "boosting": false,
+      "calls": 530,
+      "lap": 2,
+      "lateral": 3.3259753539776407,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4609187712697591,
+      "speedKmh": 90.26999273697244,
+      "time": 51.72279999999405,
+      "triangles": 698391
+    },
+    {
+      "boosting": false,
+      "calls": 575,
+      "lap": 2,
+      "lateral": 3.601513783205794,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4677279738234117,
+      "speedKmh": 90.30505770052412,
+      "time": 51.98959999999404,
+      "triangles": 734001
+    },
+    {
+      "boosting": false,
+      "calls": 588,
+      "lap": 2,
+      "lateral": 3.6473146608544695,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.47445344928298994,
+      "speedKmh": 90.019758578482,
+      "time": 52.25609999999404,
+      "triangles": 722526
+    },
+    {
+      "boosting": false,
+      "calls": 595,
+      "lap": 2,
+      "lateral": 3.5556334884194225,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.481361440963991,
+      "speedKmh": 90.30411576907105,
+      "time": 52.52279999999405,
+      "triangles": 715170
+    },
+    {
+      "boosting": false,
+      "calls": 597,
+      "lap": 2,
+      "lateral": 3.358423208906487,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4877855574558694,
+      "speedKmh": 90.42272061708,
+      "time": 52.789499999994064,
+      "triangles": 715602
+    },
+    {
+      "boosting": false,
+      "calls": 598,
+      "lap": 2,
+      "lateral": 3.1384227718580275,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.4943729882196613,
+      "speedKmh": 90.46009748322052,
+      "time": 53.05609999999404,
+      "triangles": 697723
+    },
+    {
+      "boosting": false,
+      "calls": 612,
+      "lap": 2,
+      "lateral": 2.8881149913512334,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5011375925645738,
+      "speedKmh": 90.41866546716098,
+      "time": 53.322799999994054,
+      "triangles": 729054
+    },
+    {
+      "boosting": false,
+      "calls": 614,
+      "lap": 2,
+      "lateral": 2.6522087898327213,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5076572203805347,
+      "speedKmh": 90.13536950213587,
+      "time": 53.58949999999406,
+      "triangles": 719274
+    },
+    {
+      "boosting": false,
+      "calls": 620,
+      "lap": 2,
+      "lateral": 2.470280416776085,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5139577252091889,
+      "speedKmh": 90.2540822434364,
+      "time": 53.85609999999403,
+      "triangles": 739995
+    },
+    {
+      "boosting": false,
+      "calls": 624,
+      "lap": 2,
+      "lateral": 2.3084940144424575,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5204471849313721,
+      "speedKmh": 89.96917581878397,
+      "time": 54.12269999999402,
+      "triangles": 732032
+    },
+    {
+      "boosting": false,
+      "calls": 627,
+      "lap": 2,
+      "lateral": 2.2547179162507605,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5269333131187244,
+      "speedKmh": 90.00542481479022,
+      "time": 54.389399999994026,
+      "triangles": 748844
+    },
+    {
+      "boosting": false,
+      "calls": 635,
+      "lap": 2,
+      "lateral": 2.25125162889041,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5334420944545524,
+      "speedKmh": 90.36874790202673,
+      "time": 54.655999999994066,
+      "triangles": 726304
+    },
+    {
+      "boosting": false,
+      "calls": 642,
+      "lap": 2,
+      "lateral": 2.3387265989119537,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5397503543894502,
+      "speedKmh": 89.84085383273684,
+      "time": 54.90609999999404,
+      "triangles": 740143
+    },
+    {
+      "boosting": false,
+      "calls": 645,
+      "lap": 2,
+      "lateral": 2.281198185533398,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5460777023998493,
+      "speedKmh": 89.95816683897749,
+      "time": 55.17279999999405,
+      "triangles": 733177
+    },
+    {
+      "boosting": false,
+      "calls": 650,
+      "lap": 2,
+      "lateral": 2.123440697911054,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5527726916449807,
+      "speedKmh": 89.91635947510946,
+      "time": 55.43929999999405,
+      "triangles": 739256
+    },
+    {
+      "boosting": false,
+      "calls": 644,
+      "lap": 2,
+      "lateral": 1.9434961891864484,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.558827798027415,
+      "speedKmh": 90.44302920424828,
+      "time": 55.68939999999403,
+      "triangles": 689853
+    },
+    {
+      "boosting": false,
+      "calls": 640,
+      "lap": 2,
+      "lateral": 1.721783542261259,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5652782730338208,
+      "speedKmh": 90.1603496197242,
+      "time": 55.95599999999406,
+      "triangles": 685883
+    },
+    {
+      "boosting": false,
+      "calls": 636,
+      "lap": 2,
+      "lateral": 1.519979209897257,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5711181658412903,
+      "speedKmh": 90.11616434579057,
+      "time": 56.20609999999404,
+      "triangles": 692379
+    },
+    {
+      "boosting": false,
+      "calls": 631,
+      "lap": 2,
+      "lateral": 1.289622023310245,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5775473573210208,
+      "speedKmh": 90.15289222874304,
+      "time": 56.47269999999401,
+      "triangles": 664779
+    },
+    {
+      "boosting": false,
+      "calls": 629,
+      "lap": 2,
+      "lateral": 1.0746721799232186,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5839607720384834,
+      "speedKmh": 90.19221299734342,
+      "time": 56.73939999999403,
+      "triangles": 674825
+    },
+    {
+      "boosting": false,
+      "calls": 622,
+      "lap": 2,
+      "lateral": 0.8601006856303663,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5903610441272207,
+      "speedKmh": 89.9109202724948,
+      "time": 57.00599999999406,
+      "triangles": 669743
+    },
+    {
+      "boosting": false,
+      "calls": 615,
+      "lap": 2,
+      "lateral": 0.6592974589604006,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.5967615945055713,
+      "speedKmh": 89.94869051953718,
+      "time": 57.27259999999404,
+      "triangles": 653775
+    },
+    {
+      "boosting": false,
+      "calls": 609,
+      "lap": 2,
+      "lateral": 0.45805041554238496,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6031629381662649,
+      "speedKmh": 90.62979392021272,
+      "time": 57.53929999999405,
+      "triangles": 634478
+    },
+    {
+      "boosting": false,
+      "calls": 608,
+      "lap": 2,
+      "lateral": 0.2983225688731995,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6095568575475101,
+      "speedKmh": 90.02257175283577,
+      "time": 57.805899999994026,
+      "triangles": 634540
+    },
+    {
+      "boosting": false,
+      "calls": 601,
+      "lap": 2,
+      "lateral": 0.16555402740407982,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6155437587353112,
+      "speedKmh": 90.22394004450072,
+      "time": 58.055999999994064,
+      "triangles": 631630
+    },
+    {
+      "boosting": false,
+      "calls": 593,
+      "lap": 2,
+      "lateral": 0.07888198235255336,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6219348947971031,
+      "speedKmh": 89.94141480288079,
+      "time": 58.32259999999404,
+      "triangles": 598952
+    },
+    {
+      "boosting": false,
+      "calls": 587,
+      "lap": 2,
+      "lateral": 0.050943737704285334,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6285412597973474,
+      "speedKmh": 89.90033001370449,
+      "time": 58.589199999994015,
+      "triangles": 587575
+    },
+    {
+      "boosting": false,
+      "calls": 578,
+      "lap": 2,
+      "lateral": 0.04781950520880674,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6347204186125124,
+      "speedKmh": 90.02540690401723,
+      "time": 58.85589999999403,
+      "triangles": 578273
+    },
+    {
+      "boosting": false,
+      "calls": 571,
+      "lap": 2,
+      "lateral": 0.05300200759696204,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6411145663498754,
+      "speedKmh": 90.38793711304342,
+      "time": 59.12259999999404,
+      "triangles": 566382
+    },
+    {
+      "boosting": false,
+      "calls": 564,
+      "lap": 2,
+      "lateral": 0.0765240643984272,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6477113512085775,
+      "speedKmh": 90.34620361628298,
+      "time": 59.38919999999402,
+      "triangles": 556899
+    },
+    {
+      "boosting": false,
+      "calls": 559,
+      "lap": 2,
+      "lateral": 0.1106094648420162,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6539066471912576,
+      "speedKmh": 90.14108474964722,
+      "time": 59.65589999999403,
+      "triangles": 531128
+    },
+    {
+      "boosting": false,
+      "calls": 560,
+      "lap": 2,
+      "lateral": 0.15116605050720286,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6603044592006984,
+      "speedKmh": 90.17850627798582,
+      "time": 59.92259999999404,
+      "triangles": 521845
+    },
+    {
+      "boosting": false,
+      "calls": 581,
+      "lap": 2,
+      "lateral": 0.20868662643090624,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6666896874882811,
+      "speedKmh": 90.22321481819492,
+      "time": 60.18919999999402,
+      "triangles": 504555
+    },
+    {
+      "boosting": false,
+      "calls": 599,
+      "lap": 2,
+      "lateral": 0.26485686278429454,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6730816694850357,
+      "speedKmh": 89.94148656861283,
+      "time": 60.45579999999405,
+      "triangles": 504903
+    },
+    {
+      "boosting": false,
+      "calls": 589,
+      "lap": 2,
+      "lateral": 0.3343355112679057,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6790800724068156,
+      "speedKmh": 90.13913754306132,
+      "time": 60.70589999999403,
+      "triangles": 479163
+    },
+    {
+      "boosting": false,
+      "calls": 586,
+      "lap": 2,
+      "lateral": 0.4235984153753729,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6854818548433286,
+      "speedKmh": 90.49943434676555,
+      "time": 60.972499999994064,
+      "triangles": 474964
+    },
+    {
+      "boosting": false,
+      "calls": 574,
+      "lap": 2,
+      "lateral": 0.5344522658035362,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6920869297032388,
+      "speedKmh": 90.134293038601,
+      "time": 61.23909999999404,
+      "triangles": 453080
+    },
+    {
+      "boosting": false,
+      "calls": 571,
+      "lap": 2,
+      "lateral": 0.6451109218759967,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.6984948059171903,
+      "speedKmh": 90.17277459055036,
+      "time": 61.50579999999405,
+      "triangles": 442026
+    },
+    {
+      "boosting": false,
+      "calls": 560,
+      "lap": 2,
+      "lateral": 0.7129359972916411,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7049091868033397,
+      "speedKmh": 90.21131908437177,
+      "time": 61.77239999999403,
+      "triangles": 421199
+    },
+    {
+      "boosting": false,
+      "calls": 552,
+      "lap": 2,
+      "lateral": 0.7247340533879153,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7109262162071688,
+      "speedKmh": 90.085070682413,
+      "time": 62.02249999999406,
+      "triangles": 412803
+    },
+    {
+      "boosting": false,
+      "calls": 544,
+      "lap": 2,
+      "lateral": 0.6520929048972999,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.717313305867288,
+      "speedKmh": 90.12910219314692,
+      "time": 62.28909999999403,
+      "triangles": 382775
+    },
+    {
+      "boosting": false,
+      "calls": 542,
+      "lap": 2,
+      "lateral": 0.609320155322606,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7235399239479545,
+      "speedKmh": 89.92862400842593,
+      "time": 62.55569999999402,
+      "triangles": 381279
+    },
+    {
+      "boosting": false,
+      "calls": 536,
+      "lap": 2,
+      "lateral": 0.63082768066834,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7301421885675663,
+      "speedKmh": 90.21193890413991,
+      "time": 62.822399999994026,
+      "triangles": 372650
+    },
+    {
+      "boosting": false,
+      "calls": 531,
+      "lap": 2,
+      "lateral": 0.7391497283815781,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7365579153350894,
+      "speedKmh": 90.24525858946208,
+      "time": 63.08909999999404,
+      "triangles": 352582
+    },
+    {
+      "boosting": false,
+      "calls": 527,
+      "lap": 2,
+      "lateral": 0.8769841431056675,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7427716425036452,
+      "speedKmh": 90.0411603192101,
+      "time": 63.355699999994016,
+      "triangles": 340782
+    },
+    {
+      "boosting": false,
+      "calls": 527,
+      "lap": 2,
+      "lateral": 1.059643138623896,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7493876712326153,
+      "speedKmh": 90.6468617833061,
+      "time": 63.62239999999403,
+      "triangles": 353241
+    },
+    {
+      "boosting": false,
+      "calls": 521,
+      "lap": 2,
+      "lateral": 1.3148837422137114,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7558227621442153,
+      "speedKmh": 90.68414279205987,
+      "time": 63.88899999999406,
+      "triangles": 342108
+    },
+    {
+      "boosting": false,
+      "calls": 519,
+      "lap": 2,
+      "lateral": 1.6344436435320455,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7622877344798034,
+      "speedKmh": 90.07399844276866,
+      "time": 64.15569999999401,
+      "triangles": 333858
+    },
+    {
+      "boosting": false,
+      "calls": 518,
+      "lap": 2,
+      "lateral": 2.015469452538445,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7685551446807986,
+      "speedKmh": 90.19632106552938,
+      "time": 64.42239999999403,
+      "triangles": 344705
+    },
+    {
+      "boosting": false,
+      "calls": 521,
+      "lap": 2,
+      "lateral": 2.4527717745767332,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7750719643561643,
+      "speedKmh": 89.9176792725536,
+      "time": 64.68899999999407,
+      "triangles": 338097
+    },
+    {
+      "boosting": false,
+      "calls": 517,
+      "lap": 2,
+      "lateral": 2.9000023136888493,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7816687699342535,
+      "speedKmh": 90.59930236279264,
+      "time": 64.95569999999401,
+      "triangles": 328311
+    },
+    {
+      "boosting": false,
+      "calls": 521,
+      "lap": 2,
+      "lateral": 3.2621240699717617,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.7883498398255697,
+      "speedKmh": 89.99079246177045,
+      "time": 65.22229999999405,
+      "triangles": 342355
+    },
+    {
+      "boosting": false,
+      "calls": 578,
+      "lap": 2,
+      "lateral": 3.4240673333843743,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.795093745450131,
+      "speedKmh": 90.03141774700936,
+      "time": 65.48889999999403,
+      "triangles": 339323
+    },
+    {
+      "boosting": false,
+      "calls": 578,
+      "lap": 2,
+      "lateral": 3.4490417069491643,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.801373884100026,
+      "speedKmh": 89.90820340027621,
+      "time": 65.73899999999406,
+      "triangles": 342954
+    },
+    {
+      "boosting": false,
+      "calls": 573,
+      "lap": 2,
+      "lateral": 3.3250157758046126,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8080254097483222,
+      "speedKmh": 89.94407549314083,
+      "time": 66.00559999999403,
+      "triangles": 341866
+    },
+    {
+      "boosting": false,
+      "calls": 574,
+      "lap": 2,
+      "lateral": 3.101961607405562,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8146210640339584,
+      "speedKmh": 89.98052349783896,
+      "time": 66.27229999999405,
+      "triangles": 332677
+    },
+    {
+      "boosting": false,
+      "calls": 582,
+      "lap": 2,
+      "lateral": 2.8203009982829927,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8211895678729282,
+      "speedKmh": 90.01795443403348,
+      "time": 66.53899999999406,
+      "triangles": 340742
+    },
+    {
+      "boosting": false,
+      "calls": 576,
+      "lap": 2,
+      "lateral": 2.5124046077971904,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8276958457143575,
+      "speedKmh": 90.37915011171312,
+      "time": 66.80559999999404,
+      "triangles": 337803
+    },
+    {
+      "boosting": false,
+      "calls": 580,
+      "lap": 2,
+      "lateral": 2.202839710327209,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8341707032587788,
+      "speedKmh": 90.41744756155845,
+      "time": 67.07229999999404,
+      "triangles": 350072
+    },
+    {
+      "boosting": false,
+      "calls": 524,
+      "lap": 2,
+      "lateral": 1.9466870406614931,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8406229937395062,
+      "speedKmh": 90.4558584510743,
+      "time": 67.33889999999403,
+      "triangles": 356181
+    },
+    {
+      "boosting": false,
+      "calls": 526,
+      "lap": 2,
+      "lateral": 1.8073837966324755,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8470646753878519,
+      "speedKmh": 90.16951089617672,
+      "time": 67.60549999999407,
+      "triangles": 364880
+    },
+    {
+      "boosting": false,
+      "calls": 534,
+      "lap": 2,
+      "lateral": 1.7683224928795602,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8537602107057396,
+      "speedKmh": 89.8103513222364,
+      "time": 67.87219999999401,
+      "triangles": 380352
+    },
+    {
+      "boosting": false,
+      "calls": 541,
+      "lap": 2,
+      "lateral": 1.749474235662133,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8601857950469249,
+      "speedKmh": 90.17160936259631,
+      "time": 68.13889999999402,
+      "triangles": 391134
+    },
+    {
+      "boosting": false,
+      "calls": 567,
+      "lap": 2,
+      "lateral": 1.6612916295398332,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8664491928030711,
+      "speedKmh": 90.28889808165025,
+      "time": 68.40559999999404,
+      "triangles": 399774
+    },
+    {
+      "boosting": false,
+      "calls": 557,
+      "lap": 2,
+      "lateral": 1.510815179806441,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8730888069025897,
+      "speedKmh": 89.92538146105252,
+      "time": 68.67219999999402,
+      "triangles": 388388
+    },
+    {
+      "boosting": false,
+      "calls": 561,
+      "lap": 2,
+      "lateral": 1.364267628634087,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.879319120272757,
+      "speedKmh": 90.37121255477268,
+      "time": 68.93879999999405,
+      "triangles": 397114
+    },
+    {
+      "boosting": false,
+      "calls": 563,
+      "lap": 2,
+      "lateral": 1.204057992812179,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8853371251219757,
+      "speedKmh": 89.92522165500874,
+      "time": 69.18889999999402,
+      "triangles": 402147
+    },
+    {
+      "boosting": false,
+      "calls": 562,
+      "lap": 2,
+      "lateral": 1.0317917134119103,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8917551531742025,
+      "speedKmh": 89.96319061463889,
+      "time": 69.45549999999406,
+      "triangles": 401317
+    },
+    {
+      "boosting": false,
+      "calls": 555,
+      "lap": 2,
+      "lateral": 0.8681166138208051,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.8981662593996114,
+      "speedKmh": 90.00046435270522,
+      "time": 69.72219999999402,
+      "triangles": 401103
+    },
+    {
+      "boosting": false,
+      "calls": 549,
+      "lap": 2,
+      "lateral": 0.7135193907396933,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9045619618169458,
+      "speedKmh": 90.04386042452087,
+      "time": 69.98879999999406,
+      "triangles": 381499
+    },
+    {
+      "boosting": false,
+      "calls": 522,
+      "lap": 2,
+      "lateral": 0.5644517471561123,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9109640586469006,
+      "speedKmh": 90.08270160659684,
+      "time": 70.25539999999403,
+      "triangles": 368601
+    },
+    {
+      "boosting": false,
+      "calls": 494,
+      "lap": 2,
+      "lateral": 0.4074996895571847,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9173647333635908,
+      "speedKmh": 90.12082821176152,
+      "time": 70.52209999999404,
+      "triangles": 348277
+    },
+    {
+      "boosting": false,
+      "calls": 492,
+      "lap": 2,
+      "lateral": 0.19746055895662248,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9237528512578992,
+      "speedKmh": 90.15821972032194,
+      "time": 70.78869999999402,
+      "triangles": 356232
+    },
+    {
+      "boosting": false,
+      "calls": 485,
+      "lap": 2,
+      "lateral": -0.062029170439264744,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9297329506987766,
+      "speedKmh": 90.35810531278112,
+      "time": 71.03879999999405,
+      "triangles": 330992
+    },
+    {
+      "boosting": false,
+      "calls": 496,
+      "lap": 2,
+      "lateral": -0.39324957630664664,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9360089363682706,
+      "speedKmh": 90.39888071439536,
+      "time": 71.30539999999402,
+      "triangles": 323903
+    },
+    {
+      "boosting": false,
+      "calls": 502,
+      "lap": 2,
+      "lateral": -0.5717988147152426,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9425529549922436,
+      "speedKmh": 90.11314494867892,
+      "time": 71.57209999999404,
+      "triangles": 312790
+    },
+    {
+      "boosting": false,
+      "calls": 511,
+      "lap": 2,
+      "lateral": -0.5159993613282644,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.948954110305192,
+      "speedKmh": 90.1508428237107,
+      "time": 71.83869999999402,
+      "triangles": 315398
+    },
+    {
+      "boosting": false,
+      "calls": 457,
+      "lap": 2,
+      "lateral": -0.27897284942224637,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9549363124940924,
+      "speedKmh": 90.35100757714146,
+      "time": 72.08879999999405,
+      "triangles": 318655
+    },
+    {
+      "boosting": false,
+      "calls": 464,
+      "lap": 2,
+      "lateral": 0.15577795114376272,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9613058126826948,
+      "speedKmh": 90.39206565375734,
+      "time": 72.35539999999403,
+      "triangles": 321499
+    },
+    {
+      "boosting": false,
+      "calls": 473,
+      "lap": 2,
+      "lateral": 0.8502592076064863,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9676780358514332,
+      "speedKmh": 90.43148814386208,
+      "time": 72.62199999999406,
+      "triangles": 338908
+    },
+    {
+      "boosting": false,
+      "calls": 529,
+      "lap": 2,
+      "lateral": 1.8441617994039492,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9740725707080528,
+      "speedKmh": 90.4693392829877,
+      "time": 72.88859999999404,
+      "triangles": 372484
+    },
+    {
+      "boosting": false,
+      "calls": 560,
+      "lap": 2,
+      "lateral": 3.110175091558793,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9801156796747854,
+      "speedKmh": 90.0226403571813,
+      "time": 73.13869999999402,
+      "triangles": 449238
+    },
+    {
+      "boosting": false,
+      "calls": 614,
+      "lap": 2,
+      "lateral": 4.822193807846953,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9868685191380636,
+      "speedKmh": 90.06394448159577,
+      "time": 73.40529999999406,
+      "triangles": 518144
+    },
+    {
+      "boosting": false,
+      "calls": 655,
+      "lap": 2,
+      "lateral": 6.556038580768696,
+      "memory": {
+        "geometries": 210,
+        "textures": 66
+      },
+      "quality": 1,
+      "s": 0.9943507705585896,
+      "speedKmh": 90.10360338997424,
+      "time": 73.67199999999406,
+      "triangles": 578600
+    }
+  ]
+}

@@ -4,13 +4,14 @@
 import * as THREE from 'three';
 import { CAR_BUILDERS } from './cars/index.js';
 import { disposeObject } from './cars/common.js';
+import { buildSourceVehicle } from './cities/vehicles.js';
 
 const FRAMES = 36;          // 10° 一幀
 const FW = 220, FH = 132;   // 單幀尺寸
 const COLS = 6;
 
 const sheets = new Map();   // carId → { sheet(canvas), cols }
-let renderer = null, scene = null, cam = null, stage = null;
+let renderer = null, scene = null, cam = null, stage = null, disc = null;
 
 function ensureStudio() {
   if (renderer) return;
@@ -30,7 +31,7 @@ function ensureStudio() {
   const hemi = new THREE.HemisphereLight(0x8899bb, 0x222833, 1.1);
   scene.add(key, rim, hemi);
   // 地台圓盤 (微反光深色)
-  const disc = new THREE.Mesh(
+  disc = new THREE.Mesh(
     new THREE.CircleGeometry(3.4, 40),
     new THREE.MeshStandardMaterial({ color: 0x14181f, roughness: 0.4, metalness: 0.5 }));
   disc.rotation.x = -Math.PI / 2;
@@ -46,10 +47,14 @@ function ensureStudio() {
 }
 
 // 生成 (或取快取) 某車的轉盤 spritesheet
-export function getTurntable(carDef) {
-  if (sheets.has(carDef.id)) return sheets.get(carDef.id);
+export function getTurntable(carDef, cityLease = null) {
+  const key = `${carDef.id}:${cityLease?.manifest.version ?? 'legacy'}`;
+  if (sheets.has(key)) return sheets.get(key);
   ensureStudio();
-  const { mesh, parts } = (CAR_BUILDERS[carDef.builder] || CAR_BUILDERS.gt)(carDef);
+  const { mesh, parts } = carDef.sourceAssetId ? buildSourceVehicle(carDef, cityLease)
+    : (CAR_BUILDERS[carDef.builder] || CAR_BUILDERS.gt)(carDef);
+  disc.visible = !carDef.sourceAssetId;
+  parts.setLights?.({ headlights: false, siren: false, night: false });
   // 攝影棚內不需要車燈光源/光池/體積光
   const kill = [];
   mesh.traverse((o) => { if (o.isSpotLight || o.isPointLight) kill.push(o); });
@@ -71,7 +76,7 @@ export function getTurntable(carDef) {
   stage.remove(mesh);
   disposeObject(mesh);
   const rec = { sheet, cols: COLS };
-  sheets.set(carDef.id, rec);
+  sheets.set(key, rec);
   return rec;
 }
 
@@ -79,8 +84,8 @@ export function getTurntable(carDef) {
 const live = new Set();
 let rafOn = false, frame = 0, lastStep = 0;
 
-export function attachSpin(canvas, carDef) {
-  const rec = getTurntable(carDef);
+export function attachSpin(canvas, carDef, cityLease = null) {
+  const rec = getTurntable(carDef, cityLease);
   const item = { canvas, rec };
   live.add(item);
   // 先畫第一幀,避免出現前空白

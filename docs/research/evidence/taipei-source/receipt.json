@@ -1,0 +1,24 @@
+{
+  "manifestVersion": "source-v1-359f74464472",
+  "assets": 54,
+  "triangles": 256618,
+  "sourceFiles": 28,
+  "files": 97,
+  "pngs": 40,
+  "jsons": 57,
+  "bytes": 81145358,
+  "kinds": {
+    "building": 17,
+    "vehicle": 7,
+    "vegetation": 6,
+    "street": 8,
+    "primitive": 1,
+    "road": 5,
+    "ground": 4,
+    "character": 4,
+    "effect": 1,
+    "marker": 1
+  },
+  "renderer": "Three.js r160 WebGL2",
+  "validation": "9 node:test cases passed; standalone gallery screenshots and animation state receipts; no complete track/runtime acceptance"
+}
