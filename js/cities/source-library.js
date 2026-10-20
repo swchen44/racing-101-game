@@ -137,8 +137,11 @@ export function createSourceLibrary(manifest, documents, textures, dependencies 
           mesh.name = definition.name;
           mesh.userData = { sourceAssetId: id, source: template.asset.source, sourceManaged: true,
             sourcePart: definition.part, sourcePivot: definition.pivot, sourceMutableGeometry: mutable };
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
+          // These shaders hide/reposition primitive vertices and composite light.
+          // A default MeshDepthMaterial would cast their entire raw quad/cylinder.
+          const shaderEffect = type === 'source-fx' || type === 'source-marker';
+          mesh.castShadow = !shaderEffect;
+          mesh.receiveShadow = !shaderEffect;
           root.add(mesh);
           if (skeleton) mesh.bind(skeleton);
         }
