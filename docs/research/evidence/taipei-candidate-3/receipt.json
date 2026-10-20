@@ -1,0 +1,465 @@
+{
+  "timestamp": "2026-10-20T13:09:33.809Z",
+  "codeCommit": "3f9c458567e9b97b08ce0be443e20708a16b98d5",
+  "codeSha256": {
+    "js/main.js": "e89c5ffe457a9233a44abe50d1d3aa2de91f966dc2690b01822c6353f2c7e4b0",
+    "js/cities/taipei.js": "1990ab94735421955e80f72f173338fed40a4b4206411af2723105f1104c5ed2",
+    "js/cities/scene.js": "99ff152104253d7ca6f549dc1a2656cee4e913630925ee9c4c4cd6974218b5fe",
+    "js/cities/source-materials.js": "23ab3270e85d078b927fbf7860b8007959239148218d6ade17f5ad34485aa2e0",
+    "js/cities/source-library.js": "3138014c1b8c7fbd3de08c81861413a9ed5aac6e59004e57fb366366062ed35f",
+    "js/cities/vehicles.js": "a8dbbc9d8561e6d4d2688880550a1d7c0357790d9fd9672eba252d462506e39d",
+    "js/cities/characters.js": "1f4b01bb5d2b7e208554450f54c72f262ed180f50397776c11ce46507c72782a",
+    "js/effects.js": "8a66f370148475a7cb9b84e7e47e89211b6607c83989157891d9e0fb5145f0c1"
+  },
+  "seed": 20261020,
+  "car": "taipei-taxi",
+  "mode": "solo",
+  "camera": "chase",
+  "viewport": [
+    1280,
+    577
+  ],
+  "views": [
+    [
+      "street",
+      0.035
+    ],
+    [
+      "shops",
+      0.185
+    ],
+    [
+      "market",
+      0.285
+    ],
+    [
+      "approach",
+      0.445
+    ],
+    [
+      "temple",
+      0.515
+    ],
+    [
+      "commercial",
+      0.815
+    ]
+  ],
+  "captures": [
+    {
+      "file": "day-street.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -143.7512516797421,
+        2.9,
+        -129.60973843134852
+      ],
+      "preparationMs": 6832.29999999702,
+      "render": {
+        "calls": 751,
+        "memory": {
+          "geometries": 201,
+          "textures": 62
+        },
+        "quality": 1,
+        "triangles": 807502
+      }
+    },
+    {
+      "file": "day-shops.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        12.904419311808846,
+        2.9,
+        -128.63224986295478
+      ],
+      "preparationMs": 6832.29999999702,
+      "render": {
+        "calls": 596,
+        "memory": {
+          "geometries": 201,
+          "textures": 62
+        },
+        "quality": 1,
+        "triangles": 640892
+      }
+    },
+    {
+      "file": "day-market.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        114.5506349101944,
+        2.9,
+        -108.42681415293724
+      ],
+      "preparationMs": 6832.29999999702,
+      "render": {
+        "calls": 503,
+        "memory": {
+          "geometries": 201,
+          "textures": 62
+        },
+        "quality": 1,
+        "triangles": 589114
+      }
+    },
+    {
+      "file": "day-approach.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        174.43197504629617,
+        2.9,
+        35.600772517502
+      ],
+      "preparationMs": 6832.29999999702,
+      "render": {
+        "calls": 458,
+        "memory": {
+          "geometries": 205,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 651066
+      }
+    },
+    {
+      "file": "day-temple.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        136.20691327579254,
+        2.9,
+        95.35079400202508
+      ],
+      "preparationMs": 6832.29999999702,
+      "render": {
+        "calls": 598,
+        "memory": {
+          "geometries": 213,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 709272
+      }
+    },
+    {
+      "file": "day-commercial.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -157.335525666764,
+        2.9,
+        75.26637759353626
+      ],
+      "preparationMs": 6832.29999999702,
+      "render": {
+        "calls": 557,
+        "memory": {
+          "geometries": 213,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 326033
+      }
+    },
+    {
+      "file": "dusk-street.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -143.7512516797421,
+        2.9,
+        -129.60973843134852
+      ],
+      "preparationMs": 241.79999999701977,
+      "render": {
+        "calls": 923,
+        "memory": {
+          "geometries": 209,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 1077085
+      }
+    },
+    {
+      "file": "dusk-shops.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        12.904419311808846,
+        2.9,
+        -128.63224986295478
+      ],
+      "preparationMs": 241.79999999701977,
+      "render": {
+        "calls": 682,
+        "memory": {
+          "geometries": 209,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 755672
+      }
+    },
+    {
+      "file": "dusk-market.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        114.5506349101944,
+        2.9,
+        -108.42681415293724
+      ],
+      "preparationMs": 241.79999999701977,
+      "render": {
+        "calls": 645,
+        "memory": {
+          "geometries": 209,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 732099
+      }
+    },
+    {
+      "file": "dusk-approach.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        174.43197504629617,
+        2.9,
+        35.600772517502
+      ],
+      "preparationMs": 241.79999999701977,
+      "render": {
+        "calls": 580,
+        "memory": {
+          "geometries": 209,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 858366
+      }
+    },
+    {
+      "file": "dusk-temple.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        136.20691327579254,
+        2.9,
+        95.35079400202508
+      ],
+      "preparationMs": 241.79999999701977,
+      "render": {
+        "calls": 720,
+        "memory": {
+          "geometries": 214,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 788882
+      }
+    },
+    {
+      "file": "dusk-commercial.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -157.335525666764,
+        2.9,
+        75.26637759353626
+      ],
+      "preparationMs": 241.79999999701977,
+      "render": {
+        "calls": 710,
+        "memory": {
+          "geometries": 214,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 650544
+      }
+    },
+    {
+      "file": "night-street.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -143.7512516797421,
+        2.9,
+        -129.60973843134852
+      ],
+      "preparationMs": 333.59999999403954,
+      "render": {
+        "calls": 750,
+        "memory": {
+          "geometries": 209,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 823937
+      }
+    },
+    {
+      "file": "night-shops.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        12.904419311808846,
+        2.9,
+        -128.63224986295478
+      ],
+      "preparationMs": 333.59999999403954,
+      "render": {
+        "calls": 600,
+        "memory": {
+          "geometries": 209,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 651057
+      }
+    },
+    {
+      "file": "night-market.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        114.5506349101944,
+        2.9,
+        -108.42681415293724
+      ],
+      "preparationMs": 333.59999999403954,
+      "render": {
+        "calls": 540,
+        "memory": {
+          "geometries": 209,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 651512
+      }
+    },
+    {
+      "file": "night-approach.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        174.43197504629617,
+        2.9,
+        35.600772517502
+      ],
+      "preparationMs": 333.59999999403954,
+      "render": {
+        "calls": 485,
+        "memory": {
+          "geometries": 209,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 691728
+      }
+    },
+    {
+      "file": "night-temple.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        136.20691327579254,
+        2.9,
+        95.35079400202508
+      ],
+      "preparationMs": 333.59999999403954,
+      "render": {
+        "calls": 611,
+        "memory": {
+          "geometries": 214,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 755373
+      }
+    },
+    {
+      "file": "night-commercial.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -157.335525666764,
+        2.9,
+        75.26637759353626
+      ],
+      "preparationMs": 333.59999999403954,
+      "render": {
+        "calls": 592,
+        "memory": {
+          "geometries": 214,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 366662
+      }
+    }
+  ],
+  "errors": ""
+}

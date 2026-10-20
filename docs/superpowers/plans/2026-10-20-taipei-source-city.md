@@ -6,9 +6,13 @@
 
 **Architecture:** 開發工具從固定來源模組恢復幾何、材質與構件，輸出帶來源紀錄的資產。城市資產管理器先載入，車與角色轉接器提供既有物理合約；場景配置負責擺放，舊賽道維持原路徑。所有權、非同步切換與城市快取皆有獨立驗證。
 
-**Tech Stack:** Browser ES modules、Three.js r160、來源 r186 隔離抽取、Node.js built-in test runner、GLB/PNG、agent-browser。保持純靜態部署。
+**Tech Stack:** Browser ES modules、Three.js r160、來源 r186 隔離抽取、Node.js built-in test runner、source BufferGeometry JSON/PNG/RGBA array、agent-browser。保持純靜態部署。
 
 **Spec:** `docs/superpowers/specs/2026-10-20-taipei-source-city-design.md`
+
+**Current acceptance:** See `docs/TAIPEI-ACCEPTANCE.md`. Engineering and local browser verification are progressing; art/desktop performance/real-phone acceptance remain open.
+
+**Integration update (2026-10-21):** 使用者明確要求將目前候選版本合併至 `main` 並推送 GitHub；此指示取代下列原本的本機分支／不推送限制。未通過的美術、動態與手機驗收仍保留，不宣告完整完成。
 
 ## Global Constraints
 
@@ -40,7 +44,7 @@
 
 **Interfaces:** Produces `assets/cities/taipei/manifest.json` schema 1, `{id:'taipei',version,assets:[{id,url,sha256,source:{file,symbol,sha256},bounds,triangles,kind,parts?,textures?,limitations:[]}],required:[assetId]}`. Static models are GLB+PNG where fidelity permits; semantic source buffer data may be retained when required, documented before runtime consumption. Required vehicle ids are `sedan,taxi,sports,suv,police`; building candidates are in the spec.
 
-- [ ] Write and run a missing-library test first:
+- [x] Write and run a missing-library test first:
   ```js
   import test from 'node:test';
   import assert from 'node:assert/strict';
@@ -55,10 +59,10 @@
     assert.ok(m.assets.some(a=>a.kind==='building' && a.textures?.length));
   });
   ```
-- [ ] Use source lazy extraction for near building generators and their paint callbacks; restore atlas UV rectangles instead of the old whole-atlas placeholder. Obtain representative sign lettering, glass, foliage and emissive separation. Extract source road/curb/barrier/pole/vegetation and necessary effect primitives with source symbols. Keep raw source file hashes and fail on nonfinite geometry.
-- [ ] Reconstruct wheel semantics from original `xs` vehicle attributes/generation order, preserve steering/spinner pivots and original palette. Export source characters and original animation data with consistent units. Keep metadata for the current source pose, not invented rig fidelity claims.
-- [ ] Generate only needed assets, test file hashes, bounds, finite positions, UV/image presence, wheel pivot placement and source coverage. Use isolated browser/Canvas or local dev dependencies for baking; never initialize original backend/session/game.
-- [ ] Produce a local sample gallery and representative screenshots. Document missing source components immediately, continue extraction until required assets are resolved. Run `node --test tests/source-assets.test.mjs`, then commit only owned paths.
+- [x] Use source lazy extraction for near building generators and their paint callbacks; restore atlas UV rectangles instead of the old whole-atlas placeholder. Obtain representative sign lettering, glass, foliage and emissive separation. Extract source road/curb/barrier/pole/vegetation and necessary effect primitives with source symbols. Keep raw source file hashes and fail on nonfinite geometry.
+- [x] Reconstruct wheel semantics from original `xs` vehicle attributes/generation order, preserve steering/spinner pivots and original palette. Export source characters and original animation data with consistent units. Keep metadata for the current source pose, not invented rig fidelity claims.
+- [x] Generate only needed assets, test file hashes, bounds, finite positions, UV/image presence, wheel pivot placement and source coverage. Use isolated browser/Canvas or local dev dependencies for baking; never initialize original backend/session/game.
+- [x] Produce a local sample gallery and representative screenshots. Document missing source components immediately, continue extraction until required assets are resolved. Run `node --test tests/source-assets.test.mjs`, then commit only owned paths.
 
 ## Task 2: City loading and resource ownership
 
@@ -66,7 +70,7 @@
 
 **Interfaces:** `prepareCity(id,{signal}={}) -> Promise<CityLease>`, where lease exposes `instantiate(assetId)`, `manifest`, `release()`. Instantiation returns a source-tagged Object3D and per-instance mutable material/skeleton/controller state. `createSelectionGate()` returns `{begin(snapshot),isCurrent(token),cancel()}`. Immutable geometry/textures have shared ownership; no caller uses legacy disposal on shared assets.
 
-- [ ] Write RED tests for out-of-order requests and cancel:
+- [x] Write RED tests for out-of-order requests and cancel:
   ```js
   const gate=createSelectionGate();
   const first=gate.begin({city:'taipei',car:'taxi'});
@@ -75,9 +79,9 @@
   assert.equal(gate.isCurrent(next),true);
   gate.cancel(); assert.equal(gate.isCurrent(next),false);
   ```
-- [ ] Implement only the selected format loader, required-file validation and explicit missing-asset errors. Reject unknown ids, preserve request snapshots and release late completions.
-- [ ] Verify two leases keep shared resources alive until the last release, while mutable materials/skeletons differ. A partial load releases all acquired resources and never registers a ready lease.
-- [ ] Commit covering test and implementation after GREEN; runtime browser verification follows Task 4.
+- [x] Implement only the selected format loader, required-file validation and explicit missing-asset errors. Reject unknown ids, preserve request snapshots and release late completions.
+- [x] Verify two leases keep shared resources alive until the last release, while mutable materials/skeletons differ. A partial load releases all acquired resources and never registers a ready lease.
+- [x] Commit covering test and implementation after GREEN; runtime browser verification follows Task 4.
 
 ## Task 3: Source car and actor adapters
 
@@ -85,10 +89,10 @@
 
 **Interfaces:** `buildSourceVehicle(def,lease) -> {mesh,parts}` matches `Car` bodyGroup/wheels contract. `sourceCarDefinitions` exposes four player cars and a police spec. Mode constructors receive an optional city asset context; without it legacy behavior remains. `buildSourceCharacter(kind,lease)` returns independently animated source rig. Vehicle metadata supplies wheelRadius, forward axis, collision dimensions and camera anchors.
 
-- [ ] RED test creating player, ghost and police instances with independent material states, steering/spin groups and source IDs. Test current-car ghost semantics with route-version invalidation and preservation of legacy ghost records.
-- [ ] Implement source builders and register explicit ids; resolve source actor/model choice through context for GP, police, chase both roles, preview and arrest. Remove implicit GT/taxi fallback for a missing city asset.
-- [ ] Use original rigs/clips where available; map existing game event timing to source actions, verify foot placement and flip pivot. Source cockpit missingness remains explicit; do not transplant old 3D interiors.
-- [ ] Check all four wheels rotate and front wheels steer without moving chassis; ghost transparency and police flashes do not change player/preview. Run actor tests, then commit scoped files.
+- [x] RED test creating player, ghost and police instances with independent material states, steering/spin groups and source IDs. Test current-car ghost semantics with route-version invalidation and preservation of legacy ghost records.
+- [x] Implement source builders and register explicit ids; resolve source actor/model choice through context for GP, police, chase both roles, preview and arrest. Remove implicit GT/taxi fallback for a missing city asset.
+- [x] Use original rigs/clips where available; map existing game event timing to source actions, verify foot placement and flip pivot. Source cockpit missingness remains explicit; do not transplant old 3D interiors.
+- [x] Check all four wheels rotate and front wheels steer without moving chassis; ghost transparency and police flashes do not change player/preview. Run actor tests, then commit scoped files.
 
 ## Task 4: Complete Taipei scene and race lifecycle
 
@@ -96,11 +100,11 @@
 
 **Interfaces:** City definition supplies `trackDef`, `vehicleIds`, `routeRevision`, placement seed and four zone descriptors. `buildSourceCity(track,lease,weather)` returns `{group,update,dispose,audit}`. `audit()` reports all visible geometry with missing source IDs. Loading creates a complete staged race bundle; only a current token can replace the old world/car/actors.
 
-- [ ] Add a failing scene contract test requiring valid placement transforms, four zone ids, required source asset references and zero untagged rendered geometry.
-- [ ] Add Taipei closed control points and bilingual text; retain prior track IDs. Build source road surface and curb geometry along the same sampled path, preserving source cross-section/material and documenting derivation. Position streets/buildings with road setbacks from actual bounds.
+- [x] Add a failing scene contract test requiring valid placement transforms, four zone ids, required source asset references and zero untagged rendered geometry.
+- [x] Add Taipei closed control points and bilingual text; retain prior track IDs. Build source road surface and curb geometry along the same sampled path, preserving source cross-section/material and documenting derivation. Position streets/buildings with road setbacks from actual bounds.
 - [ ] Start with the 30-second daylight segment; use actual camera/vehicle to tune placement and expose material defects. Then build the full four-zone loop with diverse source facades, a temple focal point and controlled distant massing.
-- [ ] Replace visual roadblock, marker, sponsor frame, preview-stage and geometry-bearing effects with traced source components; keep gameplay trigger logic. Distinguish lights/postprocessing from visible model assets.
-- [ ] Add user-facing progress/retry states and city-limited source vehicle selection; await assets before preview/race construction. Stage and atomically commit latest selection. Original four tracks must still load without Taipei assets.
+- [x] Replace visual roadblock, marker, sponsor frame, preview-stage and geometry-bearing effects with traced source components; keep gameplay trigger logic. Distinguish lights/postprocessing from visible model assets.
+- [x] Add user-facing progress/retry states and city-limited source vehicle selection; await assets before preview/race construction. Stage and atomically commit latest selection. Original four tracks must still load without Taipei assets.
 - [ ] Run browser checks for four modes, both chase roles, ghost, menu, restart, finish, camera/mirror, three times of day and source audit; capture desktop/mobile-layout evidence. Commit after reproducible failures are fixed.
 
 ## Task 5: Versioned offline support
@@ -109,10 +113,10 @@
 
 **Interfaces:** City manifests bind immutable asset URLs/hashes to runtime compatibility. Offline readiness is computed from required files actually present; cache names use a game-owned namespace with core/city version scope.
 
-- [ ] RED test that core activation keeps compatible city caches and unrelated applications' caches; missing one required file means not-ready even if prior ready metadata exists.
-- [ ] Populate candidate city cache, verify required items including loaders/textures/fonts/decoders, then mark committed. Retry partial downloads; report capacity failure, retain playable prior content.
-- [ ] Replace broad cache deletion with namespace/version rules; prevent network-first mixing versions. Confirm online complete load → offline reload → race restart and version update using an isolated browser session.
-- [ ] Run cache tests and commit scoped changes.
+- [x] RED test that core activation keeps compatible city caches and unrelated applications' caches; missing one required file means not-ready even if prior ready metadata exists.
+- [x] Populate candidate city cache, verify required items including loaders/textures/fonts/decoders, then mark committed. Retry partial downloads; report capacity failure, retain playable prior content.
+- [x] Replace broad cache deletion with namespace/version rules; prevent network-first mixing versions. Confirm online complete load → offline reload → race restart and version update using an isolated browser session.
+- [x] Run cache tests and commit scoped changes.
 
 ## Task 6: Gameplay, visual and performance acceptance
 

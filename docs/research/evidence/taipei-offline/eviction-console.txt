@@ -1,0 +1,4 @@
+[warning] City preview: {stack: "Error: City manifest load failed: 503
+    at http://127.0.0.1:8937/js/cities/assets.js:48:37", message: "City manifest load failed: 503"}
+[warning] Race preparation: {stack: "Error: City manifest load failed: 503
+    at http://127.0.0.1:8937/js/cities/assets.js:48:37", message: "City manifest load failed: 503"}

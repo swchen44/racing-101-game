@@ -1,0 +1,441 @@
+{
+  "views": [
+    [
+      "street",
+      0.035
+    ],
+    [
+      "shops",
+      0.185
+    ],
+    [
+      "market",
+      0.285
+    ],
+    [
+      "approach",
+      0.445
+    ],
+    [
+      "temple",
+      0.515
+    ],
+    [
+      "commercial",
+      0.815
+    ]
+  ],
+  "seed": 20261020,
+  "version": "source-v1-f633ae38aa1e",
+  "mode": "solo",
+  "car": "taipei-taxi",
+  "camera": "chase",
+  "viewport": [
+    1280,
+    577
+  ],
+  "codeSha256": {
+    "js/main.js": "684c36e48f581caf74233ea9faa358f5f71a253756dc2b3f329944b121d9ef92",
+    "js/cities/taipei.js": "5ab17ab1a956cb224e59d9fa815ec2279d040a6053df21b04473371a85590dee",
+    "js/cities/scene.js": "57bd9f60cc809f64987e9e2f62599f01641f196c97fa6e5dfcdca261dd40a81a",
+    "js/cities/source-materials.js": "23ab3270e85d078b927fbf7860b8007959239148218d6ade17f5ad34485aa2e0"
+  },
+  "captures": [
+    {
+      "file": "day-street.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -143.7512516797421,
+        2.9,
+        -129.60973843134852
+      ],
+      "render": {
+        "calls": 767,
+        "memory": {
+          "geometries": 202,
+          "textures": 62
+        },
+        "quality": 1,
+        "triangles": 807742
+      }
+    },
+    {
+      "file": "day-shops.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        12.904419311808846,
+        2.9,
+        -128.63224986295478
+      ],
+      "render": {
+        "calls": 612,
+        "memory": {
+          "geometries": 202,
+          "textures": 62
+        },
+        "quality": 1,
+        "triangles": 641132
+      }
+    },
+    {
+      "file": "day-market.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        114.5506349101944,
+        2.9,
+        -108.42681415293724
+      ],
+      "render": {
+        "calls": 519,
+        "memory": {
+          "geometries": 202,
+          "textures": 62
+        },
+        "quality": 1,
+        "triangles": 589354
+      }
+    },
+    {
+      "file": "day-approach.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        174.43197504629617,
+        2.9,
+        35.600772517502
+      ],
+      "render": {
+        "calls": 474,
+        "memory": {
+          "geometries": 206,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 651822
+      }
+    },
+    {
+      "file": "day-temple.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        136.20691327579254,
+        2.9,
+        95.35079400202508
+      ],
+      "render": {
+        "calls": 607,
+        "memory": {
+          "geometries": 209,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 709508
+      }
+    },
+    {
+      "file": "day-commercial.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -157.335525666764,
+        2.9,
+        75.26637759353626
+      ],
+      "render": {
+        "calls": 566,
+        "memory": {
+          "geometries": 209,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 326259
+      }
+    },
+    {
+      "file": "dusk-street.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -143.7512516797421,
+        2.9,
+        -129.60973843134852
+      ],
+      "render": {
+        "calls": 939,
+        "memory": {
+          "geometries": 210,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 1076981
+      }
+    },
+    {
+      "file": "dusk-shops.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        12.904419311808846,
+        2.9,
+        -128.63224986295478
+      ],
+      "render": {
+        "calls": 698,
+        "memory": {
+          "geometries": 210,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 755740
+      }
+    },
+    {
+      "file": "dusk-market.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        114.5506349101944,
+        2.9,
+        -108.42681415293724
+      ],
+      "render": {
+        "calls": 661,
+        "memory": {
+          "geometries": 210,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 732339
+      }
+    },
+    {
+      "file": "dusk-approach.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        174.43197504629617,
+        2.9,
+        35.600772517502
+      ],
+      "render": {
+        "calls": 596,
+        "memory": {
+          "geometries": 210,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 858778
+      }
+    },
+    {
+      "file": "dusk-temple.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        136.20691327579254,
+        2.9,
+        95.35079400202508
+      ],
+      "render": {
+        "calls": 730,
+        "memory": {
+          "geometries": 210,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 789476
+      }
+    },
+    {
+      "file": "dusk-commercial.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -157.335525666764,
+        2.9,
+        75.26637759353626
+      ],
+      "render": {
+        "calls": 719,
+        "memory": {
+          "geometries": 210,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 650770
+      }
+    },
+    {
+      "file": "night-street.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -143.7512516797421,
+        2.9,
+        -129.60973843134852
+      ],
+      "render": {
+        "calls": 767,
+        "memory": {
+          "geometries": 210,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 824363
+      }
+    },
+    {
+      "file": "night-shops.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        12.904419311808846,
+        2.9,
+        -128.63224986295478
+      ],
+      "render": {
+        "calls": 616,
+        "memory": {
+          "geometries": 210,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 651297
+      }
+    },
+    {
+      "file": "night-market.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        114.5506349101944,
+        2.9,
+        -108.42681415293724
+      ],
+      "render": {
+        "calls": 556,
+        "memory": {
+          "geometries": 210,
+          "textures": 65
+        },
+        "quality": 1,
+        "triangles": 651752
+      }
+    },
+    {
+      "file": "night-approach.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        174.43197504629617,
+        2.9,
+        35.600772517502
+      ],
+      "render": {
+        "calls": 501,
+        "memory": {
+          "geometries": 210,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 692484
+      }
+    },
+    {
+      "file": "night-temple.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        136.20691327579254,
+        2.9,
+        95.35079400202508
+      ],
+      "render": {
+        "calls": 620,
+        "memory": {
+          "geometries": 210,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 755781
+      }
+    },
+    {
+      "file": "night-commercial.png",
+      "audit": {
+        "active": true,
+        "manifest": "source-v1-f633ae38aa1e",
+        "missing": []
+      },
+      "camera": [
+        -157.335525666764,
+        2.9,
+        75.26637759353626
+      ],
+      "render": {
+        "calls": 601,
+        "memory": {
+          "geometries": 210,
+          "textures": 66
+        },
+        "quality": 1,
+        "triangles": 366888
+      }
+    }
+  ]
+}

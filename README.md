@@ -4,7 +4,9 @@
 >
 > 🎮 **Play now: <https://swchen44.github.io/racing-101-game/>** (desktop / tablet / phone-landscape)
 
-A third-person 3D arcade racing game set in a rain-slicked neon Taipei at midnight. Built with **vanilla Three.js** — every asset (the 101 tower, four tracks, eight cars, every texture and sound) is **100% procedurally generated** in code. No model files, no image assets, no audio files.
+A third-person 3D arcade racing game built with **vanilla Three.js**. The original four tracks and eight cars use procedural assets. The game also includes a Taipei street circuit using recovered source models, textures and animations.
+
+The new Taipei circuit is a candidate release; complete art, mobile-device and final performance acceptance remains open. See [Taipei implementation and acceptance](docs/TAIPEI-ACCEPTANCE.md) for evidence and remaining work. Run `npm ci && npm test` for the source asset and lifecycle tests; running the game still only requires a static HTTP server.
 
 ![Title screen](docs/screenshots/title.png)
 
