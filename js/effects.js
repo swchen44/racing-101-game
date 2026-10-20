@@ -107,14 +107,18 @@ export class Effects {
   setSize(w, h) { this.composer.setSize(w, h); }
   render(dt) { this.composer.render(dt); }
 
-  setCityContext(lease, weather = {}) {
-    if (lease && this.sourceEffects?.lease === lease) {
+  prepareCityContext(lease, weather = {}, target = this.scene) {
+    return lease ? new SourceEffects(target, lease, weather) : null;
+  }
+
+  setCityContext(lease, weather = {}, prepared) {
+    if (lease && this.sourceEffects?.lease === lease && prepared === undefined) {
       this.sourceEffects.setWeather(weather);
       this._setCityBloom(weather);
       return;
     }
     // Build first: a failed source allocation leaves the current city intact.
-    const next = lease ? new SourceEffects(this.scene, lease, weather) : null;
+    const next = prepared === undefined ? this.prepareCityContext(lease, weather) : prepared;
     this.sourceEffects?.dispose();
     this.sourceEffects = next;
     this._setCityBloom(next ? weather : null);
@@ -128,7 +132,7 @@ export class Effects {
 
   _setCityBloom(weather) {
     const id = typeof weather === 'string' ? weather : weather?.id;
-    this.bloom.strength = weather ? (id === 'night' ? .55 : id === 'dusk' ? .4 : .16) : .75;
+    this.bloom.strength = weather ? (id === 'night' ? .32 : id === 'dusk' ? .24 : .12) : .75;
   }
 
   _hideLegacyEffects(car) {

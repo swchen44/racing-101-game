@@ -125,7 +125,8 @@ export function buildSourceVehicle(def, lease) {
       bodyGroup.position.set(flipPivot.x - rotatedPivot.x, support - rotatedPivot.y + lift, flipPivot.z - rotatedPivot.z);
     };
     const lamps = lampMaterials(mesh);
-    const state = { headlights: 0, brake: 0, reverse: 0, siren: 0, night: 0,
+    const state = { headlights: lease.weather?.headlights ? 1 : 0, brake: 0, reverse: 0, siren: 0,
+      night: lease.weather?.id === 'night' ? 1 : lease.weather?.id === 'dusk' ? .5 : 0,
       indicatorLeft: 0, indicatorRight: 0, seed: data.parameters?.seed ?? .5 };
     let clock = 0;
     const updateLights = (time = clock) => {

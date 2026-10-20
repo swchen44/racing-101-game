@@ -55,3 +55,20 @@ test('conflicting shared texture descriptors reject readiness and release decode
   await assert.rejects(load('taipei'), /Conflicting source texture/);
   assert.equal(disposed, 1); assert.equal(closed, 1);
 });
+
+test('raw surface texture arrays require their exact RGBA dimensions', async () => {
+  const bytes = 'RGBA';
+  const hash = (text) => createHash('sha256').update(text).digest('hex');
+  let width = 1;
+  const load = createCityLoader({ baseURL: 'https://example.test/', fetch: async (url) => {
+    const data = JSON.stringify({ schema: 1, id: 'box', format: 'taipei-source-buffer-v1', meshes: [], textures: [{
+      id: 'surface', dimension: '2d-array', format: 'rgba8', width, height: 1, depth: 1,
+      url: 'assets/cities/taipei/surface.rgba', sha256: hash(bytes),
+    }] });
+    if (String(url).includes('manifest.json')) return new Response(JSON.stringify({ ...manifest, assets: [{ ...manifest.assets[0], sha256: hash(data) }] }));
+    return new Response(String(url).includes('.rgba') ? bytes : data);
+  } });
+  const lease = await load('taipei'); lease.release();
+  width = 2;
+  await assert.rejects(load('taipei'), /Invalid source array texture/);
+});

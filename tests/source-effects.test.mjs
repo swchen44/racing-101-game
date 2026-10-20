@@ -84,7 +84,7 @@ test('city context hides every legacy FX, preserves grading, swaps atomically an
   const legacy = [fx.skidInst, fx.sparkLines, fx.rain, fx.streaks, fx.brakePool, fx.smokes[0].sprite, fx._flames[0].group];
   fx.setCityContext(lease, { id: 'day' });
   assert.ok(legacy.every(o => !o.visible));
-  assert.equal(fx.bloom.strength, .16);
+  assert.equal(fx.bloom.strength, .12);
   fx.addSkid(0, 0, 0, 1); fx.addSmoke(0, 0, 0, 0); fx.burstSparks(0, 1, 0, 1);
   const car = { pos: new THREE.Vector3(), speed: 0, speedKmh: 140, heading: 0,
     headlightPool: object(), underglow: object() };
@@ -94,11 +94,20 @@ test('city context hides every legacy FX, preserves grading, swaps atomically an
   assert.equal(fx.sourceEffects.mesh.geometry.instanceCount, 3);
   fx.setCityContext(lease, { id: 'night' });
   assert.equal(lease.instances.size, 1);
-  assert.equal(fx.bloom.strength, .55);
+  assert.equal(fx.bloom.strength, .32);
   const live = fx.sourceEffects;
   assert.throws(() => fx.setCityContext({ instantiate() { throw new Error('allocation'); } }), /allocation/);
   assert.equal(fx.sourceEffects, live);
-  fx.resetTransient(); assert.equal(live.mesh.geometry.instanceCount, 0);
+  const stagedRoot = new THREE.Group();
+  const prepared = fx.prepareCityContext(lease, { id: 'night' }, stagedRoot);
+  assert.equal(fx.sourceEffects, live); // Preparation cannot tear down the playing race.
+  assert.equal(prepared.root.parent, stagedRoot);
+  assert.equal(lease.instances.size, 2);
+  fx.setCityContext(lease, { id: 'night' }, prepared);
+  assert.equal(fx.sourceEffects, prepared);
+  assert.equal(live.disposed, true);
+  assert.equal(lease.instances.size, 1);
+  fx.resetTransient(); assert.equal(prepared.mesh.geometry.instanceCount, 0);
   fx.setCityContext(null);
   assert.equal(lease.instances.size, 0);
   assert.equal(fx.bloom.strength, .75);

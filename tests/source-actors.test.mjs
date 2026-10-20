@@ -196,6 +196,7 @@ test('Car and all race opponents consume the source context without invoking leg
   const lease = await fixture(allCars);
   try {
     const track = trackFixture(), scene = new THREE.Group();
+    lease.weather = { id: 'night', headlights: true };
     const car = new Car(track, sourceCarDefinitions[2], { cityLease: lease });
     assert.equal(car.mesh.userData.sourceAssetId, 'sports');
     assert.equal(car.wheelRadius, .34);
@@ -209,6 +210,10 @@ test('Car and all race opponents consume the source context without invoking leg
     assert.equal(opponents.cars.length, 5);
     assert.ok(opponents.cars.every((ai) => sourceCarDefinitions.some((def) => def.sourceAssetId === ai.mesh.userData.sourceAssetId)));
     const ai = opponents.cars[0]; ai.speed = 10;
+    const lamps = [];
+    ai.mesh.traverse((object) => { if (object.material?.userData.sourceLightTag === 1) lamps.push(object.material.userData.sourceLampIntensity.value); });
+    assert.ok(lamps.length > 0);
+    assert.ok(lamps.every((value) => Math.abs(value - 3.55) < 1e-8));
     opponents._advance(ai, .1);
     near(ai.wheelSpin, 1 / ai.parts.wheelRadius);
     opponents._place(ai);

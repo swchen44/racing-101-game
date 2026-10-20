@@ -1,6 +1,10 @@
 // i18n.js — 中/英雙語:靜態 DOM 用 data-i18n 屬性,動態字串用 t(key)
 const STRINGS = {
   zh: {
+    cityLoading: '正在載入台北街區與車輛，首次載入需要較多時間…',
+    cityReady: '台北街區已準備就緒。',
+    cityOfflineReady: '台北街區已準備就緒，可離線遊玩。',
+    cityFailed: '台北載入失敗。請確認網路後按「出發」重試，或選擇其他賽道。',
     driverName: 'Email 帳號', namePlaceholder: 'name@example.com',
     emailInvalid: '⚠ 請輸入有效的 Email 帳號 (不分大小寫)',
     start: '開始遊戲 START — ENTER', rankings: '排行榜 RANKINGS',
@@ -48,6 +52,10 @@ const STRINGS = {
     topSpeed: (k) => `極速 ${k} KM/H`, lengthDiff: (km, st) => `${km} KM ・ 難度 ${st}`,
   },
   en: {
+    cityLoading: 'Loading Taipei streets and vehicles. The first visit takes a little longer…',
+    cityReady: 'Taipei is ready to race.',
+    cityOfflineReady: 'Taipei is ready to race, including offline.',
+    cityFailed: 'Taipei could not load. Check your connection and press RACE to retry, or choose another track.',
     driverName: 'EMAIL ACCOUNT', namePlaceholder: 'name@example.com',
     emailInvalid: '⚠ Please enter a valid email (case-insensitive)',
     start: 'START — ENTER', rankings: 'RANKINGS',

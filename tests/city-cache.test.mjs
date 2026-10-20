@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readdir } from 'node:fs/promises';
 import { commitCityCache, readCityReadiness, coreCacheName, runtimeURLs } from '../js/cities/offline.js';
+import { createCityLoader } from '../js/cities/assets.js';
 
 const baseURL = 'https://example.test/game/';
 const manifestURL = baseURL + 'assets/cities/taipei/manifest.json';
@@ -71,6 +72,25 @@ test('city readiness requires cached runtime modules and every committed asset',
   const missingRuntime = await readCityReadiness('taipei', env);
   assert.equal(missingRuntime.ready, false);
   assert.ok(missingRuntime.missing.includes(baseURL + 'js/cities/source-library.js'));
+});
+
+test('a pooled live city rechecks cache eviction before reporting offline readiness', async () => {
+  const env = await environment(), input = fixture();
+  const load = createCityLoader({ ...env, textureDecoder: async () => ({ dispose() {} }),
+    fetch: async (url) => String(url).endsWith('manifest.json')
+      ? new Response(JSON.stringify(input.manifest))
+      : new Response(input.files.find((file) => file.url === String(url)).bytes),
+  });
+  const active = await load('taipei');
+  assert.equal(active.offline.ready, true);
+  const cache = await env.cacheStorage.open(active.offline.cacheName);
+  await cache.delete(input.files[1].url);
+  const preview = await load('taipei');
+  assert.equal(preview.offline.ready, false);
+  assert.equal((await active.refreshOffline()).ready, false);
+  assert.equal(active.offline.ready, false);
+  assert.equal(preview.instantiate('building').userData.sourceAssetId, 'building');
+  preview.release(); active.release();
 });
 
 test('a missing transitive texture cannot commit or replace the previous complete city', async () => {

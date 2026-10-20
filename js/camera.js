@@ -37,7 +37,19 @@ export class ChaseCamera {
       car.pos.x - sin * m.dist,
       m.height,
       car.pos.z - cos * m.dist);
+    this._sourceEye(car, this.pos);
+    this._towerLift = 0;
+    this._towerSide = 0;
     this.camera.position.copy(this.pos);
+  }
+
+  _sourceEye(car, target) {
+    const mode = this.mode;
+    const anchor = mode.rigid && car.cameraAnchors?.[mode.name === 'bumper' ? 'hood' : mode.name];
+    if (!anchor) return;
+    const sin = Math.sin(car.heading), cos = Math.cos(car.heading);
+    target.set(car.pos.x + anchor.x * cos + anchor.z * sin,
+      car.pos.y + anchor.y, car.pos.z - anchor.x * sin + anchor.z * cos);
   }
 
   addShake(amount) { this.shake = Math.min(1, this.shake + amount); }
@@ -102,6 +114,7 @@ export class ChaseCamera {
         car.pos.x - sin * m.dist,
         m.height,
         car.pos.z - cos * m.dist);
+      this._sourceEye(car, this._desired);
     } else {
       // 車後方 (甩尾時稍微甩向外側增加動感)
       const driftOffset = car.driftAmount * Math.sign(car.steer || 0.0001) * 2.2;
@@ -128,7 +141,7 @@ export class ChaseCamera {
     const rightX = cos, rightZ = -sin; // 車右側方向
     // 剛性視角注視點壓低 (lookDrop):讓儀表台/引擎蓋落在畫面下 1/3
     const lookY = isBumper
-      ? m.height - (m.lookDrop || 0)
+      ? this._desired.y - (m.lookDrop || 0)
       : 1.1 + speedRatio * 1.1 + towerLookY;
     this.lookTarget.set(
       car.pos.x + sin * m.lookAhead + rightX * this._curveShift,

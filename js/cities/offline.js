@@ -1,7 +1,7 @@
 // Cache format and runtime compatibility are separate from the source content version.
 const CACHE_SCHEMA = 1;
 const SOURCE_FORMAT = 'taipei-source-buffer-v1';
-const CORE_VERSION = 'taipei-source-v1';
+const CORE_VERSION = 'taipei-source-v2';
 const JS_FILES = [
   'main', 'config', 'i18n', 'track', 'vehicle', 'taipei101', 'city', 'effects',
   'audio', 'hud', 'camera', 'opponents', 'police', 'leaderboard', 'touch',
