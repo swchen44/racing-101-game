@@ -225,6 +225,79 @@ function buildingState(material, extra = {}) {
   return uniforms;
 }
 
+// world:us / ds / fs / ps / ms. The exported *-roughness PNG retains Ls's
+// alpha noise, which Ec uses to locate puddles, not as a roughness multiplier.
+const GROUND_SURFACES = {
+  asphalt: [7, .88, 1, .2], 'old-asphalt': [7, .92, 1, .2],
+  brick: [2.4, .86, .92, .85], paver: [2.4, .8, .95, .8],
+  concrete: [3, .9, .8, .35], grass: [4, 1, .35, .25],
+  plaza: [4.8, .74, .95, .7], lot: [5, .93, .9, .3],
+  arcade: [1.6, .55, 1, .85], shrub: [3, 1, .3, 0],
+  curb: [2, .8, .75, .5], granite: [2.4, .72, .95, .8],
+  'old-brick': [2.4, .88, .9, .85], grasscrete: [2.4, .95, .6, .8],
+  soffit: [4.8, .92, .15, .3],
+};
+
+function groundSurface(material, mask, name) {
+  const [repeat, roughness, wetK, flat] = GROUND_SURFACES[name];
+  material.roughness = roughness;
+  material.roughnessMap = null;
+  material.envMapIntensity = .9;
+  const uniforms = buildingState(material, { uGroundMask: { value: mask },
+    uGroundRepeat: { value: repeat }, uGroundWetK: { value: wetK }, uGroundFlat: { value: flat } });
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vGroundUv;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvGroundUv = uv;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+        uniform sampler2D uGroundMask;
+        uniform float uGroundRepeat;
+        uniform float uGroundWetK;
+        uniform float uGroundFlat;
+        uniform float uWet;
+        uniform float uNight;
+        varying vec2 vGroundUv;`)
+      .replace('#include <map_fragment>', `
+        // Runtime ribbons already divide metre UVs by ds[layer]. Recover the
+        // original metre UVs only for Ec's two low-frequency alpha samples.
+        vec2 gMetres = vGroundUv * uGroundRepeat;
+        vec4 gTex = texture2D(map, vGroundUv);
+        float gFlat = uGroundFlat * smoothstep(14.0, 40.0, length(vViewPosition));
+        if (gFlat > 0.0) gTex.rgb = mix(gTex.rgb, textureLod(map, vec2(0.5), 12.0).rgb, gFlat);
+        float gTexAlpha = texture2D(uGroundMask, vGroundUv).r;
+        float gMacro = texture2D(uGroundMask, gMetres * 0.011 + vec2(0.37, 0.11)).r;
+        float gMacro2 = texture2D(uGroundMask, gMetres * 0.0037 + vec2(0.71, 0.29)).r;
+        diffuseColor.rgb *= gTex.rgb * (0.88 + 0.15 * gMacro + 0.1 * gMacro2);
+        ${name === 'grass' || name === 'shrub' ? 'diffuseColor.rgb *= mix(vec3(1.0), vec3(0.62, 0.5, 0.62), smoothstep(0.25, 0.75, uNight));' : ''}
+        float gWetK = uGroundWetK;
+        float gPuddle = smoothstep(0.66, 0.9, gTexAlpha * 0.4 + gMacro * 0.3 + gMacro2 * 0.42) * gWetK;`)
+      .replace('#include <roughnessmap_fragment>', `
+        float roughnessFactor = roughness;
+        float wetA = uWet * gWetK;
+        roughnessFactor = mix(roughnessFactor, 0.3, wetA);
+        float pud = gPuddle * smoothstep(0.2, 0.75, uWet);
+        roughnessFactor = mix(roughnessFactor, 0.045, pud);
+        diffuseColor.rgb *= mix(1.0, mix(0.52, 0.35, smoothstep(0.25, 0.8, uNight)), wetA) * mix(1.0, 0.72, pud);`)
+      .replace('#include <lights_fragment_end>', `
+        #if defined( RE_IndirectSpecular )
+          radiance *= mix(1.0, mix(0.4, 0.75, pud), smoothstep(0.25, 0.85, uNight));
+        #endif
+        #include <lights_fragment_end>`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        #if !defined( USE_ENVMAP ) && defined( USE_FOG )
+          vec3 groundVd = normalize(vViewPosition);
+          float groundFr = pow(1.0 - clamp(dot(groundVd, normalize(vNormal)), 0.0, 1.0), 5.0);
+          totalEmissiveRadiance += fogColor * groundFr * (uWet * gWetK * 0.25 + gPuddle * smoothstep(0.2, 0.75, uWet) * 0.45);
+        #endif`);
+  };
+  material.customProgramCacheKey = () => `taipei-ground-ec-r160-v1-${name}`;
+  material.userData.sourceShader = { file: 'world-BwYfSiTY.js', symbols: 'Ls / Ec / Sc / wc / Tc / ds / fs / ps / ms',
+    limitations: ['Original source street light-map is not available for the assembled race route; dynamic lamp-map radiance is excluded.',
+      'Runtime ribbons provide UVs divided by the original source metre repeat. RGB and alpha are sampled from their losslessly separated source PNGs.'] };
+}
+
 function landmarkSurface(material, surfaceMap) {
   material.vertexColors = false;
   material.emissive.setRGB(0, 0, 0);
@@ -325,6 +398,10 @@ export function createSourceMaterial(def = {}, textures) {
   if (def.type === 'source-character') characterAtlas(material, map);
   if (def.type === 'source-vehicle') vehicleAtlas(material);
   if (def.type === 'source-marking') markingAtlas(material);
+  const groundName = def.map?.startsWith('ground-') ? def.map.slice(7) : null;
+  if (GROUND_SURFACES[groundName] && def.roughnessMap === `${def.map}-roughness`) {
+    groundSurface(material, texture(def.roughnessMap), groundName);
+  }
   if (def.sourceBucket === 'lm' || def.sourceBucket === 'leaves') {
     if (!surfaceMap) { material.dispose(); throw new Error('Missing source surface atlas'); }
     landmarkSurface(material, surfaceMap);

@@ -12,6 +12,44 @@ function compile(material, lib = THREE.ShaderLib.standard) {
 }
 const lmDef = { type: 'standard', sourceBucket: 'lm', vertexColors: true, surfaceMap: 'source-surfaces' };
 
+test('source ground alpha is a weather-gated puddle field, never a dry roughness map', async () => {
+  const data = JSON.parse(await readFile('assets/cities/taipei/road-surface.json'));
+  const map = new THREE.Texture(), mask = new THREE.Texture();
+  const material = createSourceMaterial(data.meshes[0].material,
+    new Map([['ground-asphalt', map], ['ground-asphalt-roughness', mask]]));
+  assert.equal(material.roughness, .88, 'world:fs[ASPHALT] is the dry baseline');
+  assert.equal(material.roughnessMap, null, 'source alpha must not multiply dry roughness');
+  const shader = compile(material);
+  assert.equal(shader.uniforms.uGroundMask.value, mask);
+  assert.equal(shader.uniforms.uWet.value, 0);
+  assert.match(shader.fragmentShader, /float wetA = uWet \* gWetK;/);
+  assert.match(shader.fragmentShader, /mix\(roughnessFactor, 0\.3, wetA\)/);
+  assert.match(shader.fragmentShader, /gPuddle \* smoothstep\(0\.2, 0\.75, uWet\)/);
+  assert.match(shader.fragmentShader, /mix\(roughnessFactor, 0\.045, pud\)/);
+  assert.match(shader.fragmentShader, /gTexAlpha \* 0\.4 \+ gMacro \* 0\.3 \+ gMacro2 \* 0\.42/);
+  material.userData.setSourceWeather({ id: 'day', wet: 0 });
+  assert.equal(shader.uniforms.uWet.value, 0);
+  material.userData.setSourceWeather({ id: 'night', wet: .85 });
+  assert.equal(shader.uniforms.uWet.value, .85);
+  assert.equal(shader.uniforms.uNight.value, 1);
+  assert.equal(map.repeat.x, 1, 'instance hooks do not mutate shared texture transforms');
+  material.dispose(); map.dispose(); mask.dispose();
+});
+
+test('all exported paving layers use their original independent dry and wet coefficients', () => {
+  for (const [name, roughness, wetK, repeat] of [['paver', .8, .95, 2.4], ['concrete', .9, .8, 3],
+    ['grass', 1, .35, 4], ['plaza', .74, .95, 4.8], ['curb', .8, .75, 2], ['granite', .72, .95, 2.4]]) {
+    const map = new THREE.Texture(), mask = new THREE.Texture();
+    const material = createSourceMaterial({ map: `ground-${name}`, roughnessMap: `ground-${name}-roughness` },
+      new Map([[`ground-${name}`, map], [`ground-${name}-roughness`, mask]]));
+    assert.equal(material.roughness, roughness);
+    const shader = compile(material);
+    assert.equal(shader.uniforms.uGroundWetK.value, wetK);
+    assert.equal(shader.uniforms.uGroundRepeat.value, repeat);
+    material.dispose(); map.dispose(); mask.dispose();
+  }
+});
+
 test('LM decodes original array layers, AO, roughness/metalness and per-vertex masked emission', () => {
   const atlas = surfaceTexture();
   const material = createSourceMaterial(lmDef, new Map([['source-surfaces', atlas]]));
